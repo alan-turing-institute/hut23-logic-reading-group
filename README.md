@@ -2,13 +2,31 @@
 
 Materials for a logic study group.
 
-### Schedule
-
-tbd, but likely to be Thursdays noon-1pm. Discussions occur on Slack in the
-(misnamed!) `hut23-linear-algebra-reading-group`.
-
 ### Reading materials
 
-We are reading (parts of) [forall x:
-Calgary](https://forallx.openlogicproject.org/) a free and open source
+At present, our text [_forall x:
+Calgary_](https://forallx.openlogicproject.org/) a free and open source
 textbook.
+
+Other things that look interesting are:
+
+- [_Carnap_](https://carnap.io/book) is an online, introductory book with
+  interactive exercises: the webside checks your proofs.
+- [Logical
+  Foundations](https://softwarefoundations.cis.upenn.edu/current/lf-current/toc.html),
+  is Volume 1 of _Software foundations_, an extremely comprehensive
+  overview of the mathematical foundations of reliable software.
+
+### Schedule
+
+We meet on Thursdays at noon, usually in David Blackwell (but the
+first week is in Marian Rejewski).
+
+Discussions occur on Slack in the
+(misnamed!) `hut23-linear-algebra-reading-group`.
+
+| Date       | Topic                                          | Reading               |
+|------------|------------------------------------------------|-----------------------|
+| 22 January | Introduction to logic (**in Marian Rejewski**) | Part I (chapters 1–3) |
+
+
