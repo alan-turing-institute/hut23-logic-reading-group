@@ -4,10 +4,10 @@
 \usepackage{fontspec}
 \usepackage{microtype}
 \usepackage[math-style=upright]{unicode-math}
-\setmainfont[Numbers=OldStyle]{CMU Concrete}
+%\setmainfont[Numbers=OldStyle]{CMU Concrete}
 \setmathfont{Euler Math}
 %%
-\usepackage[medium, compact]{titlesec}
+%\usepackage[medium, compact]{titlesec}
 %\usepackage{parskip}
 \usepackage{tabularx}
 \usepackage{array}
@@ -20,7 +20,7 @@
 %%\addbibresource{notes.bib}
 %%
 %%
-\newcommand{\defn}[1]{\textit{#1}}
+\newcommand{\defn}[1]{\textit{#1}\sidenote*{#1}}
 \newcommand{\isdef}{\stackrel{\text{def}}{=}}
 %% 
 \title{All we know about logic}
@@ -31,9 +31,29 @@
 \maketitle
 
 \section*{Preliminaries}
-\subsection*{Names for things}
 
-A \defn{sentence} is a statement that could in principle be true or false. (That is, it is not, for example, a question, or an interjection.) An \defn{argument}
+\subsection*{Arguments}
+
+A \defn{sentence} is a statement that could in principle be true or
+false. (It is not, for example, a question or an interjection.) The book
+says that ``a \textsc{sentence} [is] a sentence that can be true or
+false'' which seems circular. On the other hand, I have not defined a
+``statement.''
+
+An \defn{argument} is a finite sequence of sentences. The final sentence is called the \defn{conclusion}; the other sentences are called the \defn{premises}. 
+
+A \defn{counterexample} to an argument is a situation in which all the
+premises are true but the conclusion is false. An argument is
+\defn{valid} if it has no counterexamples. Thus, an argument is valid
+if, whenever the premises are all true, then necessarily the conclusion
+is true. An argument that is not valid is \defn{invalid}.
+
+If it is not possible for a sentence to be false, it is
+\defn{necessarily true}. For example: ``The number 7 is either odd or
+even.'' If it is not possible for a sentence to be true, it is
+\defn{necessarily false}. A sentence that is neither necessarily true nor necessarily false is called \defn{contingent}.
+
+Two sentences are \defn{jointly equivalent} if in all cases either they are both true or they are both false. A set of sentences are \defn{jointly possible} if there is a case in which they are all true; sentences that are not not jointly possible are \defn{jointly impossible}.
 
 
 \end{document}
