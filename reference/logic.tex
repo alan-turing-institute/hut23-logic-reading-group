@@ -13,14 +13,18 @@
 \usepackage{array}
 \usepackage{booktabs}
 %%
-\usepackage[raggedrightboxes]{ragged2e}
-\usepackage[Ragged, size=footnote, shape=up]{sidenotesplus}
+%\usepackage[raggedrightboxes]{ragged2e}
+%\usepackage[Ragged, size=footnote, shape=up]{sidenotesplus}
+\usepackage[size=footnote, shape=up]{sidenotesplus}
 %% 
 %%\usepackage[style=authoryear]{biblatex}
 %%\addbibresource{notes.bib}
 %%
 %%
-\newcommand{\defn}[1]{\textit{#1}\sidenote*{#1}}
+%% \defn takes an optional star and an optional argument.
+%% If the optional argument is present, it is used for the marginal note; if the argument is missing, the default is the mandatory argument. if the command is starred, no marginal note is made. 
+\NewDocumentCommand\defn{sO{#3}m}{\textit{#3}\IfBooleanF{#1}{\sidenote*{#2}}}
+%\newcommand{\defn}[2][#2]{\textit{#2}\sidenote*{#1}}
 \newcommand{\isdef}{\stackrel{\text{def}}{=}}
 %% 
 \title{All we know about logic}
@@ -35,25 +39,30 @@
 \subsection*{Arguments}
 
 A \defn{sentence} is a statement that could in principle be true or
-false. (It is not, for example, a question or an interjection.) The book
+false. It is not, for example, a question or an interjection. (The book
 says that ``a \textsc{sentence} [is] a sentence that can be true or
 false'' which seems circular. On the other hand, I have not defined a
-``statement.''
+``statement.'')
 
-An \defn{argument} is a finite sequence of sentences. The final sentence is called the \defn{conclusion}; the other sentences are called the \defn{premises}. 
+An \defn{argument} is a finite sequence of sentences. The final sentence is called the \defn[conclusion, premises]{conclusion}; the other sentences are called the \defn*{premises}. 
 
 A \defn{counterexample} to an argument is a situation in which all the
 premises are true but the conclusion is false. An argument is
-\defn{valid} if it has no counterexamples. Thus, an argument is valid
-if, whenever the premises are all true, then necessarily the conclusion
-is true. An argument that is not valid is \defn{invalid}.
+\defn[valid / invalid]{valid} if it has no counterexamples. Thus, an
+argument is valid if, whenever the premises are all true, then
+necessarily the conclusion is true. An argument that is not valid is
+\defn*{invalid}.
 
 If it is not possible for a sentence to be false, it is
-\defn{necessarily true}. For example: ``The number 7 is either odd or
+\defn[necessary truth / falsehood]{necessarily true}. For example: ``The number 7 is either odd or
 even.'' If it is not possible for a sentence to be true, it is
-\defn{necessarily false}. A sentence that is neither necessarily true nor necessarily false is called \defn{contingent}.
+\defn*{necessarily false}. A sentence that is neither necessarily true nor necessarily false is called \defn{contingent}.
 
-Two sentences are \defn{jointly equivalent} if in all cases either they are both true or they are both false. A set of sentences are \defn{jointly possible} if there is a case in which they are all true; sentences that are not not jointly possible are \defn{jointly impossible}.
+Two sentences are \defn{jointly equivalent} if in all cases either they
+are both true or they are both false. A set of sentences are
+\defn[jointly possible / impossible]{jointly possible} if there is a
+case in which they are all true; sentences that are not jointly possible
+are \defn*{jointly impossible}.
 
 
 \end{document}
