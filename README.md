@@ -21,8 +21,7 @@ Other things that look interesting are:
 
 We meet on Thursdays at noon, usually in Marian Rejewski.
 
-Discussions occur on Slack in the
-(misnamed!) `hut23-linear-algebra-reading-group` channel.
+Discussions occur on Slack in the `hut23-logic-reading-group` channel (formerly known as the linear algebra reading group).
 
 | Date       | Topic                                          | Reading               |
 |------------|------------------------------------------------|-----------------------|
