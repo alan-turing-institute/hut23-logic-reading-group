@@ -23,8 +23,8 @@ We meet on Thursdays at noon, usually in Marian Rejewski.
 
 Discussions occur on Slack in the `hut23-logic-reading-group` channel (formerly known as the linear algebra reading group).
 
-| Date       | Topic                                          | Suggested exercises |
-|------------|------------------------------------------------|---------------------|
-| 22 January | Introduction to logic (**in Marian Rejewski**) |                     |
-| 29 January | ∀x: II. Truth-functional logic, ¶¶4, 5, and 6  | tbd                 |
+| Date       | Topic                                             | Suggested exercises |
+|------------|---------------------------------------------------|---------------------|
+| 22 January | Introduction to logic (**in Marian Rejewski**)    |                     |
+| 29 January | ∀ _x_: II. Truth-functional logic, §§ 4, 5, and 6 | tbd                 |
 
