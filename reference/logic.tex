@@ -2,17 +2,10 @@
 \documentclass{article}
 \usepackage{ttn}
 \usepackage{booktabs}
-\usepackage{mathtools}
+%\usepackage{mathtools}
 \usepackage{colonequals} % because unicode-math has broken "::=" somehow
 \usepackage{simplebnf}
-\SetBNFConfig{
-  relation-sym-map = { 
-    {::=} = {\ensuremath{\coloncolonequals}}
-  }
-}
-%%
 %\usepackage[raggedrightboxes]{ragged2e}
-%\usepackage[Ragged, size=footnote, shape=up]{sidenotesplus}
 \usepackage[Ragged, size=footnote, shape=up]{sidenotesplus}
 \usepackage[dvipsnames]{xcolor}
 %% 
@@ -83,7 +76,7 @@ We assume the existence of a countable set of \defn[sentence
 letter]{sentence letters}: $A$, $B$, \ldots, $A_1$, $A_2$, \ldots,
 $C_{42}$, \ldots.  The symbols $\wedge$, $\vee$, $\to$,
 $\leftrightarrow$, and $\neg$ are known as \defn[connectives ($\wedge$,
-$\vee$, $\to$, $\leftrightarrow$, and $\neg$)]{connectives}.  A \defn{sentence} (of
+$\vee$, $\to$, $\leftrightarrow$, and $\neg$)]{connectives}.  A \defn[sentence (or ``proposition'')]{sentence} (of
 propositional logic) is defined by the grammar shown in
 figure~\ref{fig:bnf-prop}.
 
