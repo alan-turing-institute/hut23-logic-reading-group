@@ -1,4 +1,4 @@
-pdfs = logic.pdf
+pdfs = logic.pdf jg-is-confused-about.pdf
 
 all: $(pdfs)
 
