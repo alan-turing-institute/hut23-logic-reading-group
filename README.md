@@ -16,8 +16,9 @@ Other things that look interesting are:
   Foundations](https://softwarefoundations.cis.upenn.edu/current/lf-current/toc.html)
   is Volume 1 of _Software foundations_, an extremely comprehensive
   overview of the mathematical foundations of reliable software.
-- [_How to prove It: A Structured Approach_ (Daniel
-  J.~Velleman)](https://www.goodreads.com/book/show/739735.How_to_Prove_It)
+- [_How to prove It: A Structured
+  Approach_](https://www.goodreads.com/book/show/739735.How_to_Prove_It)
+  (by Daniel J.Velleman), hat tip to Iain.
 
 ### Schedule
 
