@@ -1,5 +1,7 @@
 # hut23-logic-reading-group
 
+[![All the logic](https://img.shields.io/badge/PDF-All_the_logic-orange.svg?style=flat)](https://github.com/alan-turing-institute/hut23-logic-reading-group/releases/download/2026-01-29/logic.pdf)
+
 Materials for a logic study group.
 
 ### Reading materials
@@ -26,9 +28,10 @@ We meet on Thursdays at noon, usually in Marian Rejewski.
 
 Discussions occur on Slack in the `hut23-logic-reading-group` channel (formerly known as the linear algebra reading group).
 
-| Date       | Topic                                          | Suggested exercises                         |
-|------------|------------------------------------------------|---------------------------------------------|
-| 22 January | Introduction to logic (**in Marian Rejewski**) |                                             |
-| 29 January | ∀x: II. Truth-functional logic, §§ 4, 5, and 6 | 5.D.8, 5.G.1, 5.H.2, 5.I, 6.A.1, 6.A.3, 6.B |
+| Date       | Topic                                          | Suggested exercises                           |
+|------------|------------------------------------------------|-----------------------------------------------|
+| 22 January | Introduction to logic (**in Marian Rejewski**) |                                               |
+| 29 January | ∀x: II. Truth-functional logic, §§ 4, 5, and 6 | §5: D.8, G.1, H.2, and I; §6: A.1, A.3, and B |
+
 
 
