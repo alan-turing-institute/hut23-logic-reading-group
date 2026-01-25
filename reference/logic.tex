@@ -2,10 +2,11 @@
 \documentclass{article}
 \usepackage{ttn}
 \usepackage{booktabs}
-%%
+%\usepackage{mathtools}
+\usepackage{colonequals} % because unicode-math has broken "::=" somehow
+\usepackage{simplebnf}
 %\usepackage[raggedrightboxes]{ragged2e}
-%\usepackage[Ragged, size=footnote, shape=up]{sidenotesplus}
-\usepackage[size=footnote, shape=up]{sidenotesplus}
+\usepackage[Ragged, size=footnote, shape=up]{sidenotesplus}
 \usepackage[dvipsnames]{xcolor}
 %% 
 %%\usepackage[style=authoryear]{biblatex}
@@ -17,6 +18,8 @@
 \NewDocumentCommand\defn{sO{#3}m}{\textit{#3}\IfBooleanF{#1}{\sidenote*{\textcolor{MidnightBlue}{#2}}}}
 %\newcommand{\defn}[2][#2]{\textit{#2}\sidenote*{#1}}
 \newcommand{\isdef}{\stackrel{\text{def}}{=}}
+% Relies on euler-math.sty, loaded by ttn.sty
+\newcommand{\wff}[1]{\ensuremath{\symscr{#1}}} 
 %% 
 \title{All we know about logic}
 \author{James Geddes}
@@ -26,6 +29,8 @@
 \maketitle
 
 \section*{Preliminaries}
+
+In the following, ``the book'' means \emph{forall x: Calgary}.
 
 \subsection*{Arguments}
 
@@ -57,6 +62,56 @@ are both true or they are both false.  A set of sentences are
 \defn[jointly possible / impossible]{jointly possible} if there is a
 case in which they are all true; sentences that are not jointly possible
 are \defn*{jointly impossible}.
+
+\sidenote*{The book refers to the logic developed in parts II to~IV\ as
+  \emph{truth-functional logic}, or TFL\@.  Truth-functional logic is
+  also known as \emph{propositional logic} and sometimes
+  \emph{sentential logic} (see Appendix~A.1 of the book).  The Stanford
+  Encyclopedia of Philosophy calls it propositional logic, so that is
+  what I shall do.}
+\section*{Propositional logic}
+
+\subsection*{Syntax}
+We assume the existence of a countable set of \defn[sentence
+letter]{sentence letters}: $A$, $B$, \ldots, $A_1$, $A_2$, \ldots,
+$C_{42}$, \ldots.  The symbols $\wedge$, $\vee$, $\to$,
+$\leftrightarrow$, and $\neg$ are known as \defn[connectives ($\wedge$,
+$\vee$, $\to$, $\leftrightarrow$, and $\neg$)]{connectives}.  A \defn[sentence (or ``proposition'')]{sentence} (of
+propositional logic) is defined by the grammar shown in
+figure~\ref{fig:bnf-prop}.
+
+\begin{figure}[ht]
+  \sidecaption{\label{fig:bnf-prop}The meaning of ``sentence'' in
+    propositional logic.  Here \wff{S}, \wff{A}, and \wff{B} are
+    arbitrary sentences.  An alternative name for a sentence is a
+    \emph{well-formed formula}. Sometimes the symbols $\top$ (``top,'' or
+    ``truth'') and $\bot$ (``bottom,'' or ``false'') are also allowed as
+    sentences.}
+  \centering
+  \begin{bnf}
+    $\wff{S}$ : Sentence ::=
+    | $A$ // $B$ // $C$ // $\dotsb$        : atomic sentence
+    |  $\neg \wff{A}$                      : negation
+    | ($\wff{A} \wedge \wff{B}$)           : conjuction 
+    | ($\wff{A} \vee \wff{B}$)             : disjunction
+    | ($\wff{A} \to \wff{B}$)              : conditional
+    | ($\wff{A} \leftrightarrow \wff{B}$)  : biconditional
+  \end{bnf}
+\end{figure}
+It is traditional, when writing a sentence, to omit the outer set of
+parentheses and to allow the use of other kinds of brackets, such as `['
+and `]', wherever parentheses may be used. It is also traditional (but
+this is not a tradition followed by the book) to omit many other
+parentheses when the result can be disambiguated according to the
+following rules:
+\begin{enumerate}
+\item $\neg$ binds more tightly than $\wedge$ and $\vee$, which bind more tightly
+  than $\to$ and $\leftrightarrow$;
+\item $\wedge$ and $\vee$ are associative so it doesn't matter how you replace the parentheses in, for example, $P\wedge Q\wedge R$; and
+\item $\to$ is taken to be right associative.
+\end{enumerate}
+Thus $P\wedge Q\to R$ means $(P\wedge Q)\to R$; $P\to Q\to R$ means $P \to (Q \to R)$; and $P\wedge Q \wedge R$ may be read as either $(P\wedge Q)\wedge R$ or $P\wedge (Q\wedge R)$, as you like.
+
 
 
 \end{document}

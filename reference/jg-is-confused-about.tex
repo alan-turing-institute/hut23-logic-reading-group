@@ -1,0 +1,91 @@
+% -*- TeX-engine: luatex; fill-column: 72; eval: (auto-fill-mode -1); eval: (visual-fill-column-mode 1); eval: (visual-line-mode 1); eval: (adaptive-wrap-prefix-mode 1) -*-
+\documentclass{article}
+\usepackage{ttn}
+\usepackage{booktabs}
+\usepackage{mathtools}
+\usepackage{colonequals} % because unicode-math has broken "::=" somehow
+\usepackage{simplebnf}
+\SetBNFConfig{
+  relation-sym-map = { 
+    {::=} = {\ensuremath{\coloncolonequals}}
+  }
+}
+%%
+%\usepackage[raggedrightboxes]{ragged2e}
+%\usepackage[Ragged, size=footnote, shape=up]{sidenotesplus}
+\usepackage[Ragged, size=footnote, shape=up]{sidenotesplus}
+\usepackage[dvipsnames]{xcolor}
+%% 
+%%\usepackage[style=authoryear]{biblatex}
+%%\addbibresource{notes.bib}
+%%
+%%
+%% \defn takes an optional star and an optional argument.
+%% If the optional argument is present, it is used for the marginal note; if the argument is missing, the default is the mandatory argument. if the command is starred, no marginal note is made. 
+\NewDocumentCommand\defn{sO{#3}m}{\textit{#3}\IfBooleanF{#1}{\sidenote*{\textcolor{MidnightBlue}{#2}}}}
+%\newcommand{\defn}[2][#2]{\textit{#2}\sidenote*{#1}}
+\newcommand{\isdef}{\stackrel{\text{def}}{=}}
+% Relies on euler-math.sty, loaded by ttn.sty
+\newcommand{\wff}[1]{\ensuremath{\symscr{#1}}} 
+%% 
+\title{Things JG is confused about}
+\author{James Geddes}
+\date{\today}
+%%
+\begin{document}%\maketitle
+\maketitle
+\section*{Meanings of things}
+
+\subsection*{Sentence letters}
+In a sentence such as `$(P\wedge Q)$,' what is the intended
+interpretation of the sentence letter~$P$?  There seem to me to be
+\emph{two} possibilities:
+\begin{enumerate}
+\item\label{item:shorthand} it is merely a shorthand for a specific,
+  previously written, English sentence;
+\item it indicates an arbitrary atomic sentence.
+\end{enumerate}
+As evidence for~\ref{item:shorthand}, note that the book says, in
+\textsection4.3, ``We will use sentence letters to represent [\dots] certain
+English sentences. [\dots] for the time being, we will think of the
+sentence letter of TFL, `$A$', as symbolizing the English sentence `It
+is raining outside'.''  That seems pretty clear.  On the other hand,
+the usual name for these things is \emph{propositional variable}.
+When one writes, for example, $(P \wedge Q)$, must one already be committed
+to a specific expansion of $P$ and $Q$ (as sentences of English, say)?
+Or is the intended reading that one can replace $P$ and $Q$ by
+whatever one likes?  I don't think it matters but the book is normally
+a stickler for precision.
+
+\subsection*{Propositional sentences}
+What in fact is a sentence?  There seem to me to be two possibilities:
+\begin{enumerate}
+\item It is a \emph{string}: a sequence of characters.  The sentence `$P\wedge Q$' is just that sequence of characters, namely: `$P$', `$\wedge$', `$Q$';
+\item It is a \emph{tree}.  The sentence `$P\wedge Q$' means ``a
+  conjunction of $P$ and $Q$,'' or more concretely, perhaps, ``a tree
+  with a node labelled by `$\wedge$' having two children, labelled by
+  $P$ and $Q$ respectively.''
+\end{enumerate}
+Most texts I have read (including the book) give the impression that
+they mean the first.  On that account, the grammar of propositional
+logic explains how to \emph{construct} a sentence, or perhaps how to
+\emph{parse} it into its \dots well, not its meaning, but its
+``structure.''  My view, on the other hand, is that the grammar tells
+you what a sentence \emph{is}: It is either a sentence letter, or a
+negation of a sentence, or a conjuction of an ordered pair of sentences,
+etc.  Then, if you like, you might wish to ``linearise'' the sentence as
+a string.  Or, given a string, you might wish to parse it back into a
+sentence.  But the sentence itself is not a linear object; it has
+recursive structure.
+
+Since we have redundant names in this subject perhaps we could remove
+the redundancy to make a distinction.  Thus, we could say that a
+\emph{proposition} is either an atomic proposition, or a negation of a
+proposition, or a conjunction of a proposition, \&c \&c; whereas a
+\emph{sentence} is a linearisation of a proposition, so constructed as
+to be in one-to-one correspondence with propositions.
+
+Again, perhaps this doesn't matter.
+
+
+\end{document}
