@@ -1,10 +1,19 @@
 pdfs = logic.pdf jg-is-confused-about.pdf
 
-all: $(pdfs)
+# Check for existence of required LaTeX style file
+ttn_package := $(shell kpsewhich ttn.sty)
+ifndef ttn_package
+$(error Please install ttn.sty from github.com//alan-turing-institute/ttn)
+endif
 
-$(pdfs): %.pdf: %.tex
-	latexmk -lualatex $<
+all: $(pdfs)
 
 clean:
 	rm -f *.blg *.log *.pdf *.bbl *.aux *.out *.fdb_latexmk *.fls
+
+%.pdf : %.tex $(ttn_package)
+	latexmk -lualatex $<
+
+
+
 
