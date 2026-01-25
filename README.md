@@ -29,7 +29,7 @@ Discussions occur on Slack in the `hut23-logic-reading-group` channel (formerly 
 | Date       | Topic                                          | Suggested exercises                           |
 |------------|------------------------------------------------|-----------------------------------------------|
 | 22 January | Introduction to logic (in Marian Rejewski) |                                               |
-| 29 January | ∀x: II. Truth-functional logic, §§ **4**, **5**, and **6** | **§5**: D.8, G.1, H.2, and I; **§6**: A.1, A.3, and B |
+| 29 January | ∀x: II. Truth-functional logic, §§ **4**, **5**, and **6** | **§5**: D.8, G.1, H.2, and I;<br /> **§6**: A.1, A.3, and B |
 
 
 
