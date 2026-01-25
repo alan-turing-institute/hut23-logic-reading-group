@@ -1,8 +1,6 @@
 # hut23-logic-reading-group
 
-[![All the logic](https://img.shields.io/badge/PDF-All_the_logic-orange.svg?style=flat)](https://github.com/alan-turing-institute/hut23-logic-reading-group/releases/download/2026-01-29/logic.pdf)
-
-Materials for a logic study group.
+[![All the logic](https://img.shields.io/badge/PDF-All_the_logic-orange.svg?style=flat)](https://github.com/alan-turing-institute/hut23-logic-reading-group/releases/latest/download/logic.pdf)
 
 ### Reading materials
 
