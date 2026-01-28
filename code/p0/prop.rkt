@@ -2,7 +2,14 @@
 
 ;; Manipulate propositions
 
-(provide prop-PROP?
+(provide (struct-out PROP)
+         (struct-out LIT)
+         (struct-out ATOM)
+         (struct-out NEG)
+         (struct-out CONJ)
+         (struct-out DISJ)
+         (struct-out IMPL)
+         proposition
          prop-as-string
          argument-display)
 
@@ -19,27 +26,65 @@ A propositional formula is:
 
 |#
 
-(define prop-LIT?  (or/c #t #f))
-(define prop-ATOM? symbol?)
-(define prop-NEG?  (list/c '¬
-                           (recursive-contract prop-PROP? #:flat)))
-(define prop-CONJ? (list/c '∨
-                           (recursive-contract prop-PROP? #:flat)
-                           (recursive-contract prop-PROP? #:flat)))
-(define prop-DISJ? (list/c '∧
-                           (recursive-contract prop-PROP? #:flat)
-                           (recursive-contract prop-PROP? #:flat)))
-(define prop-IMPL? (list/c '→
-                           (recursive-contract prop-PROP? #:flat)
-                           (recursive-contract prop-PROP? #:flat)))
-(define prop-PROP?
-  (or/c
-   prop-LIT?
-   prop-ATOM?
-   prop-NEG?
-   prop-CONJ?
-   prop-DISJ?
-   prop-IMPL?))
+(struct PROP      ()    #:transparent)
+(struct LIT  PROP (val) #:transparent)
+(struct ATOM PROP (sym) #:transparent)
+(struct NEG  PROP (p)   #:transparent)
+(struct CONJ PROP (p q) #:transparent)
+(struct DISJ PROP (p q) #:transparent)
+(struct IMPL PROP (p q) #:transparent)
+
+;; Input and output
+(define (proposition P)
+  (match P
+    [(or #t #f)    (LIT P)]
+    [(? symbol? v) (ATOM v)]
+    [(list '¬ ψ)   (NEG (proposition ψ))]
+    [(list '∧ ψ χ) (CONJ (proposition ψ) (proposition χ))]
+    [(list '∨ ψ χ) (DISJ (proposition ψ) (proposition χ))]
+    [(list '→ ψ χ) (IMPL (proposition ψ) (proposition χ))]))
+
+;; Flatten a propositional formula to infix notation
+;; removing parentheses
+(define (prop-as-string φ)
+  (subformula->string φ))
+
+(define (subformula->string φ)
+  (define (bracket-unless type? α)
+    (let ([s (subformula->string α)])
+      (if (type? α)
+          s
+          (string-append " (" s ") "))))
+  (match φ
+    [(LIT #t)         "#t"]
+    [(LIT #f)         "#f"]
+    [(ATOM sym)       (symbol->string sym)]
+    [(NEG ψ)          (string-append "¬" (subformula->string ψ))]
+    [(CONJ ψ χ)
+     (string-append
+      (bracket-unless (or/c NEG? CONJ?) ψ)
+      " ∧ "
+      (bracket-unless (or/c NEG? CONJ?) χ))]
+    [(DISJ ψ χ)
+     (string-append
+      (bracket-unless (or/c NEG? DISJ?) ψ)
+      " ∧ "
+      (bracket-unless (or/c NEG? DISJ?) χ))]
+    [(IMPL ψ χ)
+     (string-append
+      (bracket-unless (not/c IMPL?) ψ)
+      " → "
+      (subformula->string χ))]))
+
+;; Pretty-print an argument
+;; φs : (pair? (listof PROP?) PROP?)
+(define (argument-display φs)
+  (let ([premises (car φs)]
+        [conclusion (cdr φs)])
+    (for ([φ (in-list premises)])
+      (displayln (string-append "  " (prop-as-string φ))))
+    (displayln (string-append "∴ " (prop-as-string conclusion)))))
+
 
 
 ;; Compile the set of all atomic propositions used in a propositional formula
@@ -52,45 +97,3 @@ A propositional formula is:
     [(list (or '∧ '∨ '→) ψ χ)
      (set-union (prop-atomics ψ) (prop-atomics χ))]))
 
-;; Flatten a propositional formula to infix notation
-;; removing parentheses
-(define (prop-as-string φ)
-  (subformula->string φ))
-
-;; op : which operator is the ancestor of this sub-formula?
-;; side : 'left or 'right -- which operandum is this?
-(define (subformula->string φ)
-  (define (bracket-unless type? α)
-    (let ([s (subformula->string α)])
-      (if (type? α)
-          s
-          (string-append " (" s ") "))))
-  (match φ
-    [#t            "#t"]
-    [#f            "#f"]
-    [(? symbol? v)
-     (symbol->string v)]
-    [(list '¬ ψ)
-     (string-append "¬" (subformula->string ψ))]
-    [(list '∧ ψ χ)
-     (string-append
-      (bracket-unless (or/c prop-NEG? prop-CONJ?) ψ)
-      " ∧ "
-      (bracket-unless (or/c prop-NEG? prop-CONJ?) χ))]
-    [(list '∨ ψ χ)
-     (string-append
-      (bracket-unless (or/c prop-NEG? prop-DISJ?) ψ)
-      " ∧ "
-      (bracket-unless (or/c prop-NEG? prop-DISJ?) χ))]
-  [(list '→ ψ χ)
-     (string-append
-      (bracket-unless (not/c prop-IMPL?) ψ)
-      " → "
-      (subformula->string χ))]))
-
-;; Pretty-print an argument
-(define (argument-display φs)
-  (let-values ([(premises conclusion) (split-at-right φs 1)])
-    (for ([φ (in-list premises)])
-      (displayln (string-append "  " (prop-as-string φ))))
-    (displayln (string-append "∴ " (prop-as-string (car conclusion))))))
