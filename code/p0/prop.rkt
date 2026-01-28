@@ -2,16 +2,19 @@
 
 ;; Manipulate propositions
 
+(provide prop/c
+         prop-write)
+
 #|
 
 A propositional formula is:
 
 Φ ::= #t | #f
-    | <symbol?>        ; atomic proposition
-    | (¬ Φ)
-    | (∧ Φ Ψ)
-    | (∨ φ Ψ)
-    | (→ Φ Ψ)
+| <symbol?>        ; atomic proposition
+| (¬ Φ)
+| (∧ Φ Ψ)
+| (∨ φ Ψ)
+| (→ Φ Ψ)
 
 |#
 
@@ -22,6 +25,10 @@ A propositional formula is:
          symbol?
          (list/c '¬ Φ)
          (list/c (or/c '∧ '∨ '→) Φ Φ))))
+
+(define prop-LIT? (or/c #t #f))
+(define prop-NEG? (list/c ))
+
 
 ;; Compile the set of all atomic propositions used in a propositional formula
 ;; prop/c -> set?
@@ -34,15 +41,15 @@ A propositional formula is:
      (set-union (prop-atomics ψ) (prop-atomics χ))]))
 
 ;; Flatten a propositional formula to infix notation
-;; optionally removing parentheses
-(define (prop-display φ #:brackets? [brackets? #t])
-  (subformula->string φ 'top 'right brackets?))
+;; removing parentheses
+(define (prop-write φ)
+  (subformula->string φ #f 'right))
 
 ;; op : which operator is the ancestor of this sub-formula?
 ;; side : 'left or 'right -- which operandum is this?
-(define (subformula->string φ op side brackets?)
-  (define (left α op) (subformula->string α op 'left brackets?))
-  (define (right α op) (subformula->string α op 'right brackets?))
+(define (subformula->string φ op side)
+  (define (left α op) (subformula->string α op 'left))
+  (define (right α op) (subformula->string α op 'right))
   (match φ
     [#t            "#t"]
     [#f            "#f"]
@@ -51,15 +58,11 @@ A propositional formula is:
     [(list '¬ ψ)
      (string-append "¬" (right ψ '¬))]
     [(list '∧ ψ χ)
-     (string-append (left ψ '∧) " ∧ " (right χ '∧))]
+     (maybe-bracket-unless (or (eq? ))  
+      (string-append (left ψ '∧) " ∧ " (right χ '∧)))]
     [(list '∨ ψ χ)
-     (string-append (left ψ '∨) " ∨ " (right χ '∨))]
+     (maybe-bracket-unless op 
+      (string-append (left ψ '∨) " ∨ " (right χ '∨)))]
     [(list '→ ψ χ)
      (string-append (left ψ '→) " → " (right χ '→))]))
 
-;; Exercises from ∀x
-;;
-;; 5.D.8 ​If John Coltrane played tuba then Miles Davis played neither trumpet nor tuba. 
-;; J₃ -> ¬M₁ ∧ ¬M₂
-(define/contract D8 prop/c
-  '(→ J₃ (∧ (¬ M₁) (¬ M₂))))
