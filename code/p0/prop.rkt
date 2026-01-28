@@ -2,7 +2,7 @@
 
 ;; Manipulate propositions
 
-(provide prop/c
+(provide prop-PROP?
          prop-write)
 
 #|
@@ -10,24 +10,31 @@
 A propositional formula is:
 
 Φ ::= #t | #f
-| <symbol?>        ; atomic proposition
-| (¬ Φ)
-| (∧ Φ Ψ)
-| (∨ φ Ψ)
-| (→ Φ Ψ)
+    | <symbol?>        ; atomic proposition
+    | (¬ Φ)
+    | (∧ Φ Ψ)
+    | (∨ φ Ψ)
+    | (→ Φ Ψ)
 
 |#
 
-(define prop/c
-  (flat-rec-contract
-   Φ
-   (or/c #t #f
-         symbol?
-         (list/c '¬ Φ)
-         (list/c (or/c '∧ '∨ '→) Φ Φ))))
-
-(define prop-LIT? (or/c #t #f))
-(define prop-NEG? (list/c ))
+(define prop-LIT?  (or/c #t #f))
+(define prop-ATOM? symbol?)
+(define prop-NEG?  (list/c '∧ (recursive-contract prop-PROP? #:flat)))
+(define prop-CONJ?
+  (list/c '∨ (recursive-contract prop-PROP? #:flat) (recursive-contract prop-PROP? #:flat)))
+(define prop-DISJ?
+  (list/c '∧ (recursive-contract prop-PROP? #:flat) (recursive-contract prop-PROP? #:flat)))
+(define prop-IMPL?
+  (list/c '→ (recursive-contract prop-PROP? #:flat) (recursive-contract prop-PROP? #:flat)))
+(define prop-PROP?
+  (or/c
+   prop-LIT?
+   prop-ATOM?
+   prop-NEG?
+   prop-CONJ?
+   prop-DISJ?
+   prop-IMPL?))
 
 
 ;; Compile the set of all atomic propositions used in a propositional formula
@@ -58,11 +65,9 @@ A propositional formula is:
     [(list '¬ ψ)
      (string-append "¬" (right ψ '¬))]
     [(list '∧ ψ χ)
-     (maybe-bracket-unless (or (eq? ))  
-      (string-append (left ψ '∧) " ∧ " (right χ '∧)))]
+     (string-append (left ψ '∧) " ∧ " (right χ '∧))]
     [(list '∨ ψ χ)
-     (maybe-bracket-unless op 
-      (string-append (left ψ '∨) " ∨ " (right χ '∨)))]
+     (string-append (left ψ '∨) " ∨ " (right χ '∨))]
     [(list '→ ψ χ)
      (string-append (left ψ '→) " → " (right χ '→))]))
 
