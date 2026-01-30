@@ -23,7 +23,7 @@
 %% 
 \title{All we know about logic}
 \author{James Geddes}
-\date{17 January 2026}
+\date{\today}
 %%
 \begin{document}%\maketitle
 \maketitle
@@ -98,12 +98,19 @@ figure~\ref{fig:bnf-prop}.
     | ($\wff{A} \leftrightarrow \wff{B}$)  : biconditional
   \end{bnf}
 \end{figure}
+
 It is traditional, when writing a sentence, to omit the outer set of
 parentheses and to allow the use of other kinds of brackets, such as `['
 and `]', wherever parentheses may be used. It is also traditional (but
 this is not a tradition followed by the book) to omit many other
 parentheses when the result can be disambiguated according to the
-following rules:
+following rules: \sidenote*{I tend to think of the \emph{real} thing as
+  a kind of tree, or perhaps a data type.  The sentence is just how we
+  serialise it.  That is, I understand, say, ``a conjunction'' to simply
+  be a kind of sentence, the constituent data for which is a pair of
+  sentences (namely, the left conjunct and the right conjunct).  It
+  doesn't matter how it is \emph{written}, what it \emph{is} is a
+  conjunction.  The only reason we care about how we write it is to ensure that we can recover the real thing given the written form. }
 \begin{enumerate}
 \item $\neg$ binds more tightly than $\wedge$ and $\vee$, which bind more tightly
   than $\to$ and $\leftrightarrow$;
@@ -112,6 +119,20 @@ following rules:
 \end{enumerate}
 Thus $P\wedge Q\to R$ means $(P\wedge Q)\to R$; $P\to Q\to R$ means $P \to (Q \to R)$; and $P\wedge Q \wedge R$ may be read as either $(P\wedge Q)\wedge R$ or $P\wedge (Q\wedge R)$, as you like.
 
+The grammar of figure~\ref{fig:bnf-prop} defines the set of possible
+sentences in propositional logic. However, the terms `\wff{S}',
+`\wff{A}', and `\wff{B}', (written in a script typeface) are not
+themselves either sentences or parts of sentences.  (They cannot be, for
+they are neither atomic propositions nor sentences made from atomic
+propositions and connectives.) 
+
+The language defined by figure~\ref{fig:bnf-prop} is the \defn{object
+  language} of propositional logic. Terms \emph{used} in the definition
+are said to be part of the \defn{metalanguage}. The script letters,
+`\wff{S}', and so on, are called \defn{metavariables} and are part of
+the metalanguage. The symbol `$\therefore$', used to indicate which sentence is the conclusion of an argument, is also part of the metalanguage.  
+
+\subsection*{}
 
 
 \end{document}
