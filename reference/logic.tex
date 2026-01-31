@@ -19,7 +19,9 @@
 %\newcommand{\defn}[2][#2]{\textit{#2}\sidenote*{#1}}
 \newcommand{\isdef}{\stackrel{\text{def}}{=}}
 % Relies on euler-math.sty, loaded by ttn.sty
-\newcommand{\wff}[1]{\ensuremath{\symscr{#1}}} 
+\newcommand{\wff}[1]{\ensuremath{\symscr{#1}}}
+\newcommand{\tr}{\ensuremath{\mathbb{t}}}
+\newcommand{\fa}{\textcolor{gray}{\ensuremath{\mathbb{f}}}}
 %% 
 \title{All we know about logic}
 \author{James Geddes}
@@ -27,7 +29,6 @@
 %%
 \begin{document}%\maketitle
 \maketitle
-
 \section*{Preliminaries}
 
 In the following, ``the book'' means \emph{forall x: Calgary}.
@@ -133,7 +134,64 @@ are said to be part of the \defn{metalanguage}. The script letters,
 `\wff{S}', and so on, are called \defn{metavariables} and are part of
 the metalanguage. The symbol `$\therefore$', used to indicate which sentence is the conclusion of an argument, is also part of the metalanguage.  
 
-\subsection*{}
+\subsection*{Valuations}
 
+A \defn{truth value} is one of `$\tr$' (true) or `$\fa$' (false). (The
+lighter shade for $\fa$ is just to make it clearer which is which.)
+Sentences are the kind of thing that may have truth values. A
+\defn{valuation} is an assignment of a truth value to each of a set of
+sentence letters. A \defn{truth table} for a sentence is a set of rows,
+each representing a valuation of the component parts of the sentence and
+the value of the whole sentence. (The truth value of a compound sentence
+is determined entirely by the truth values of its consituent parts and
+the particular connective.)
+
+\begin{figure}[ht]
+  \sidecaption{\label{fig:truthtables}Truth tables for the standard
+    connectives. Note that that the column headers, `\wff{A}',
+    `\wff{B}', and so on are metavariables rather than sentence
+    letters.}
+  \centering 
+  \begin{tabular}{@{}c|c@{}}
+    $\wff{A}$ & $\neg \wff{A}$ \\
+    \specialrule{\cmidrulewidth}{0pt}{0pt} 
+    \fa & \tr \\
+    \tr & \fa \\
+  \end{tabular}\medskip
+  
+  \begin{tabular}{@{}cc|c@{}}
+    $\wff{A}$ & $\wff{B}$ & $\wff{A} \wedge \wff{B}$ \\
+    \specialrule{\cmidrulewidth}{0pt}{0pt} 
+    \fa & \fa & \fa \\
+    \fa & \tr & \fa \\
+    \tr & \fa & \fa \\
+    \tr & \tr & \tr \\
+  \end{tabular}\hfil
+  \begin{tabular}{@{}cc|c@{}}
+    $\wff{A}$ & $\wff{B}$ & $\wff{A} \vee \wff{B}$ \\
+    \specialrule{\cmidrulewidth}{0pt}{0pt} 
+    \fa & \fa & \fa \\
+    \fa & \tr & \tr \\
+    \tr & \fa & \tr \\
+    \tr & \tr & \tr \\
+  \end{tabular}\hfil
+  \begin{tabular}{@{}cc|c@{}}
+    $\wff{A}$ & $\wff{B}$ & $\wff{A} \to \wff{B}$ \\
+    \specialrule{\cmidrulewidth}{0pt}{0pt} 
+    \fa & \fa & \tr \\
+    \fa & \tr & \tr \\
+    \tr & \fa & \fa \\
+    \tr & \tr & \tr \\
+  \end{tabular}\medskip
+  
+  \begin{tabular}{@{}cc|c@{}}
+    $\wff{A}$ & $\wff{B}$ & $\wff{A} \leftrightarrow \wff{B}$ \\
+    \specialrule{\cmidrulewidth}{0pt}{0pt} 
+    \fa & \fa & \tr \\
+    \fa & \tr & \fa \\
+    \tr & \fa & \fa \\
+    \tr & \tr & \tr \\
+  \end{tabular}
+\end{figure}
 
 \end{document}
