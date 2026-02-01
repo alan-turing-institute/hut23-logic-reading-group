@@ -3,12 +3,12 @@
 ;; Manipulate propositions
 
 (provide (struct-out PROP)
-         (struct-out LIT)
-         (struct-out ATOM)
-         (struct-out NEG)
-         (struct-out CONJ)
-         (struct-out DISJ)
-         (struct-out IMPL)
+         ;; (struct-out LIT)
+         ;; (struct-out ATOM)
+         ;; (struct-out NEG)
+         ;; (struct-out CONJ)
+         ;; (struct-out DISJ)
+         ;; (struct-out IMPL)
          proposition
          prop-as-string
          argument-display)
@@ -19,10 +19,10 @@ A propositional formula is:
 
 Φ ::= #t | #f
     | <symbol?>        ; atomic proposition
-    | (¬ Φ)
-    | (∧ Φ Ψ)
-    | (∨ φ Ψ)
-    | (→ Φ Ψ)
+    | (not Φ)
+    | (and Φ Ψ)
+    | (or φ Ψ)
+    | (impl Φ Ψ)
 
 |#
 
@@ -42,8 +42,8 @@ A propositional formula is:
     [(list 'not ψ)    (NEG (proposition ψ))]
     [(list 'and ψ χ)  (CONJ (proposition ψ) (proposition χ))]
     [(list 'or ψ χ)   (DISJ (proposition ψ) (proposition χ))]
-    [(list 'impl ψ χ) (IMPL (proposition ψ) (proposition χ))]
-    [_ (raise-argument-error 'proposition "A proposition, as a string." P)]))
+    [(list '-> ψ χ) (IMPL (proposition ψ) (proposition χ))]
+    [_ (raise-argument-error 'proposition "A proposition, as a list." P)]))
 
 ;; Flatten a propositional formula to infix notation
 ;; removing parentheses
@@ -86,16 +86,73 @@ A propositional formula is:
       (displayln (string-append "  " (prop-as-string φ))))
     (displayln (string-append "∴ " (prop-as-string conclusion)))))
 
+;; Evaluate propositions
+
+(define (prop-eval φ env)
+  (match φ
+    [(LIT v)    v]
+    [(ATOM s)   (dict-ref env s)]
+    [(NEG ψ)    (not (prop-eval ψ env))]
+    [(CONJ ψ χ) (and (prop-eval ψ env) (prop-eval χ env))]
+    [(DISJ ψ χ) (or  (prop-eval ψ env) (prop-eval χ env))]
+    [(IMPL ψ χ) (or (not (prop-eval ψ env)) (prop-eval χ env))]))
 
 ;; Utilities
 
-;; Compile the set of all atomic propositions used in a propositional formula
+;; Compile the set of all sentence letters used in a propositional formula
 ;; prop/c -> set?
-(define (prop-atomics φ)
-  (match φ
-    [(or #t #f)    '()]
-    [(? symbol? v) (list v)]
-    [(list '¬ ψ)   (prop-atomics ψ)]
-    [(list (or '∧ '∨ '→) ψ χ)
-     (set-union (prop-atomics ψ) (prop-atomics χ))]))
+(define (prop-letters φ)
+  (sort
+   (match φ
+     [(LIT _)    '()]
+     [(ATOM v)   (list v)]
+     [(NEG ψ)   (prop-letters ψ)]
+     [(or (CONJ ψ χ) (DISJ ψ χ) (IMPL ψ χ))
+      (set-union (prop-letters ψ) (prop-letters χ))])
+   symbol<?))
 
+
+(define (make-col-widths vars)
+  (map (λ (var)
+         (+ 1
+            (max 2 (string-length (symbol->string var)))))))
+
+(define (format-minimum-width v wd)
+  (let ([padding (make-string (- wd (string-length v)) #\space)])
+    (string-append padding v)))
+
+;; -> string
+(define (tt-header vars col-widths φ-string φ-width)
+  (string-append 
+   (string-join (map format-minimum-width (map symbol->string vars) col-widths))
+   " | "
+   (format-minimum-width φ-string φ-width)))
+
+(define (truth-table-display φ)
+  (let* ([vars       (prop-letters φ)]
+         [φ-string   (prop-as-string φ)]
+         [col-widths (make-col-widths (cdr vars))]
+         [φ-width (+ 1 (max 2 (string-length φ-string)))])
+    
+    ;; [rows 
+    ;;  (apply cartesian-product
+    ;;         (map (λ (_) '(#f #t)) vars))]
+    ;; (for ([vals (in-list rows)])
+    ;;   (let ([env (map cons vars vals)])
+    ;;     (let ([val (prop-eval φ env)])
+    ;;       (displayln (format "~a : ~a" vals val)))))))
+    ))
+
+
+;; --------------------------------------------------------------------------------
+
+(module+ week3
+
+  ;; Exercise 11.A.2
+  (define exA2
+    (proposition '(-> C (not C))))
+
+  (prop-as-string exA2)
+
+
+  )
