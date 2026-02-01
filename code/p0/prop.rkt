@@ -185,20 +185,20 @@ A propositional formula is:
   (displayln "\n\n11.A.5")
   (tt-display (proposition '(-> (and A B) (or B A))))
 
-(displayln "\n\n11.B.1")
-(tt-display (proposition '(and (and A B) C)))
-(displayln "and")
-(tt-display (proposition '(and A (and B C))))
-
-(displayln "\n\n11.C.3")
-(tt-display
- (proposition
-  '(and
-    (-> (-> A B)
-        (and (-> (not B) (not A))
-             (-> (not A) (not B))))
-    (-> (and (-> (not B) (not A))
-             (-> (not A) (not B)))
-        (-> A B)))))
+  (displayln "\n\n11.B.1")
+  (tt-display (proposition '(and (and A B) C)))
+  (displayln "and")
+  (tt-display (proposition '(and A (and B C))))
+  
+  (displayln "\n\n11.C.3")
+  (tt-display
+   (proposition
+    '(and
+      (-> (-> A B)
+          (and (-> (not B) (not A))
+               (-> (not A) (not B))))
+      (-> (and (-> (not B) (not A))
+               (-> (not A) (not B)))
+          (-> A B)))))
  
   )
