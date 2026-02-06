@@ -31,5 +31,5 @@ Discussions occur on Slack in the `hut23-logic-reading-group` channel (formerly 
 | 22 January  | Introduction to logic (in Marian Rejewski)                               |                                                             |
 | 29 January  | ∀x: II. Truth-functional logic, §§ **4**, **5**, and **6**               | **§5**: D.8, G.1, H.2, and I;<br /> **§6**: A.1, A.3, and B |
 | 5 February  | ∀x: **7** and **8** (from II); and **9**, **10**, and **11** (from III). | **§11**: A.2, A.5, B.1, C.3                                 |
-| 12 February | ∀x: **12** and **13** (optionally **14** and **15**)                     | **15**: A.4, B.2, C.3, E.6m I.2                             |
+| 12 February | ∀x: **12** and **13** (optionally **14** and **15**)                     | **15**: A.4, B.2, C.3, E.6, I.2                             |
 
