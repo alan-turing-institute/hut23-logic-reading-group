@@ -21,7 +21,7 @@
 % Relies on euler-math.sty, loaded by ttn.sty
 \newcommand{\wff}[1]{\ensuremath{\symscr{#1}}}
 \newcommand{\tr}{\ensuremath{\mathbb{t}}}
-\newcommand{\fa}{\textcolor{gray}{\ensuremath{\mathbb{f}}}}
+\newcommand{\fa}{\textcolor{.!50}{\ensuremath{\mathbb{f}}}}
 %% 
 \title{All we know about logic}
 \author{James Geddes}
@@ -142,17 +142,17 @@ terms used to described the object language are said to be part of the
 
 \subsection{Valuations}
 
-A \defn{truth value} is one of `$\tr$' (true) or `$\fa$' (false). (The
-lighter shade for $\fa$ is just to make it clearer which is which.)
-Sentences are the kind of thing that may have truth values.  A
-\defn{valuation} is an assignment of a truth value to each of a set of
-sentence letters.  A \defn{truth table} for a sentence is a set of rows,
-each giving a possible valuation of the sentence letters in the sentence
-together with the value of the whole sentence.  (The truth value of a
-compound sentence is determined entirely by the truth values of its
-constituent parts and the particular connectives.)  See
-figure~\ref{fig:truthtables} for complete truth tables of the standard
-connectives.
+A \defn[truth values ($\tr$ and $\fa$)]{truth value} is one of `$\tr$'
+(true) or `$\fa$' (false).  (The lighter shade for $\fa$ is just to make
+it clearer which is which.)  Sentences are the kind of thing that may
+have truth values.  A \defn{valuation} is an assignment of a truth value
+to each of a set of sentence letters.  A \defn{truth table} for a
+sentence is a set of rows, each giving a possible valuation of the
+sentence letters in the sentence together with the value of the whole
+sentence.  (The truth value of a compound sentence is determined
+entirely by the truth values of its constituent parts and the particular
+connectives.)  See figure~\ref{fig:truthtables} for complete truth
+tables of the standard connectives.
 \begin{figure}[ht]
   \sidecaption{\label{fig:truthtables}Truth tables for the standard
     connectives. Note that that the column headers, `\wff{A}',
@@ -203,7 +203,7 @@ connectives.
 
 \subsection{Arguments (reprise)}
 
-We now recapitulate the ideas of section~\ref{sec:english}.
+We now recapitulate the ideas of section~\ref{sec:english} as they apply to propositional logic rather than in general.
 
 A sentence, \wff{S}, is a \defn[tautology, contradiction]{tautology} if
 it is true on every valuation.  Likewise, \wff{S} is a
@@ -220,7 +220,7 @@ valuation that makes them all true.  Likewise these sentences are
 all true.  These concepts are the propositional logic versions of
 ``jointly possible'' and ``jointly impossible'' respectively.
 
-Sentences $\wff{A}_1, \wff{A}_2, \dotsc, \wff{A}_n$ \defn{entail} sentence $\wff{C}$ if there is no valuation that makes all the $\wff{A}_i$ true and $\wff{C}$ false.  If indeed the $\wff{A}_i$ entail $\wff{C}$ we write
+Sentences $\wff{A}_1, \wff{A}_2, \dotsc, \wff{A}_n$ \defn[entailment, $\vDash$]{entail} sentence $\wff{C}$ if there is no valuation that makes all the $\wff{A}_i$ true and $\wff{C}$ false.  If indeed the $\wff{A}_i$ entail $\wff{C}$ we write
 \begin{equation*}
   \wff{A}_1, \wff{A}_2, \dotsc, \wff{A}_n \vDash \wff{C}.
 \end{equation*}
@@ -228,10 +228,10 @@ Sentences $\wff{A}_1, \wff{A}_2, \dotsc, \wff{A}_n$ \defn{entail} sentence $\wff
 Entailment is the propositional logic version of validity. If
 $\wff{A}_1, \dotsc, \wff{A}_n \vDash \wff{C}$, then the argument
 $\wff{A}_1, \dotsc, \wff{A}_n\, \therefore \wff{C}$ is valid.  The converse is
-not necessarily true since, in English but not in propositional logic,
+not necessarily true since in English, but not in propositional logic,
 one may appeal to the meaning of the sentence letters to establish
 validity.
 
-If $\wff{C}$ is a tautology we may write ${} \vDash \wff{C}$. Likewise, if $\wff{C}$ is a contradiction we may write $\wff{C} \vDash {}$. If the sentences $\wff{A}_1,\dotsc, \wff{A}_n$ are jointly unsatisfiable, we may write $\wff{A}_1,\dotsc, \wff{A}_n \vDash {}$.  
+If $\wff{C}$ is a tautology we may write $\vDash \wff{C}$. Likewise, if $\wff{C}$ is a contradiction we may write $\wff{C} \vDash$. If the sentences $\wff{A}_1,\dotsc, \wff{A}_n$ are jointly unsatisfiable, we may write $\wff{A}_1,\dotsc, \wff{A}_n \vDash$.  
 
 \end{document}
