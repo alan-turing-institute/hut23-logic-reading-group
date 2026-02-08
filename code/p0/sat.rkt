@@ -1,15 +1,22 @@
-#lang racket
+#lang racket/base
+
+(require
+ racket/set
+ racket/string
+ (only-in racket/list splitf-at)
+ (only-in racket/port port->lines)
+ (only-in threading ~>))
 
 #|
 
-A basic SAT solver, very much not optimised, especially in space.
+A basic DP SAT solver, very much not optimised, especially in space.
 
 The input should be in conjunctive normal form. The representation used is:
 
 <formula> ::= (<clause> ...)
- <clause> ::= (<literal> ...)
+<clause> ::= (<literal> ...)
 <literal> ::= (<var> . #t) | (<var> . #f)
-    <var> ::= integer?
+<var> ::= integer?
 
 (<var> . #f) represents the negation of (<var> . #t)
 
@@ -17,6 +24,13 @@ The output is a list (possibly empty) of solutions. A solution is a list of lite
 variable occurs exactly once.
 
 |#
+
+(provide
+ solve                                  ; solve a problem
+ read-dimacs                            ; read a file in DIMACS format
+ )
+
+;; ---------------------------------------------------------------------------------------------------
 
 ;; Convenience functions
 (define (pos var) (cons var #t))
@@ -50,7 +64,7 @@ variable occurs exactly once.
 ;; solve : vars problem -> solution
 ;;
 ;; vars : (non-empty-listof integer?)
-;;        The variables in problem in the order in which we should decide them.
+;;        The variables in `problem`, in the order in which we should decide them.
 ;;
 ;; problem : a problem in which the variables in each clause are ordered by `vars`
 ;; Returns a list of solutions, or the empty list if there are none.
@@ -111,13 +125,34 @@ variable occurs exactly once.
 
 
 ;; ---------------------------------------------------------------------------------------------------
-
 ;; Input and output in DIMACS format
+
+;; TODO: Replace this with a nicer parser.
+;; TODO: We do not check that the number of vars is num-vars, and the number of clauses is num-clauses
 
 ;; read-dimacs : port? -> problem?
 (define (read-dimacs in)
-  (read-problem-size in)
-  )
+  (let-values ([(num-vars num-clauses) (read-dimacs-problem-size in)])
+    (~> (port->lines in)
+        (map (λ (ln) (map string->number (string-split ln))) _) 
+        (apply append _)
+        (group-on-zeros)                ; now grouped by clauses
+        (map (λ (clause) (map (λ (v) (if (negative? v) (neg (- v)) (pos v)))
+                              clause))
+             _))))
+
+;; xs : a list of numbers, through of as groups where each group is separated by a 0
+(define (group-on-zeros xs)
+  (let loop ([acc '()]
+             [xs  xs])
+  (if (null? xs)
+      acc
+      (let-values ([(next rest) (splitf-at xs (λ (x) (not (zero? x))))])
+        (cond
+          [(null? next) (raise-user-error "Error in DIMACS file: perhaps two consecutive zeros?" 'read-dimacs)]
+          [(null? rest) (cons next acc)]
+          [else         (loop (cons next acc) (cdr rest))]  ; rest starts with 0
+          )))))
 
 ;; Skip comment lines until we find a "p"
 (define (read-dimacs-problem-size in)
@@ -126,16 +161,20 @@ variable occurs exactly once.
       (cond
         [(eof-object? ln)
          (raise-user-error "End of file before problem line found." 'read-dimancs)]
-        [(or (not (non-empty-string? ln))
-             (char-ci=? (string-ref ln 0) #\c))
-         (loop)]
-        [
+        [(and (non-empty-string? ln)
+              (char-ci=? (string-ref ln 0) #\p))
+         (parse-dimacs-problem-line ln)]
+        [else (loop)]))))
 
-
-
-         ]))))
-
-
+;; A DIMACS problem line is:
+;; p cnf N-vars N-clauses
+(define (parse-dimacs-problem-line ln)
+  (let ([toks (string-split ln)])
+    (unless (string-ci=? (cadr toks) "cnf")
+      (raise-user-error "Only cnf files are supported." 'read-dimancs))
+    (values
+     (string->number (caddr toks))
+     (string->number (cadddr toks)))))
 
 
 ;; ---------------------------------------------------------------------------------------------------
@@ -161,8 +200,4 @@ variable occurs exactly once.
   (define *unsat-problem*
     (cons
      (list (neg 4) (pos 1) (neg 2))
-     *sat-problem*))
-  
-  
-
-  )
+     *sat-problem*)))
