@@ -37,6 +37,7 @@ variable occurs exactly once.
 (define (neg var) (cons var #f))
 (define VAR car)
 (define VAL cdr)
+(define LIT cons)
 
 ;; TODO: Add unit propagation
 (define (solve problem)
@@ -71,23 +72,23 @@ variable occurs exactly once.
 (define (solve/recurse vars problem)
   (if (null? problem)                   ; Empty conjunct: always true
       (list '())                        ; TODO: What if we have not run out of variables?
-      (let ([v (car vars)])             ; Pick the next variable
-        (filter values
+      (let* ([v (car vars)]
+             [vs (cdr vars)])           
+        (filter values                  ; Delete any dead ends ...
                 (append
-                 ;; Try the next variable #t
-                 (let ([next-problem (reduce/problem v #t problem)])
-                   (if (eq? next-problem #f)
-                       '()
-                       (map (λ (soln) (cons (pos v) soln))
-                            (solve/recurse (cdr vars) next-problem))))
-                 ;; Try the next variable #f
-                 (let ([next-problem (reduce/problem v #f problem)])
-                   (if (eq? next-problem #f)
-                       '()
-                       (map (λ (soln) (cons (neg v) soln))
-                            (solve/recurse (cdr vars) next-problem)))))))))
+                 (try v #t vs problem)
+                 (try v #f vs problem))))))
+
+;; Simplify the problem clauses and then solve the simpler problem
+(define (try var val vars problem)
+  (let ([next-problem (reduce/problem var val problem)])
+    (if (eq? next-problem #f)
+        '()
+        (map (λ (soln) (cons (LIT var val) soln))
+             (solve/recurse vars next-problem)))))
 
 
+;; reduce/problem : var val problem -> problem?
 ;; Reduce a problem by setting var to val
 ;; `problem` is a non-empty list (otherwise we would have terminated already)
 ;; Returns a new problem (which may be empty) 
