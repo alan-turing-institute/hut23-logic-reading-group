@@ -23,16 +23,29 @@ variable occurs exactly once.
 (define (neg var) (cons var #f))
 (define VAR car)
 (define VAL cdr)
-(define LIT cons)
 
 ;; TODO: Add unit propagation
 (define (solve problem)
-  ;; Remove literals from clauses if the variable occurs twice with opposite polarities.
+  (let* ([vars     (problem-unique-vars problem)]
+         [problem< (problem-sort-clauses problem)])
+    (solve/recurse vars problem<))
+  ;; TODO:
+  ;; Remove literals from clauses if a variable occurs twice with opposite polarities.
   ;; Remove duplicate literals
-  ;; Order the variables and sort each clause in variable order
-
-  '()
+  
   )
+
+(define (problem-unique-vars problem)
+  (sort (set->list
+         (apply set-union
+                (map (λ (cl) (list->set (map VAR cl)))
+                     problem)))                              
+        <                           ; TODO: Revisit < as an order
+        ))
+
+(define (problem-sort-clauses problem)
+  (map (λ (clause) (sort clause < #:key VAR)) problem))
+
 
 ;; solve : vars problem -> solution
 ;;
@@ -40,28 +53,30 @@ variable occurs exactly once.
 ;;        The variables in problem in the order in which we should decide them.
 ;;
 ;; problem : a problem in which the variables in each clause are ordered by `vars`
-
+;; Returns a list of solutions, or the empty list if there are none.
 (define (solve/recurse vars problem)
-  ;; Pick var from vars
-  ;; Choose var positive
-  ;; Reduce problem and solve
-  ;; Choose var negative
-  ;; Reduce problem and solve
   (if (null? problem)                   ; Empty conjunct: always true
-      '()                               ; TODO: What if we have not run out of variables?
-      (let* ([v (car vars)]
-             [next-problem (reduce/problem v #t problem)])
-        (and next-problem
-             (null? next-problem) )
+      (list '())                        ; TODO: What if we have not run out of variables?
+      (let ([v (car vars)])             ; Pick the next variable
+        (filter values
+                (append
+                 ;; Try the next variable #t
+                 (let ([next-problem (reduce/problem v #t problem)])
+                   (if (eq? next-problem #f)
+                       '()
+                       (map (λ (soln) (cons (pos v) soln))
+                            (solve/recurse (cdr vars) next-problem))))
+                 ;; Try the next variable #f
+                 (let ([next-problem (reduce/problem v #f problem)])
+                   (if (eq? next-problem #f)
+                       '()
+                       (map (λ (soln) (cons (neg v) soln))
+                            (solve/recurse (cdr vars) next-problem)))))))))
 
-
-  
-
-  )
 
 ;; Reduce a problem by setting var to val
 ;; `problem` is a non-empty list (otherwise we would have terminated already)
-;; Returns a new problem (which may be empty) or #f if any clause was empty
+;; Returns a new problem (which may be empty) 
 
 (module+ test
   (define cl1 '((1 . #t) (2 . #f) (3 . #t)))
@@ -91,6 +106,34 @@ variable occurs exactly once.
             #t                          ; x has the same polarity as val: this disjunction is true
             (cdr clause)                ; x has opposite polarity to val: remove x
             ))))
+
+
+
+
+;; ---------------------------------------------------------------------------------------------------
+
+;; Input and output in DIMACS format
+
+;; read-dimacs : port? -> problem?
+(define (read-dimacs in)
+  (read-problem-size in)
+  )
+
+;; Skip comment lines until we find a "p"
+(define (read-dimacs-problem-size in)
+  (let loop ()
+    (let ([ln (read-line in)])
+      (cond
+        [(eof-object? ln)
+         (raise-user-error "End of file before problem line found." 'read-dimancs)]
+        [(or (not (non-empty-string? ln))
+             (char-ci=? (string-ref ln 0) #\c))
+         (loop)]
+        [
+
+
+
+         ]))))
 
 
 
