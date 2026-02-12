@@ -23,6 +23,7 @@ A propositional formula is:
     | (and Φ Ψ)
     | (or φ Ψ)
     | (impl Φ Ψ)
+    | (eqv Φ Ψ)
 
 |#
 
@@ -33,17 +34,23 @@ A propositional formula is:
 (struct CONJ PROP (p q) #:transparent)
 (struct DISJ PROP (p q) #:transparent)
 (struct IMPL PROP (p q) #:transparent)
+(struct EQV  PROP (p q) #:transparent)
 
 ;; Input and output
 (define (proposition P)
   (match P
-    [(or #t #f)       (LIT P)]
-    [(? symbol? v)    (ATOM v)]
-    [(list 'not ψ)    (NEG (proposition ψ))]
-    [(list 'and ψ χ)  (CONJ (proposition ψ) (proposition χ))]
-    [(list 'or ψ χ)   (DISJ (proposition ψ) (proposition χ))]
-    [(list '-> ψ χ) (IMPL (proposition ψ) (proposition χ))]
+    [(or #t #f)      (LIT P)]
+    [(? symbol? v)   (ATOM v)]
+    [(list 'not ψ)   (NEG (proposition ψ))]
+    [(list 'and ψ χ) (CONJ (proposition ψ) (proposition χ))]
+    [(list 'or ψ χ)  (DISJ (proposition ψ) (proposition χ))]
+    [(list '-> ψ χ)  (IMPL (proposition ψ) (proposition χ))]
+    [(list '<-> ψ χ) (EQV (proposition ψ) (proposition χ))]
     [_ (raise-argument-error 'proposition "A proposition, as a list." P)]))
+
+
+;; ---------------------------------------------------------------------------------------------------
+;; Pretty printing
 
 ;; Flatten a propositional formula to infix notation
 ;; removing parentheses
@@ -51,11 +58,12 @@ A propositional formula is:
   (subformula->string φ))
 
 (define (subformula->string φ)
-  (define (bracket-unless type? α)
-    (let ([s (subformula->string α)])
-      (if (type? α)
-          s
-          (string-append " (" s ") "))))
+  (define (with-brackets α)
+    (string-append "(" (subformula->string α) ")"))
+  (define (with-brackets-unless type? α)
+    (if (type? α)
+        (subformula->string α)
+        (with-brackets α)))
   (match φ
     [(LIT #t)         "#t"]
     [(LIT #f)         "#f"]
@@ -63,19 +71,22 @@ A propositional formula is:
     [(NEG ψ)          (string-append "¬" (subformula->string ψ))]
     [(CONJ ψ χ)
      (string-append
-      (bracket-unless (or/c ATOM? NEG? CONJ?) ψ)
+      (with-brackets-unless (or/c ATOM? NEG? CONJ?) ψ)
       " ∧ "
-      (bracket-unless (or/c ATOM? NEG? CONJ?) χ))]
+      (with-brackets-unless (or/c ATOM? NEG? CONJ?) χ))]
     [(DISJ ψ χ)
      (string-append
-      (bracket-unless (or/c ATOM? NEG? DISJ?) ψ)
+      (with-brackets-unless (or/c ATOM? NEG? DISJ?) ψ)
       " ∨ "
-      (bracket-unless (or/c ATOM? NEG? DISJ?) χ))]
+      (with-brackets-unless (or/c ATOM? NEG? DISJ?) χ))]
     [(IMPL ψ χ)
      (string-append
-      (bracket-unless (not/c IMPL?) ψ)
+      (with-brackets-unless (or/c ATOM? (not/c IMPL?)) ψ)
       " → "
-      (subformula->string χ))]))
+      (subformula->string χ))]
+    [(EQV ψ χ)
+     (string-append
+      (with-brackets-unless ATOM? ψ) " ↔ " (with-brackets-unless ATOM? χ))]))
 
 ;; Pretty-print an argument
 ;; φs : (pair? (listof PROP?) PROP?)
@@ -95,7 +106,11 @@ A propositional formula is:
     [(NEG ψ)    (not (prop-eval ψ env))]
     [(CONJ ψ χ) (and (prop-eval ψ env) (prop-eval χ env))]
     [(DISJ ψ χ) (or  (prop-eval ψ env) (prop-eval χ env))]
-    [(IMPL ψ χ) (or (not (prop-eval ψ env)) (prop-eval χ env))]))
+    [(IMPL ψ χ) (or (not (prop-eval ψ env)) (prop-eval χ env))]
+    [(EQV ψ χ)  (let ([ψ1 (prop-eval ψ env)]
+                      [χ1 (prop-eval χ env)])
+                  (or (and ψ1 χ1)
+                      (and (not ψ1) (not χ1))))]))
 
 ;; Utilities
 
@@ -107,7 +122,7 @@ A propositional formula is:
      [(LIT _)    '()]
      [(ATOM v)   (list v)]
      [(NEG ψ)   (prop-letters ψ)]
-     [(or (CONJ ψ χ) (DISJ ψ χ) (IMPL ψ χ))
+     [(or (CONJ ψ χ) (DISJ ψ χ) (IMPL ψ χ) (EQV ψ χ))
       (set-union (prop-letters ψ) (prop-letters χ))])
    symbol<?))
 
@@ -193,12 +208,9 @@ A propositional formula is:
   (displayln "\n\n11.C.3")
   (tt-display
    (proposition
-    '(and
-      (-> (-> A B)
-          (and (-> (not B) (not A))
-               (-> (not A) (not B))))
-      (-> (and (-> (not B) (not A))
-               (-> (not A) (not B)))
-          (-> A B)))))
- 
+    '(<-> (-> A B)
+          (<-> (not B) (not A)))))
+
+
+
   )
