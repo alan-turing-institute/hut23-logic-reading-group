@@ -3,12 +3,13 @@
 ;; Manipulate propositions
 
 (provide (struct-out PROP)
-         ;; (struct-out LIT)
-         ;; (struct-out ATOM)
-         ;; (struct-out NEG)
-         ;; (struct-out CONJ)
-         ;; (struct-out DISJ)
-         ;; (struct-out IMPL)
+         (struct-out LIT)
+         (struct-out ATOM)
+         (struct-out NEG)
+         (struct-out CONJ)
+         (struct-out DISJ)
+         (struct-out IMPL)
+         (struct-out EQV)
          proposition
          prop-as-string
          argument-display)
