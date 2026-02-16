@@ -1,0 +1,42 @@
+% Initialise AMS maths package
+\usepackage{amsmath}
+\interdisplaylinepenalty=2500
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{array}
+%\usepackage{subfig}
+%\usepackage{latexsym}
+\usepackage{graphicx}
+
+\graphicspath{{./images/}}
+\thinlines
+\setlength{\unitlength}{1mm}
+
+\newcommand{\etc}{{\it etc.\/}}
+\newcommand{\define}[1]{\/{\it #1}}
+\newcommand{\etal}{{\it et al.\/} }
+\newcommand{\ie}{{\it i.e.\/} }
+\newcommand{\eg}{{\it e.g.\/} }
+\def\setsep{:}					% set separator eg {a : a<n }
+\def\N{\mathord{{\mathbb N}}}			% Natural numbers
+\def\Z{\mathord{{\mathbb Z}}}			% Integers
+\def\Q{\mathord{{\mathbb Q}}}			% Rationals
+\def\R{\mathord{{\mathbb R}}}			% Reals
+\newcommand{\ceil}[1]{\left\lceil #1 \right\rceil}
+\newcommand{\floor}[1]{\left\lfloor #1 \right\rfloor}
+\def\ave{\mathop{\rm ave}\nolimits}		% memory set
+\def\GF{\mathop{\bf GF}\nolimits}	% Galois Field
+\def\iff{\Longleftrightarrow}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}{Lemma}[theorem]
+\newtheorem{proposition}{Proposition}[theorem]
+\newtheorem{corollary}{Corollary}[theorem]
+
+\newenvironment{definition}[1][Definition]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+
+\newcommand{\PV}[1]{P_{#1}}
+\newcommand{\QV}[1]{Q_{#1}}
+\newcommand{\lxor}{\mathbin{\nleftrightarrow}}

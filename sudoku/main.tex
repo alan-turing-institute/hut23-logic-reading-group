@@ -1,0 +1,196 @@
+\documentclass[10pt]{article}
+
+% correct bad hyphenation here
+\hyphenation{op-tical networks semi-conduc-tor}
+
+\input{style}
+
+\begin{document}
+
+\title{Sudoku in Truth-Functional Logic}
+\author{David Llewellyn-Jones}
+\maketitle
+
+\section{Grid locations}
+
+We need to know how to specify locations in the grid. For this we number the locations from 1 through to 81, as shown in Figure \ref{fig:grid}.
+
+\begin{figure*}[h!]
+\centering
+\includegraphics{sudoku-grid}
+\caption{Numbering of the grid locations.}
+\label{fig:grid}
+\end{figure*}
+
+\section{Propositional variables}
+
+In TFL ({\it Truth-Functional Logic}, otherwise known as {\it Propositional Logic}) the smallest item of consideration is a propositional variable, representing a sentence in natural language. We can't refer to locations or cell contents as variables, only as the statements that they're part of.
+
+We therefore need to set up a bunch of propositional variables that represent the assignment of a particular value of a particular cell on the Sudoku grid. We do this by defining a collection of propositional variables of the following form:
+
+$$
+\PV{v, p} = \text{``the value $v$ is assigned to cell $p$''}.
+$$
+
+Since there are 9 different potential values and 81 cells, we have a total of 729 propositional variables in this form.
+
+Note that although $v$ and $p$ look like variables, they're not variables within TFL. As far as TFL is concerned, these are just 729 different propositional variables that can be either true or false. There is no other relationship between them.
+
+Our aim is to define the relationships by putting together a collection of sentences in TFL that specify how these propositional variables relate to one another.
+
+\section{The rules}
+
+Using these propositional variables we can now start to define the rules of the game.
+
+\subsection{Every cell takes a single value}
+
+We'll start with the rule that states that every cell must contain precisely one value. Starting with cell number 1, we can capture this with the following sentence of TFL:
+
+$$
+\PV{1, 1} \lxor (\PV{2, 1} \lxor (\PV{3, 1} \lxor ( \PV{4, 1} \lxor (\PV{5, 1} \lxor (\PV{6, 1} \lxor (\PV{7, 1} \lxor (\PV{8, 1} \lxor \PV{9, 1}))))))) .
+$$
+
+Here $A \lxor B$ means ``exclusive OR'', which is equivalent to $(A \lor B) \land \lnot (A \land B)$. The notation $A \lxor B$ stems from the fact that this is also equivalent to $\lnot ((A \rightarrow B) \land (B \rightarrow A))$. The equivalence of these can be seen by writing out their truth tables. 
+
+To reduce the amount of ink required, we'll add ellipses to the above and more frequently write it as follows:
+
+$$
+\PV{1, 1} \lxor (\PV{2, 1} \lxor (\PV{3, 1} \lxor ( \cdots \lxor \PV{9, 1}) \cdots )) .
+$$
+
+This essentially says ``cell 1 contains the value 1, exclusive or cell 1 contains the value 2, exclusive or cell 1 contains the value 3, exclusive or \ldots.''. In this way, cell 1 contains at least one of the values, but no more than one.
+
+We'll need one such formula for each cell of the grid, giving 81 in total:
+
+\begin{gather*}
+\PV{1, 1} \lxor (\PV{2, 1} \lxor (\PV{3, 1} \lxor ( \cdots \lxor \PV{9, 1}) \cdots )) \\
+\vdots \\
+\PV{1, n} \lxor (\PV{2, n} \lxor (\PV{3, n} \lxor ( \cdots \lxor \PV{9, n}) \cdots )) \\
+\vdots \\
+\PV{1, 81} \lxor (\PV{2, 81} \lxor (\PV{3, 81} \lxor ( \cdots \lxor \PV{9, 81}) \cdots )) .
+\end{gather*}
+
+Here we use $n$ as a notational convenience to represent the numbers between 1 and 81 inclusive. If written out in full there would be no variable needed here.
+
+\subsection{Every row has precisely one instance of each number}
+
+Now we get on to the rules of the game as we typically know them. We're going to construct a statement for each row that says the row contains a single instance of each number. To do this we'll need a couple of helper variables. First we set $r$ to be the row number from 1 to 9 inclusive. Second we set $s = (9 \times (r - 1)) + 1$. We can see that $s$ represents the starting location of each row on the left hand side of the board.
+
+Now we can build up a suitable statement for the row $r$:
+
+\begin{align*}
+& (\PV{1, s} \lxor (\PV{1, s + 1} \lxor (\PV{1, s + 2} \lxor ( \cdots \lxor \PV{1, s + 8}) \cdots ))) \\
+& \qquad \qquad \qquad \qquad \qquad \vdots \\
+{} \land & (\PV{n, s} \lxor (\PV{n, s + 1} \lxor (\PV{n, s + 2} \lxor ( \cdots \lxor \PV{n, s + 8}) \cdots ))) \\
+& \qquad \qquad \qquad \qquad \qquad \vdots \\
+{} \land & (\PV{9, s} \lxor (\PV{9, s + 1} \lxor (\PV{9, s + 2} \lxor ( \cdots \lxor \PV{9, s + 8}) \cdots ))) .
+\end{align*}
+
+The first line of this statement says that the column contains precisely one instance of the value 1; the second line says it contains precisely one instance of the value 2 and so on. Combined with the fact that every cell takes precisely one value, this fulfils the requirements for the rows.
+
+Once again, $n$ here is used for notational convenience. Once written out in full, the variables $s$ and $n$ would become concrete values.
+
+Since there are nine rows we'll have nine statements like this in total.
+
+\subsection{Every column has precisely one instance of each number}
+
+The case for the columns is similar, we just have to count things a little more carefully because our locations will use a stride of 9. That is, to get from one position in a column to the next, we have to move up in steps of 9 positions.
+
+For this, let us set $c$ to be the number of the column from 1 to 9 inclusive. Now we take $s = c$ to be the starting position of the column at the top of the board.
+
+Our statement can then be the following:
+
+\begin{align*}
+& (\PV{1, s} \lxor (\PV{1, s + 9} \lxor (\PV{1, s + 18} \lxor ( \cdots \lxor \PV{1, s + 72}) \cdots ))) \\
+& \qquad \qquad \qquad \qquad \qquad \vdots \\
+{} \land & (\PV{n, s} \lxor (\PV{n, s + 9} \lxor (\PV{n, s + 18} \lxor ( \cdots \lxor \PV{n, s + 72}) \cdots ))) \\
+& \qquad \qquad \qquad \qquad \qquad \vdots \\
+{} \land & (\PV{9, s} \lxor (\PV{9, s + 9} \lxor (\PV{9, s + 18} \lxor ( \cdots \lxor \PV{9, s + 72}) \cdots ))) .
+\end{align*}
+
+As before, since there are nine columns we'll have nine rules like this in total. The values $s$ and $n$ will resolve to concrete numbers for each of these rules.
+
+\subsection{Every block has precisely one instance of each number}
+
+For the equivalent rule for blocks we have to count even more carefully. Let $b$ be the block number from 1 to 9 inclusive. Then we'll set $s$ -- the location of the top left hand corner of a block -- to be the following:
+$$
+s = (3 \times (((b - 1) \bmod 3)) + \left(27 \times \floor{\frac{b - 1}{3}}\right) + 1 .
+$$
+
+Here we use the notation $\floor{x}$ to mean the value $x$ rounded down to the nearest integer. We can now write our block rule for block $b$ as follows:
+
+\begin{align*}
+\PV{1, s} & \lxor (\PV{1, s + 1} \lxor (\PV{1, s + 2} \\
+& \lxor (\PV{1, s + 9} \lxor (\PV{1, s + 10} \lxor (\PV{1, s + 11} \\
+& \lxor (\PV{1, s + 18} \lxor (\PV{1, s + 19} \lxor \PV{1, s + 20} ))))))) \\
+& \qquad \qquad \qquad \vdots \\
+{} \land \PV{n, s} & \lxor (\PV{n, s + 1} \lxor (\PV{n, s + 2} \\
+& \lxor (\PV{n, s + 9} \lxor (\PV{n, s + 10} \lxor (\PV{n, s + 11} \\
+& \lxor (\PV{n, s + 18} \lxor (\PV{n, s + 19} \lxor \PV{n, s + 20} ))))))) \\
+& \qquad \qquad \qquad \vdots \\
+{} \land \PV{9, s} & \lxor (\PV{9, s + 1} \lxor (\PV{9, s + 2} \\
+& \lxor (\PV{9, s + 9} \lxor (\PV{9, s + 10} \lxor (\PV{9, s + 11} \\
+& \lxor (\PV{9, s + 18} \lxor (\PV{9, s + 19} \lxor \PV{9, s + 20} ))))))) .
+\end{align*}
+
+There are nine blocks, so once again we have nine of these rules. All of the instances of $s$ and $n$ will resolve to concrete values when written out in full.
+
+\subsection{The initial board position}
+
+This gives us the rules of the game: 108 rules in total. All we need now is to bring in the actual game board. Let's suppose, for the sake of example, that the initial state of the board is as shown in Figure \ref{fig:initial}.
+
+\begin{figure*}[h!]
+\centering
+\includegraphics{sudoku-01}
+\caption{An example game board.}
+\label{fig:initial}
+\end{figure*}
+
+This has 27 of the 81 cells with numbers already in them. We can use our propositional variables to describe this state as well. Comparing figures \ref{fig:grid} and \ref{fig:initial} we can see that cell 14 contains the value 5, cell 15 contains the value 3, cell 17 contains the value 2 and so on. We can write these as follows:
+
+\begin{align*}
+\PV{5, 14} & \land (\PV{3, 15} \land (\PV{2, 17} \land (\PV{4, 18} \\
+& \land (\PV{2, 22} \land (\PV{4, 23} \land (\PV{5, 25} \land (\PV{7, 26} \\
+& \land (\PV{3, 30} \land (\PV{9, 35} \\
+& \land (\PV{7, 38} \land (\PV{9, 39} \land (\PV{5, 42} \land (\PV{8, 44} \\
+& \land (\PV{1, 47} \land (\PV{7, 50} \land (\PV{6, 54} \\
+& \land (\PV{7, 57} \land (\PV{3, 61} \\
+& \land (\PV{4, 65} \land (\PV{1, 66} \land (\PV{3, 67} \land (\PV{8, 68} \land (\PV{7, 72} \\
+& \land (\PV{6, 74} \land (\PV{4, 78} \land (\PV{1, 80} )))))))))))))))))))))))))).
+\end{align*}
+
+\subsection{Serialising}
+
+The numbers we use to refer to the propositional variables can be simplified by setting up the following rule:
+$$
+\QV{n} = \PV{((n - 1) \bmod 9) + 1, \floor{\frac{n - 1}{9}} + 1}
+$$
+
+In other words, if $v$ is the value and $p$ is the position then $\PV{v, p} = \QV{n}$ where $n = v + (9 \times (p - 1))$.
+
+We could convert all of the above statements to use this notation, but skip doing so because it's rather tedious and not very helpful for actually understanding what's going on.
+
+\subsection{Solving the puzzle with truth tables}
+
+If we combine all of these 109 rules together, we could write out the truth table for them. With 729 propositional variables there would be
+$$
+2^{729} = 2.824 \times 10^{219}
+$$
+rows (approximately 3 duoseptuagintillion), which is rather a large truth table.
+
+Nevertheless, for a well-formed puzzle, only one of the rows of the truth table will contain all {\it true} values on the right hand side of the table. This would represent the correct solution to the puzzle.
+
+Of course, we can also simplify our truth table considerably, because we know all of the 27 initial position statements have to be {\it true} and all of the propositional values for the same positions but different numbers have to be false. This fixes 243 of our propositional values, leaving just 486 that we have to consider. Our truth table is now just
+$$
+2^{486} = 1.9979 \times 10^{146}
+$$
+rows (a mere 200 septenquadragintillion).
+
+\subsection{Solving the puzzle with deduction}
+
+To be contined...
+
+% that's all folks
+\end{document}
+
+
