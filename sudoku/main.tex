@@ -188,7 +188,105 @@ rows (a mere 200 septenquadragintillion).
 
 \subsection{Solving the puzzle with deduction}
 
-To be contined...
+Rather than go through all of the lines of the truth table, an alternative approach is to apply rules of deduction in an attempt to simplify the formula. For example, consider the following rules:
+
+\begin{align*}
+\meta{P} \rightarrow \meta{Q}, \meta{P} & \vdash \meta{Q} \\
+\meta{P} \land \meta{Q}, \meta{P} & \vdash \meta{Q} \\
+\meta{P} \land \meta{Q}, \meta{Q} & \vdash \meta{P} \\
+\meta{P} \lxor \meta{Q}, \meta{P} & \vdash \lnot \meta{Q} \\
+\meta{P} \lxor \meta{Q}, \meta{Q} & \vdash \lnot \meta{P}
+\end{align*}
+
+Since these are all valid arguments, whenever we find a pattern that looks like the left hand side, we can replace it with the sentence on the right hand side without affecting the truth of the statement.
+
+Using a deduction engine to repeatedly apply these and other rules, the original sentence containing 5885 connectives was reduced down to a sentence containing 863 connectives.
+
+In the process, the following propositions were found to be {\it true} by the deduction engine:
+
+\begin{align*}
+& P_{5,2},_{\hphantom{1}} P_{7,6},_{\hphantom{1}} P_{6,8},_{\hphantom{1}} P_{3,9},_{\hphantom{,}} P_{7,10}, \\
+& P_{5,14}, P_{3,15}, P_{2,17}, P_{4,18}, P_{3,20}, \\
+& P_{2,22}, P_{4,23}, P_{5,25}, P_{7,26}, P_{3,30}, \\
+& P_{7,34}, P_{9,35}, P_{5,36}, P_{7,38}, P_{9,39}, \\
+& P_{3,41}, P_{5,42}, P_{8,44}, P_{5,46}, P_{1,47}, \\
+& P_{7,50}, P_{3,53}, P_{6,54}, P_{7,57}, P_{5,58}, \\
+& P_{3,61}, P_{4,62}, P_{4,65}, P_{1,66}, P_{3,67}, \\
+& P_{8,68}, P_{6,70}, P_{5,71}, P_{7,72}, P_{3,73}, \\
+& P_{6,74}, P_{5,75}, P_{7,76}, P_{4,78}, P_{1,80}.
+\end{align*}
+
+Each of these represents a statement about the Sudoku board, so we can apply these to the grid to make progress with the puzzle. The resulting Sudoku board can be seen in Figure \ref{fig:partial}.
+
+\begin{figure*}[h!]
+\centering
+\includegraphics{sudoku-02}
+\caption{Partially solved Sudoku puzzle.}
+\label{fig:partial}
+\end{figure*}
+
+In theory it should be possible to manipulate the sentence and apply further deduction rules to solve the puzzle in full, but I've not been able to find deduction rules to take the puzzle beyond these obvious first steps.
+
+The remaining 863-connective sentence containing only the propositions that couldn't be determined looks like this:
+
+\begin{align*}
+& (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((P_{9,1} \lxor P_{8,1}) \\
+& \lxor P_{4,1}) \lxor P_{2,1}) \lxor P_{1,1}) \land ((P_{8,3} \lxor P_{4,3}) \lxor P_{2,3})) \land ((P_{9,4} \lxor P_{8,4}) \\
+& \lxor P_{1,4})) \land (P_{9,5} \lxor P_{1,5})) \land ((P_{9,7} \lxor P_{8,7}) \lxor P_{1,7})) \land (P_{9,11} \lxor P_{8,11})) \\
+& \land (P_{8,12} \lxor P_{6,12})) \land (((P_{9,13} \lxor P_{8,13}) \lxor P_{6,13}) \lxor P_{1,13})) \land ((P_{9,16} \lxor P_{8,16}) \\
+& \lxor P_{1,16})) \land (((P_{9,19} \lxor P_{8,19}) \lxor P_{6,19}) \lxor P_{1,19})) \land (P_{8,21} \lxor P_{6,21})) \land (((P_{9,24} \\
+& \lxor P_{8,24}) \lxor P_{6,24}) \lxor P_{1,24})) \land ((P_{9,27} \lxor P_{8,27}) \lxor P_{1,27})) \land (((P_{8,28} \lxor P_{6,28}) \\
+& \lxor P_{4,28}) \lxor P_{2,28})) \land (P_{8,29} \lxor P_{2,29})) \land (((P_{8,31} \lxor P_{6,31}) \lxor P_{4,31}) \lxor P_{1,31})) \\
+& \land ((P_{6,32} \lxor P_{2,32}) \lxor P_{1,32})) \land (((P_{8,33} \lxor P_{6,33}) \lxor P_{2,33}) \lxor P_{1,33})) \land ((P_{6,37} \\
+& \lxor P_{4,37}) \lxor P_{2,37})) \land ((P_{6,40} \lxor P_{4,40}) \lxor P_{1,40})) \land ((P_{4,43} \lxor P_{2,43}) \lxor P_{1,43})) \\
+& \land (P_{2,45} \lxor P_{1,45})) \land ((P_{8,48} \lxor P_{4,48}) \lxor P_{2,48})) \land ((P_{9,49} \lxor P_{8,49}) \lxor P_{4,49})) \\
+& \land ((P_{9,51} \lxor P_{8,51}) \lxor P_{2,51})) \land (P_{4,52} \lxor P_{2,52})) \land ((P_{9,55} \lxor P_{8,55}) \lxor P_{2,55})) \\
+& \land ((P_{9,56} \lxor P_{8,56}) \lxor P_{2,56})) \land (((P_{9,59} \lxor P_{6,59}) \lxor P_{2,59}) \lxor P_{1,59})) \land (((P_{9,60} \\
+& \lxor P_{6,60}) \lxor P_{2,60}) \lxor P_{1,60})) \land ((P_{9,63} \lxor P_{8,63}) \lxor P_{2,63})) \land (P_{9,64} \lxor P_{2,64})) \\
+& \land (P_{9,69} \lxor P_{2,69})) \land (P_{9,77} \lxor P_{2,77})) \land ((P_{9,79} \lxor P_{8,79}) \lxor P_{2,79})) \land ((P_{9,81} \\
+& \lxor P_{8,81}) \lxor P_{2,81})) \land (((((((P_{1,7} \lxor P_{1,5}) \lxor P_{1,4}) \lxor P_{1,1}) \land (P_{2,3} \lxor P_{2,1})) \\
+& \land (P_{4,3} \lxor P_{4,1})) \land (((P_{8,7} \lxor P_{8,4}) \lxor P_{8,3}) \lxor P_{8,1})) \land (((P_{9,7} \lxor P_{9,5}) \\
+& \lxor P_{9,4}) \lxor P_{9,1}))) \land ((((P_{1,16} \lxor P_{1,13}) \land (P_{6,13} \lxor P_{6,12})) \land (((P_{8,16} \lxor P_{8,13}) \\
+& \lxor P_{8,12}) \lxor P_{8,11})) \land ((P_{9,16} \lxor P_{9,13}) \lxor P_{9,11}))) \land (((((P_{1,27} \lxor P_{1,24}) \lxor P_{1,19}) \\
+& \land ((P_{6,24} \lxor P_{6,21}) \lxor P_{6,19})) \land (((P_{8,27} \lxor P_{8,24}) \lxor P_{8,21}) \lxor P_{8,19})) \land ((P_{9,27} \\
+& \lxor P_{9,24}) \lxor P_{9,19}))) \land ((((((P_{1,33} \lxor P_{1,32}) \lxor P_{1,31}) \land (((P_{2,33} \lxor P_{2,32}) \lxor P_{2,29}) \\
+& \lxor P_{2,28})) \land (P_{4,31} \lxor P_{4,28})) \land (((P_{6,33} \lxor P_{6,32}) \lxor P_{6,31}) \lxor P_{6,28})) \land (((P_{8,33} \\
+& \lxor P_{8,31}) \lxor P_{8,29}) \lxor P_{8,28}))) \land (((((P_{1,45} \lxor P_{1,43}) \lxor P_{1,40}) \land ((P_{2,45} \lxor P_{2,43}) \\
+& \lxor P_{2,37})) \land ((P_{4,43} \lxor P_{4,40}) \lxor P_{4,37})) \land (P_{6,40} \lxor P_{6,37}))) \land (((((P_{2,52} \lxor P_{2,51}) \\
+& \lxor P_{2,48}) \land ((P_{4,52} \lxor P_{4,49}) \lxor P_{4,48})) \land ((P_{8,51} \lxor P_{8,49}) \lxor P_{8,48})) \land (P_{9,51} \\
+& \lxor P_{9,49}))) \land (((((P_{1,60} \lxor P_{1,59}) \land ((((P_{2,63} \lxor P_{2,60}) \lxor P_{2,59}) \lxor P_{2,56}) \\
+& \lxor P_{2,55})) \land (P_{6,60} \lxor P_{6,59})) \land ((P_{8,63} \lxor P_{8,56}) \lxor P_{8,55})) \land ((((P_{9,63} \lxor P_{9,60}) \\
+& \lxor P_{9,59}) \lxor P_{9,56}) \lxor P_{9,55}))) \land ((P_{2,69} \lxor P_{2,64}) \land (P_{9,69} \lxor P_{9,64}))) \land ((((P_{2,81} \\
+& \lxor P_{2,79}) \lxor P_{2,77}) \land (P_{8,81} \lxor P_{8,79})) \land ((P_{9,81} \lxor P_{9,79}) \lxor P_{9,77}))) \land ((((((P_{1,19} \\
+& \lxor P_{1,1}) \land ((((P_{2,64} \lxor P_{2,55}) \lxor P_{2,37}) \lxor P_{2,28}) \lxor P_{2,1})) \land ((P_{4,37} \lxor P_{4,28}) \\
+& \lxor P_{4,1})) \land ((P_{6,37} \lxor P_{6,28}) \lxor P_{6,19})) \land (((P_{8,55} \lxor P_{8,28}) \lxor P_{8,19}) \lxor P_{8,1})) \\
+& \land (((P_{9,64} \lxor P_{9,55}) \lxor P_{9,19}) \lxor P_{9,1}))) \land (((P_{2,56} \lxor P_{2,29}) \land ((P_{8,56} \lxor P_{8,29}) \\
+& \lxor P_{8,11})) \land (P_{9,56} \lxor P_{9,11}))) \land ((((P_{2,48} \lxor P_{2,3}) \land (P_{4,48} \lxor P_{4,3})) \land (P_{6,21} \\
+& \lxor P_{6,12})) \land (((P_{8,48} \lxor P_{8,21}) \lxor P_{8,12}) \lxor P_{8,3}))) \land (((((((P_{1,40} \lxor P_{1,31}) \lxor P_{1,13}) \\
+& \lxor P_{1,4}) \land ((P_{4,49} \lxor P_{4,40}) \lxor P_{4,31})) \land ((P_{6,40} \lxor P_{6,31}) \lxor P_{6,13})) \land (((P_{8,49} \\
+& \lxor P_{8,31}) \lxor P_{8,13}) \lxor P_{8,4})) \land ((P_{9,49} \lxor P_{9,13}) \lxor P_{9,4}))) \land (((((P_{1,59} \lxor P_{1,32}) \\
+& \lxor P_{1,5}) \land ((P_{2,77} \lxor P_{2,59}) \lxor P_{2,32})) \land (P_{6,59} \lxor P_{6,32})) \land ((P_{9,77} \lxor P_{9,59}) \\
+& \lxor P_{9,5}))) \land ((((((P_{1,60} \lxor P_{1,33}) \lxor P_{1,24}) \land (((P_{2,69} \lxor P_{2,60}) \lxor P_{2,51}) \lxor P_{2,33})) \\
+& \land ((P_{6,60} \lxor P_{6,33}) \lxor P_{6,24})) \land ((P_{8,51} \lxor P_{8,33}) \lxor P_{8,24})) \land (((P_{9,69} \lxor P_{9,60}) \\
+& \lxor P_{9,51}) \lxor P_{9,24}))) \land ((((((P_{1,43} \lxor P_{1,16}) \lxor P_{1,7}) \land ((P_{2,79} \lxor P_{2,52}) \lxor P_{2,43})) \\
+& \land (P_{4,52} \lxor P_{4,43})) \land ((P_{8,79} \lxor P_{8,16}) \lxor P_{8,7})) \land ((P_{9,79} \lxor P_{9,16}) \lxor P_{9,7}))) \\
+& \land ((((P_{1,45} \lxor P_{1,27}) \land ((P_{2,81} \lxor P_{2,63}) \lxor P_{2,45})) \land ((P_{8,81} \lxor P_{8,63}) \lxor P_{8,27})) \\
+& \land ((P_{9,81} \lxor P_{9,63}) \lxor P_{9,27}))) \land ((((((P_{1,19} \lxor P_{1,1}) \land (P_{2,3} \lxor P_{2,1})) \land (P_{4,3} \\
+& \lxor P_{4,1})) \land ((P_{6,21} \lxor P_{6,19}) \lxor P_{6,12})) \land (((((P_{8,21} \lxor P_{8,19}) \lxor P_{8,12}) \lxor P_{8,11}) \\
+& \lxor P_{8,3}) \lxor P_{8,1})) \land ((P_{9,19} \lxor P_{9,11}) \lxor P_{9,1}))) \land ((((((P_{1,24} \lxor P_{1,13}) \lxor P_{1,5}) \\
+& \lxor P_{1,4}) \land (P_{6,24} \lxor P_{6,13})) \land ((P_{8,24} \lxor P_{8,13}) \lxor P_{8,4})) \land (((P_{9,24} \lxor P_{9,13}) \\
+& \lxor P_{9,5}) \lxor P_{9,4}))) \land ((((P_{1,27} \lxor P_{1,16}) \lxor P_{1,7}) \land ((P_{8,27} \lxor P_{8,16}) \lxor P_{8,7})) \\
+& \land ((P_{9,27} \lxor P_{9,16}) \lxor P_{9,7}))) \land ((((((P_{2,48} \lxor P_{2,37}) \lxor P_{2,29}) \lxor P_{2,28}) \land ((P_{4,48} \\
+& \lxor P_{4,37}) \lxor P_{4,28})) \land (P_{6,37} \lxor P_{6,28})) \land ((P_{8,48} \lxor P_{8,29}) \lxor P_{8,28}))) \\
+& \land ((((((((P_{1,40} \lxor P_{1,33}) \lxor P_{1,32}) \lxor P_{1,31}) \land ((P_{2,51} \lxor P_{2,33}) \lxor P_{2,32})) \\
+& \land ((P_{4,49} \lxor P_{4,40}) \lxor P_{4,31})) \land (((P_{6,40} \lxor P_{6,33}) \lxor P_{6,32}) \lxor P_{6,31})) \land (((P_{8,51} \\
+& \lxor P_{8,49}) \lxor P_{8,33}) \lxor P_{8,31})) \land (P_{9,51} \lxor P_{9,49}))) \land (((P_{1,45} \lxor P_{1,43}) \land ((P_{2,52} \\
+& \lxor P_{2,45}) \lxor P_{2,43})) \land (P_{4,52} \lxor P_{4,43}))) \land ((((P_{2,64} \lxor P_{2,56}) \lxor P_{2,55}) \\
+& \land (P_{8,56} \lxor P_{8,55})) \land ((P_{9,64} \lxor P_{9,56}) \lxor P_{9,55}))) \land ((((P_{1,60} \lxor P_{1,59}) \\
+& \land (((P_{2,77} \lxor P_{2,69}) \lxor P_{2,60}) \lxor P_{2,59})) \land (P_{6,60} \lxor P_{6,59})) \land (((P_{9,77} \lxor P_{9,69}) \\
+& \lxor P_{9,60}) \lxor P_{9,59}))) \land ((((P_{2,81} \lxor P_{2,79}) \lxor P_{2,63}) \land ((P_{8,81} \lxor P_{8,79}) \lxor P_{8,63})) \\
+& \land ((P_{9,81} \lxor P_{9,79}) \lxor P_{9,63}))
+\end{align*}
 
 % that's all folks
 \end{document}

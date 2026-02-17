@@ -4,6 +4,7 @@
 \usepackage{amsthm}
 \usepackage{amssymb}
 \usepackage{array}
+\usepackage{mathalfa}
 %\usepackage{subfig}
 %\usepackage{latexsym}
 \usepackage{graphicx}
@@ -11,6 +12,15 @@
 \graphicspath{{./images/}}
 \thinlines
 \setlength{\unitlength}{1mm}
+
+\DeclareFontFamily{U}{BOONDOX-calo}{\skewchar\font=45 }
+\DeclareFontShape{U}{BOONDOX-calo}{m}{n}{
+  <-> s*[1.05] BOONDOX-r-calo}{}
+\DeclareFontShape{U}{BOONDOX-calo}{b}{n}{
+  <-> s*[1.05] BOONDOX-b-calo}{}
+\DeclareMathAlphabet{\meta}{U}{BOONDOX-calo}{m}{n}
+\SetMathAlphabet{\meta}{bold}{U}{BOONDOX-calo}{b}{n}
+\DeclareMathAlphabet{\metab}{U}{BOONDOX-calo}{b}{n}
 
 \newcommand{\etc}{{\it etc.\/}}
 \newcommand{\define}[1]{\/{\it #1}}
