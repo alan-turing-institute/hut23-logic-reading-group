@@ -5,7 +5,7 @@
  racket/string
  (only-in racket/list splitf-at)
  (only-in racket/port port->lines)
- (only-in threading ~>))
+ (only-in threading ~> tee~>))
 
 #|
 
@@ -137,6 +137,7 @@ variable occurs exactly once.
     (~> (port->lines in)
         (map (λ (ln) (map string->number (string-split ln))) _) 
         (apply append _)
+        (tee~> displayln)
         (group-on-zeros)                ; now grouped by clauses
         (map (λ (clause) (map (λ (v) (if (negative? v) (neg (- v)) (pos v)))
                               clause))
