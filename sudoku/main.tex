@@ -46,29 +46,44 @@ Using these propositional variables we can now start to define the rules of the 
 
 We'll start with the rule that states that every cell must contain precisely one value. Starting with cell number 1, we can capture this with the following sentence of TFL:
 
-$$
-\PV{1, 1} \lxor (\PV{2, 1} \lxor (\PV{3, 1} \lxor ( \PV{4, 1} \lxor (\PV{5, 1} \lxor (\PV{6, 1} \lxor (\PV{7, 1} \lxor (\PV{8, 1} \lxor \PV{9, 1}))))))) .
-$$
+\begin{align*}
+(&\PV{1,1} \lor (\PV{2,1} \lor (\PV{3,1} \lor (\PV{4,1} \lor (\PV{5,1} \lor (\PV{6,1} \lor (\PV{7,1} \lor (\PV{8,1} \lor \PV{9,1})))))))) \\
+& \land (\lnot(\PV{1,1} \land \PV{2,1}) \land (\lnot(\PV{1,1} \land \PV{3,1}) \land (\lnot(\PV{1,1} \land \PV{4,1}) \land (\lnot(\PV{1,1} \land \PV{5,1}) \\
+& \land (\lnot(\PV{1,1} \land \PV{6,1}) \land (\lnot(\PV{1,1} \land \PV{7,1}) \land (\lnot(\PV{1,1} \land \PV{8,1}) \land (\lnot(\PV{1,1} \land \PV{9,1}) \\
+& \land (\lnot(\PV{2,1} \land \PV{3,1}) \land (\lnot(\PV{2,1} \land \PV{4,1}) \land (\lnot(\PV{2,1} \land \PV{5,1}) \land (\lnot(\PV{2,1} \land \PV{6,1}) \\
+& \land (\lnot(\PV{2,1} \land \PV{7,1}) \land (\lnot(\PV{2,1} \land \PV{8,1}) \land (\lnot(\PV{2,1} \land \PV{9,1}) \\
+& \land (\lnot(\PV{3,1} \land \PV{4,1}) \land (\lnot(\PV{3,1} \land \PV{5,1}) \land (\lnot(\PV{3,1} \land \PV{6,1}) \\
+& \land (\lnot(\PV{3,1} \land \PV{7,1}) \land (\lnot(\PV{3,1} \land \PV{8,1}) \land (\lnot(\PV{3,1} \land \PV{9,1}) \\
+& \land (\lnot(\PV{4,1} \land \PV{5,1}) \land (\lnot(\PV{4,1} \land \PV{6,1}) \land (\lnot(\PV{4,1} \land \PV{7,1}) \\
+& \land (\lnot(\PV{4,1} \land \PV{8,1}) \land (\lnot(\PV{4,1} \land \PV{9,1}) \\
+& \land (\lnot(\PV{5,1} \land \PV{6,1}) \land (\lnot(\PV{5,1} \land \PV{7,1}) \land (\lnot(\PV{5,1} \land \PV{8,1}) \land (\lnot(\PV{5,1} \land \PV{9,1}) \\
+& \land (\lnot(\PV{6,1} \land \PV{7,1}) \land (\lnot(\PV{6,1} \land \PV{8,1}) \land (\lnot(\PV{6,1} \land \PV{9,1}) \\
+& \land (\lnot(\PV{7,1} \land \PV{8,1}) \land (\lnot(\PV{7,1} \land \PV{9,1}) \\
+& \land \lnot(\PV{8,1} \land \PV{9,1}))))))))))))))))))))))))))))))))))))
+\end{align*}
 
-Here $A \lxor B$ means ``exclusive OR'', which is equivalent to $(A \lor B) \land \lnot (A \land B)$. The notation $A \lxor B$ stems from the fact that this is also equivalent to $\lnot ((A \rightarrow B) \land (B \rightarrow A))$. The equivalence of these can be seen by writing out their truth tables. 
+We can interpret the above sentence as stating two things. The first row states that the first cell is either 1, or 2, or 3, or, \ldots, or 9. In other words the cell must contain a value between 1 and 9 inclusive. The subsequent seven lines are a conjunction of statements of the form $\lnot (\PV{v_1, 1} \land \PV{v_2, 1})$, where $1 \le v_1 < v_2 \le 9$. Each of these states that only one of each pair can be in the cell. With every distinct pair appearing in the list, this ensures that there can be only one value in each cell.
+
+As a sanity check we should have $\combination[9]{2} = \frac{9!}{2! \times (9 - 2)!} = 36$ entries in this second part (we're choosing distinct unordered pairs from 9 possible values), which counting confirms to be the case.
 
 To reduce the amount of ink required, we'll add ellipses to the above and more frequently write it as follows:
 
-$$
-\PV{1, 1} \lxor (\PV{2, 1} \lxor (\PV{3, 1} \lxor ( \cdots \lxor \PV{9, 1}) \cdots )) .
-$$
+\begin{align*}
+(\PV{1, 1} & \lor (\PV{2, 1} \lor \cdots \lor \PV{9, 1}) \cdots ) \\
+& \land (\lnot(\PV{1, 1} \land \PV{2, 1}) \land (\lnot(\PV{1, 1} \land \PV{3, 1}) \cdots \land \lnot(\PV{8, 1} \land \PV{9, 1})) \cdots )
+\end{align*}
 
-This essentially says ``cell 1 contains the value 1, exclusive or cell 1 contains the value 2, exclusive or cell 1 contains the value 3, exclusive or \ldots.''. In this way, cell 1 contains at least one of the values, but no more than one.
-
-We'll need one such formula for each cell of the grid, giving 81 in total:
-
-\begin{gather*}
-\PV{1, 1} \lxor (\PV{2, 1} \lxor (\PV{3, 1} \lxor ( \cdots \lxor \PV{9, 1}) \cdots )) \\
-\vdots \\
-\PV{1, n} \lxor (\PV{2, n} \lxor (\PV{3, n} \lxor ( \cdots \lxor \PV{9, n}) \cdots )) \\
-\vdots \\
-\PV{1, 81} \lxor (\PV{2, 81} \lxor (\PV{3, 81} \lxor ( \cdots \lxor \PV{9, 81}) \cdots )) .
-\end{gather*}
+The above tells us that cell 1 contains at least one of the values, but no more than one. We'll need one such formula for each cell of the grid, giving 81 in total:
+\begin{align*}
+(\PV{1, 1} & \lor (\PV{2, 1} \lor \cdots \lor \PV{9, 1}) \cdots ) \\
+& \land (\lnot(\PV{1, 1} \land \PV{2, 1}) \land (\lnot(\PV{1, 1} \land \PV{3, 1}) \cdots \land \lnot(\PV{8, 1} \land \PV{9, 1})) \cdots ) , \\
+& \qquad \qquad \qquad \qquad \qquad \vdots \\
+(\PV{1, n} & \lor (\PV{2, n} \lor \cdots \lor \PV{9, n}) \cdots ) \\
+& \land (\lnot(\PV{1, n} \land \PV{2, n}) \land (\lnot(\PV{1, n} \land \PV{3, n}) \cdots \land \lnot(\PV{8, n} \land \PV{9, n})) \cdots ) , \\
+& \qquad \qquad \qquad \qquad \qquad \vdots \\
+(\PV{1, 81} & \lor (\PV{2, 81} \lor \cdots \lor \PV{9, 81}) \cdots ) \\
+& \land (\lnot(\PV{1, 81} \land \PV{2, 81}) \land (\lnot(\PV{1, 81} \land \PV{3, 81}) \cdots \land \lnot(\PV{8, 81} \land \PV{9, 81})) \cdots ) .
+\end{align*}
 
 Here we use $n$ as a notational convenience to represent the numbers between 1 and 81 inclusive. If written out in full there would be no variable needed here.
 
@@ -79,14 +94,17 @@ Now we get on to the rules of the game as we typically know them. We're going to
 Now we can build up a suitable statement for the row $r$:
 
 \begin{align*}
-& (\PV{1, s} \lxor (\PV{1, s + 1} \lxor (\PV{1, s + 2} \lxor ( \cdots \lxor \PV{1, s + 8}) \cdots ))) \\
+((\PV{1, s} & \lor (\PV{1, s + 1} \lor \cdots \lor \PV{1, s + 8}) \cdots ) \\
+& \land (\lnot(\PV{1, s} \land \PV{1, s + 1}) \land (\lnot(\PV{1, s} \land \PV{1, s + 2}) \cdots \land \lnot(\PV{1, s + 7} \land \PV{1, s + 8})) \cdots )) \\
 & \qquad \qquad \qquad \qquad \qquad \vdots \\
-{} \land & (\PV{n, s} \lxor (\PV{n, s + 1} \lxor (\PV{n, s + 2} \lxor ( \cdots \lxor \PV{n, s + 8}) \cdots ))) \\
+{} \land ((\PV{n, s} & \lor (\PV{n, s + 1} \lor \cdots \lor \PV{n, s + 8}) \cdots ) \\
+& \land (\lnot(\PV{n, s} \land \PV{n, s + 1}) \land (\lnot(\PV{n, s} \land \PV{n, s + 2}) \cdots \land \lnot(\PV{n, s + 7} \land \PV{n, s + 8})) \cdots )) \\
 & \qquad \qquad \qquad \qquad \qquad \vdots \\
-{} \land & (\PV{9, s} \lxor (\PV{9, s + 1} \lxor (\PV{9, s + 2} \lxor ( \cdots \lxor \PV{9, s + 8}) \cdots ))) .
+{} \land ((\PV{9, s} & \lor (\PV{9,s + 1} \lor \cdots \lor \PV{9, s + 8}) \cdots ) \\
+& \land (\lnot(\PV{9, s} \land \PV{9, s + 1}) \land (\lnot(\PV{9, s} \land \PV{n, s + 2}) \cdots \land \lnot(\PV{9, s + 7} \land \PV{9, s + 8})) \cdots )) .
 \end{align*}
 
-The first line of this statement says that the column contains precisely one instance of the value 1; the second line says it contains precisely one instance of the value 2 and so on. Combined with the fact that every cell takes precisely one value, this fulfils the requirements for the rows.
+The first says that the column contains precisely one instance of the value 1; the second says it contains precisely one instance of the value 2 and so on. Combined with the fact that every cell takes precisely one value, this fulfils the requirements for the rows.
 
 Once again, $n$ here is used for notational convenience. Once written out in full, the variables $s$ and $n$ would become concrete values.
 
@@ -101,12 +119,17 @@ For this, let us set $c$ to be the number of the column from 1 to 9 inclusive. N
 Our statement can then be the following:
 
 \begin{align*}
-& (\PV{1, s} \lxor (\PV{1, s + 9} \lxor (\PV{1, s + 18} \lxor ( \cdots \lxor \PV{1, s + 72}) \cdots ))) \\
+((\PV{1, s} & \lor (\PV{1, s + 9} \lor \cdots \lor \PV{1, s + 72}) \cdots ) \\
+& \land (\lnot(\PV{1, s} \land \PV{1, s + 9}) \cdots \land \lnot(\PV{1, s + 63} \land \PV{1, s + 72})) \cdots )) \\
 & \qquad \qquad \qquad \qquad \qquad \vdots \\
-{} \land & (\PV{n, s} \lxor (\PV{n, s + 9} \lxor (\PV{n, s + 18} \lxor ( \cdots \lxor \PV{n, s + 72}) \cdots ))) \\
+{} \land ((\PV{n, s} & \lor (\PV{n, s + 9} \lor \cdots \lor \PV{n, s + 72}) \cdots ) \\
+& \land (\lnot(\PV{n, s} \land \PV{n, s + 9}) \cdots \land \lnot(\PV{n, s + 63} \land \PV{n, s + 72})) \cdots )) \\
 & \qquad \qquad \qquad \qquad \qquad \vdots \\
-{} \land & (\PV{9, s} \lxor (\PV{9, s + 9} \lxor (\PV{9, s + 18} \lxor ( \cdots \lxor \PV{9, s + 72}) \cdots ))) .
+{} \land ((\PV{9, s} & \lor (\PV{9,s + 9} \lor \cdots \lor \PV{9, s + 8}) \cdots ) \\
+& \land (\lnot(\PV{9, s} \land \PV{9, s + 9}) \cdots \land \lnot(\PV{9, s + 63} \land \PV{9, s + 72})) \cdots )) .
 \end{align*}
+
+
 
 As before, since there are nine columns we'll have nine rules like this in total. The values $s$ and $n$ will resolve to concrete numbers for each of these rules.
 
@@ -120,17 +143,20 @@ $$
 Here we use the notation $\floor{x}$ to mean the value $x$ rounded down to the nearest integer. We can now write our block rule for block $b$ as follows:
 
 \begin{align*}
-\PV{1, s} & \lxor (\PV{1, s + 1} \lxor (\PV{1, s + 2} \\
-& \lxor (\PV{1, s + 9} \lxor (\PV{1, s + 10} \lxor (\PV{1, s + 11} \\
-& \lxor (\PV{1, s + 18} \lxor (\PV{1, s + 19} \lxor \PV{1, s + 20} ))))))) \\
-& \qquad \qquad \qquad \vdots \\
-{} \land \PV{n, s} & \lxor (\PV{n, s + 1} \lxor (\PV{n, s + 2} \\
-& \lxor (\PV{n, s + 9} \lxor (\PV{n, s + 10} \lxor (\PV{n, s + 11} \\
-& \lxor (\PV{n, s + 18} \lxor (\PV{n, s + 19} \lxor \PV{n, s + 20} ))))))) \\
-& \qquad \qquad \qquad \vdots \\
-{} \land \PV{9, s} & \lxor (\PV{9, s + 1} \lxor (\PV{9, s + 2} \\
-& \lxor (\PV{9, s + 9} \lxor (\PV{9, s + 10} \lxor (\PV{9, s + 11} \\
-& \lxor (\PV{9, s + 18} \lxor (\PV{9, s + 19} \lxor \PV{9, s + 20} ))))))) .
+(\PV{1, s} & \lor (\PV{1, s + 1} \lor (\PV{1, s + 2} \\
+& \lor (\PV{1, s + 9} \lor (\PV{1, s + 10} \lor (\PV{1, s + 11} \\
+& \lor (\PV{1, s + 18} \lor (\PV{1, s + 19} \lor \PV{1, s + 20})))))))) \\
+& \land (\lnot(\PV{1, s} \land \PV{1, s + 1}) \cdots \land \lnot(\PV{1, s + 19} \land \PV{1, s + 20})) \cdots )) \\
+& \qquad \qquad \qquad \qquad \qquad \vdots \\
+(\PV{n, s} & \lor (\PV{n, s + 1} \lor (\PV{n, s + 2} \\
+& \lor (\PV{n, s + 9} \lor (\PV{n, s + 10} \lor (\PV{n, s + 11} \\
+& \lor (\PV{n, s + 18} \lor (\PV{n, s + 19} \lor \PV{n, s + 20})))))))) \\
+& \land (\lnot(\PV{n, s} \land \PV{n, s + 1}) \cdots \land \lnot(\PV{n, s + 19} \land \PV{n, s + 20})) \cdots )) \\
+& \qquad \qquad \qquad \qquad \qquad \vdots \\
+(\PV{9, s} & \lor (\PV{9, s + 1} \lor (\PV{9, s + 2} \\
+& \lor (\PV{9, s + 9} \lor (\PV{9, s + 10} \lor (\PV{9, s + 11} \\
+& \lor (\PV{9, s + 18} \lor (\PV{9, s + 19} \lor \PV{9, s + 20})))))))) \\
+& \land (\lnot(\PV{9, s} \land \PV{9, s + 1}) \cdots \land \lnot(\PV{9, s + 19} \land \PV{9, s + 20})) \cdots )) \\
 \end{align*}
 
 There are nine blocks, so once again we have nine of these rules. All of the instances of $s$ and $n$ will resolve to concrete values when written out in full.
@@ -146,7 +172,7 @@ This gives us the rules of the game: 108 rules in total. All we need now is to b
 \label{fig:initial}
 \end{figure*}
 
-This has 27 of the 81 cells with numbers already in them. We can use our propositional variables to describe this state as well. Comparing figures \ref{fig:grid} and \ref{fig:initial} we can see that cell 14 contains the value 5, cell 15 contains the value 3, cell 17 contains the value 2 and so on. We can write these as follows:
+This has 27 of the 81 cells with numbers already filled in. We can use our propositional variables to describe this state as well. Comparing figures \ref{fig:grid} and \ref{fig:initial} we can see that cell 14 contains the value 5, cell 15 contains the value 3, cell 17 contains the value 2 and so on. We can write these as follows:
 
 \begin{align*}
 \PV{5, 14} & \land (\PV{3, 15} \land (\PV{2, 17} \land (\PV{4, 18} \\
@@ -194,26 +220,26 @@ Rather than go through all of the lines of the truth table, an alternative appro
 \meta{P} \rightarrow \meta{Q}, \meta{P} & \vdash \meta{Q} \\
 \meta{P} \land \meta{Q}, \meta{P} & \vdash \meta{Q} \\
 \meta{P} \land \meta{Q}, \meta{Q} & \vdash \meta{P} \\
-\meta{P} \lxor \meta{Q}, \meta{P} & \vdash \lnot \meta{Q} \\
-\meta{P} \lxor \meta{Q}, \meta{Q} & \vdash \lnot \meta{P}
+\meta{P} \lor \meta{Q}, \lnot \meta{P} & \vdash \meta{Q} \\
+\meta{P} \lor \meta{Q}, \lnot \meta{Q} & \vdash \meta{P}
 \end{align*}
 
 Since these are all valid arguments, whenever we find a pattern that looks like the left hand side, we can replace it with the sentence on the right hand side without affecting the truth of the statement.
 
-Using a deduction engine to repeatedly apply these and other rules, the original sentence containing 5885 connectives was reduced down to a sentence containing 863 connectives.
+Using a deduction engine to repeatedly apply these and other rules, the original sentence containing 64205 connectives was reduced down to a sentence containing 3268 connectives.
 
 In the process, the following propositions were found to be {\it true} by the deduction engine:
 
 \begin{align*}
-& P_{5,2},_{\hphantom{1}} P_{7,6},_{\hphantom{1}} P_{6,8},_{\hphantom{1}} P_{3,9},_{\hphantom{,}} P_{7,10}, \\
-& P_{5,14}, P_{3,15}, P_{2,17}, P_{4,18}, P_{3,20}, \\
-& P_{2,22}, P_{4,23}, P_{5,25}, P_{7,26}, P_{3,30}, \\
-& P_{7,34}, P_{9,35}, P_{5,36}, P_{7,38}, P_{9,39}, \\
-& P_{3,41}, P_{5,42}, P_{8,44}, P_{5,46}, P_{1,47}, \\
-& P_{7,50}, P_{3,53}, P_{6,54}, P_{7,57}, P_{5,58}, \\
-& P_{3,61}, P_{4,62}, P_{4,65}, P_{1,66}, P_{3,67}, \\
-& P_{8,68}, P_{6,70}, P_{5,71}, P_{7,72}, P_{3,73}, \\
-& P_{6,74}, P_{5,75}, P_{7,76}, P_{4,78}, P_{1,80}.
+& \PV{5,2},_{\hphantom{1}} \PV{7,6},_{\hphantom{1}} \PV{6,8},_{\hphantom{1}} \PV{3,9},_{\hphantom{,}} \PV{7,10}, \\
+& \PV{5,14}, \PV{3,15}, \PV{2,17}, \PV{4,18}, \PV{3,20}, \\
+& \PV{2,22}, \PV{4,23}, \PV{5,25}, \PV{7,26}, \PV{3,30}, \\
+& \PV{7,34}, \PV{9,35}, \PV{5,36}, \PV{7,38}, \PV{9,39}, \\
+& \PV{3,41}, \PV{5,42}, \PV{8,44}, \PV{5,46}, \PV{1,47}, \\
+& \PV{7,50}, \PV{3,53}, \PV{6,54}, \PV{7,57}, \PV{5,58}, \\
+& \PV{3,61}, \PV{4,62}, \PV{4,65}, \PV{1,66}, \PV{3,67}, \\
+& \PV{8,68}, \PV{6,70}, \PV{5,71}, \PV{7,72}, \PV{3,73}, \\
+& \PV{6,74}, \PV{5,75}, \PV{7,76}, \PV{4,78}, \PV{1,80}.
 \end{align*}
 
 Each of these represents a statement about the Sudoku board, so we can apply these to the grid to make progress with the puzzle. The resulting Sudoku board can be seen in Figure \ref{fig:partial}.
@@ -227,65 +253,218 @@ Each of these represents a statement about the Sudoku board, so we can apply the
 
 In theory it should be possible to manipulate the sentence and apply further deduction rules to solve the puzzle in full, but I've not been able to find deduction rules to take the puzzle beyond these obvious first steps.
 
-The remaining 863-connective sentence containing only the propositions that couldn't be determined looks like this:
+The remaining 3268-connective sentence containing only the propositions that couldn't be determined is shown below.
+
+Having determined the values of 45 out of the 81 cells, our truth table now needs only $2^{324} = 3.418 \times 10^{97}$ rows (34 untrigintillion).
 
 \begin{align*}
-& (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((P_{9,1} \lxor P_{8,1}) \\
-& \lxor P_{4,1}) \lxor P_{2,1}) \lxor P_{1,1}) \land ((P_{8,3} \lxor P_{4,3}) \lxor P_{2,3})) \land ((P_{9,4} \lxor P_{8,4}) \\
-& \lxor P_{1,4})) \land (P_{9,5} \lxor P_{1,5})) \land ((P_{9,7} \lxor P_{8,7}) \lxor P_{1,7})) \land (P_{9,11} \lxor P_{8,11})) \\
-& \land (P_{8,12} \lxor P_{6,12})) \land (((P_{9,13} \lxor P_{8,13}) \lxor P_{6,13}) \lxor P_{1,13})) \land ((P_{9,16} \lxor P_{8,16}) \\
-& \lxor P_{1,16})) \land (((P_{9,19} \lxor P_{8,19}) \lxor P_{6,19}) \lxor P_{1,19})) \land (P_{8,21} \lxor P_{6,21})) \land (((P_{9,24} \\
-& \lxor P_{8,24}) \lxor P_{6,24}) \lxor P_{1,24})) \land ((P_{9,27} \lxor P_{8,27}) \lxor P_{1,27})) \land (((P_{8,28} \lxor P_{6,28}) \\
-& \lxor P_{4,28}) \lxor P_{2,28})) \land (P_{8,29} \lxor P_{2,29})) \land (((P_{8,31} \lxor P_{6,31}) \lxor P_{4,31}) \lxor P_{1,31})) \\
-& \land ((P_{6,32} \lxor P_{2,32}) \lxor P_{1,32})) \land (((P_{8,33} \lxor P_{6,33}) \lxor P_{2,33}) \lxor P_{1,33})) \land ((P_{6,37} \\
-& \lxor P_{4,37}) \lxor P_{2,37})) \land ((P_{6,40} \lxor P_{4,40}) \lxor P_{1,40})) \land ((P_{4,43} \lxor P_{2,43}) \lxor P_{1,43})) \\
-& \land (P_{2,45} \lxor P_{1,45})) \land ((P_{8,48} \lxor P_{4,48}) \lxor P_{2,48})) \land ((P_{9,49} \lxor P_{8,49}) \lxor P_{4,49})) \\
-& \land ((P_{9,51} \lxor P_{8,51}) \lxor P_{2,51})) \land (P_{4,52} \lxor P_{2,52})) \land ((P_{9,55} \lxor P_{8,55}) \lxor P_{2,55})) \\
-& \land ((P_{9,56} \lxor P_{8,56}) \lxor P_{2,56})) \land (((P_{9,59} \lxor P_{6,59}) \lxor P_{2,59}) \lxor P_{1,59})) \land (((P_{9,60} \\
-& \lxor P_{6,60}) \lxor P_{2,60}) \lxor P_{1,60})) \land ((P_{9,63} \lxor P_{8,63}) \lxor P_{2,63})) \land (P_{9,64} \lxor P_{2,64})) \\
-& \land (P_{9,69} \lxor P_{2,69})) \land (P_{9,77} \lxor P_{2,77})) \land ((P_{9,79} \lxor P_{8,79}) \lxor P_{2,79})) \land ((P_{9,81} \\
-& \lxor P_{8,81}) \lxor P_{2,81})) \land (((((((P_{1,7} \lxor P_{1,5}) \lxor P_{1,4}) \lxor P_{1,1}) \land (P_{2,3} \lxor P_{2,1})) \\
-& \land (P_{4,3} \lxor P_{4,1})) \land (((P_{8,7} \lxor P_{8,4}) \lxor P_{8,3}) \lxor P_{8,1})) \land (((P_{9,7} \lxor P_{9,5}) \\
-& \lxor P_{9,4}) \lxor P_{9,1}))) \land ((((P_{1,16} \lxor P_{1,13}) \land (P_{6,13} \lxor P_{6,12})) \land (((P_{8,16} \lxor P_{8,13}) \\
-& \lxor P_{8,12}) \lxor P_{8,11})) \land ((P_{9,16} \lxor P_{9,13}) \lxor P_{9,11}))) \land (((((P_{1,27} \lxor P_{1,24}) \lxor P_{1,19}) \\
-& \land ((P_{6,24} \lxor P_{6,21}) \lxor P_{6,19})) \land (((P_{8,27} \lxor P_{8,24}) \lxor P_{8,21}) \lxor P_{8,19})) \land ((P_{9,27} \\
-& \lxor P_{9,24}) \lxor P_{9,19}))) \land ((((((P_{1,33} \lxor P_{1,32}) \lxor P_{1,31}) \land (((P_{2,33} \lxor P_{2,32}) \lxor P_{2,29}) \\
-& \lxor P_{2,28})) \land (P_{4,31} \lxor P_{4,28})) \land (((P_{6,33} \lxor P_{6,32}) \lxor P_{6,31}) \lxor P_{6,28})) \land (((P_{8,33} \\
-& \lxor P_{8,31}) \lxor P_{8,29}) \lxor P_{8,28}))) \land (((((P_{1,45} \lxor P_{1,43}) \lxor P_{1,40}) \land ((P_{2,45} \lxor P_{2,43}) \\
-& \lxor P_{2,37})) \land ((P_{4,43} \lxor P_{4,40}) \lxor P_{4,37})) \land (P_{6,40} \lxor P_{6,37}))) \land (((((P_{2,52} \lxor P_{2,51}) \\
-& \lxor P_{2,48}) \land ((P_{4,52} \lxor P_{4,49}) \lxor P_{4,48})) \land ((P_{8,51} \lxor P_{8,49}) \lxor P_{8,48})) \land (P_{9,51} \\
-& \lxor P_{9,49}))) \land (((((P_{1,60} \lxor P_{1,59}) \land ((((P_{2,63} \lxor P_{2,60}) \lxor P_{2,59}) \lxor P_{2,56}) \\
-& \lxor P_{2,55})) \land (P_{6,60} \lxor P_{6,59})) \land ((P_{8,63} \lxor P_{8,56}) \lxor P_{8,55})) \land ((((P_{9,63} \lxor P_{9,60}) \\
-& \lxor P_{9,59}) \lxor P_{9,56}) \lxor P_{9,55}))) \land ((P_{2,69} \lxor P_{2,64}) \land (P_{9,69} \lxor P_{9,64}))) \land ((((P_{2,81} \\
-& \lxor P_{2,79}) \lxor P_{2,77}) \land (P_{8,81} \lxor P_{8,79})) \land ((P_{9,81} \lxor P_{9,79}) \lxor P_{9,77}))) \land ((((((P_{1,19} \\
-& \lxor P_{1,1}) \land ((((P_{2,64} \lxor P_{2,55}) \lxor P_{2,37}) \lxor P_{2,28}) \lxor P_{2,1})) \land ((P_{4,37} \lxor P_{4,28}) \\
-& \lxor P_{4,1})) \land ((P_{6,37} \lxor P_{6,28}) \lxor P_{6,19})) \land (((P_{8,55} \lxor P_{8,28}) \lxor P_{8,19}) \lxor P_{8,1})) \\
-& \land (((P_{9,64} \lxor P_{9,55}) \lxor P_{9,19}) \lxor P_{9,1}))) \land (((P_{2,56} \lxor P_{2,29}) \land ((P_{8,56} \lxor P_{8,29}) \\
-& \lxor P_{8,11})) \land (P_{9,56} \lxor P_{9,11}))) \land ((((P_{2,48} \lxor P_{2,3}) \land (P_{4,48} \lxor P_{4,3})) \land (P_{6,21} \\
-& \lxor P_{6,12})) \land (((P_{8,48} \lxor P_{8,21}) \lxor P_{8,12}) \lxor P_{8,3}))) \land (((((((P_{1,40} \lxor P_{1,31}) \lxor P_{1,13}) \\
-& \lxor P_{1,4}) \land ((P_{4,49} \lxor P_{4,40}) \lxor P_{4,31})) \land ((P_{6,40} \lxor P_{6,31}) \lxor P_{6,13})) \land (((P_{8,49} \\
-& \lxor P_{8,31}) \lxor P_{8,13}) \lxor P_{8,4})) \land ((P_{9,49} \lxor P_{9,13}) \lxor P_{9,4}))) \land (((((P_{1,59} \lxor P_{1,32}) \\
-& \lxor P_{1,5}) \land ((P_{2,77} \lxor P_{2,59}) \lxor P_{2,32})) \land (P_{6,59} \lxor P_{6,32})) \land ((P_{9,77} \lxor P_{9,59}) \\
-& \lxor P_{9,5}))) \land ((((((P_{1,60} \lxor P_{1,33}) \lxor P_{1,24}) \land (((P_{2,69} \lxor P_{2,60}) \lxor P_{2,51}) \lxor P_{2,33})) \\
-& \land ((P_{6,60} \lxor P_{6,33}) \lxor P_{6,24})) \land ((P_{8,51} \lxor P_{8,33}) \lxor P_{8,24})) \land (((P_{9,69} \lxor P_{9,60}) \\
-& \lxor P_{9,51}) \lxor P_{9,24}))) \land ((((((P_{1,43} \lxor P_{1,16}) \lxor P_{1,7}) \land ((P_{2,79} \lxor P_{2,52}) \lxor P_{2,43})) \\
-& \land (P_{4,52} \lxor P_{4,43})) \land ((P_{8,79} \lxor P_{8,16}) \lxor P_{8,7})) \land ((P_{9,79} \lxor P_{9,16}) \lxor P_{9,7}))) \\
-& \land ((((P_{1,45} \lxor P_{1,27}) \land ((P_{2,81} \lxor P_{2,63}) \lxor P_{2,45})) \land ((P_{8,81} \lxor P_{8,63}) \lxor P_{8,27})) \\
-& \land ((P_{9,81} \lxor P_{9,63}) \lxor P_{9,27}))) \land ((((((P_{1,19} \lxor P_{1,1}) \land (P_{2,3} \lxor P_{2,1})) \land (P_{4,3} \\
-& \lxor P_{4,1})) \land ((P_{6,21} \lxor P_{6,19}) \lxor P_{6,12})) \land (((((P_{8,21} \lxor P_{8,19}) \lxor P_{8,12}) \lxor P_{8,11}) \\
-& \lxor P_{8,3}) \lxor P_{8,1})) \land ((P_{9,19} \lxor P_{9,11}) \lxor P_{9,1}))) \land ((((((P_{1,24} \lxor P_{1,13}) \lxor P_{1,5}) \\
-& \lxor P_{1,4}) \land (P_{6,24} \lxor P_{6,13})) \land ((P_{8,24} \lxor P_{8,13}) \lxor P_{8,4})) \land (((P_{9,24} \lxor P_{9,13}) \\
-& \lxor P_{9,5}) \lxor P_{9,4}))) \land ((((P_{1,27} \lxor P_{1,16}) \lxor P_{1,7}) \land ((P_{8,27} \lxor P_{8,16}) \lxor P_{8,7})) \\
-& \land ((P_{9,27} \lxor P_{9,16}) \lxor P_{9,7}))) \land ((((((P_{2,48} \lxor P_{2,37}) \lxor P_{2,29}) \lxor P_{2,28}) \land ((P_{4,48} \\
-& \lxor P_{4,37}) \lxor P_{4,28})) \land (P_{6,37} \lxor P_{6,28})) \land ((P_{8,48} \lxor P_{8,29}) \lxor P_{8,28}))) \\
-& \land ((((((((P_{1,40} \lxor P_{1,33}) \lxor P_{1,32}) \lxor P_{1,31}) \land ((P_{2,51} \lxor P_{2,33}) \lxor P_{2,32})) \\
-& \land ((P_{4,49} \lxor P_{4,40}) \lxor P_{4,31})) \land (((P_{6,40} \lxor P_{6,33}) \lxor P_{6,32}) \lxor P_{6,31})) \land (((P_{8,51} \\
-& \lxor P_{8,49}) \lxor P_{8,33}) \lxor P_{8,31})) \land (P_{9,51} \lxor P_{9,49}))) \land (((P_{1,45} \lxor P_{1,43}) \land ((P_{2,52} \\
-& \lxor P_{2,45}) \lxor P_{2,43})) \land (P_{4,52} \lxor P_{4,43}))) \land ((((P_{2,64} \lxor P_{2,56}) \lxor P_{2,55}) \\
-& \land (P_{8,56} \lxor P_{8,55})) \land ((P_{9,64} \lxor P_{9,56}) \lxor P_{9,55}))) \land ((((P_{1,60} \lxor P_{1,59}) \\
-& \land (((P_{2,77} \lxor P_{2,69}) \lxor P_{2,60}) \lxor P_{2,59})) \land (P_{6,60} \lxor P_{6,59})) \land (((P_{9,77} \lxor P_{9,69}) \\
-& \lxor P_{9,60}) \lxor P_{9,59}))) \land ((((P_{2,81} \lxor P_{2,79}) \lxor P_{2,63}) \land ((P_{8,81} \lxor P_{8,79}) \lxor P_{8,63})) \\
-& \land ((P_{9,81} \lxor P_{9,79}) \lxor P_{9,63}))
+& (((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((\PV{1,1} \\
+& \lor \PV{2,1}) \lor \PV{4,1}) \lor \PV{8,1}) \lor \PV{9,1}) \land \lnot(\PV{1,1} \land \PV{2,1})) \land \lnot(\PV{1,1} \land \PV{4,1})) \land \lnot(\PV{1,1} \\
+& \land \PV{8,1})) \land \lnot(\PV{1,1} \land \PV{9,1})) \land \lnot(\PV{2,1} \land \PV{4,1})) \land \lnot(\PV{2,1} \land \PV{8,1})) \land \lnot(\PV{2,1} \\
+& \land \PV{9,1})) \land \lnot(\PV{4,1} \land \PV{8,1})) \land \lnot(\PV{4,1} \land \PV{9,1})) \land \lnot(\PV{8,1} \land \PV{9,1})) \land (((((\PV{2,3} \\
+& \lor \PV{4,3}) \lor \PV{8,3}) \land \lnot(\PV{2,3} \land \PV{4,3})) \land \lnot(\PV{2,3} \land \PV{8,3})) \land \lnot(\PV{4,3} \land \PV{8,3}))) \\
+& \land (((((\PV{1,4} \lor \PV{8,4}) \lor \PV{9,4}) \land \lnot(\PV{1,4} \land \PV{8,4})) \land \lnot(\PV{1,4} \land \PV{9,4})) \\
+& \land \lnot(\PV{8,4} \land \PV{9,4}))) \land ((\PV{1,5} \lor \PV{9,5}) \land \lnot(\PV{1,5} \land \PV{9,5}))) \land (((((\PV{1,7} \\
+& \lor \PV{8,7}) \lor \PV{9,7}) \land \lnot(\PV{1,7} \land \PV{8,7})) \land \lnot(\PV{1,7} \land \PV{9,7})) \land \lnot(\PV{8,7} \land \PV{9,7}))) \\
+& \land ((\PV{8,11} \lor \PV{9,11}) \land \lnot(\PV{8,11} \land \PV{9,11}))) \land ((\PV{6,12} \lor \PV{8,12}) \land \lnot(\PV{6,12} \\
+& \land \PV{8,12}))) \land (((((((((\PV{1,13} \lor \PV{6,13}) \lor \PV{8,13}) \lor \PV{9,13}) \land \lnot(\PV{1,13} \\
+& \land \PV{6,13})) \land \lnot(\PV{1,13} \land \PV{8,13})) \land \lnot(\PV{1,13} \land \PV{9,13})) \land \lnot(\PV{6,13} \land \PV{8,13})) \\
+& \land \lnot(\PV{6,13} \land \PV{9,13})) \land \lnot(\PV{8,13} \land \PV{9,13}))) \land (((((\PV{1,16} \lor \PV{8,16}) \\
+& \lor \PV{9,16}) \land \lnot(\PV{1,16} \land \PV{8,16})) \land \lnot(\PV{1,16} \land \PV{9,16})) \land \lnot(\PV{8,16} \land \PV{9,16}))) \\
+& \land (((((((((\PV{1,19} \lor \PV{6,19}) \lor \PV{8,19}) \lor \PV{9,19}) \land \lnot(\PV{1,19} \land \PV{6,19})) \\
+& \land \lnot(\PV{1,19} \land \PV{8,19})) \land \lnot(\PV{1,19} \land \PV{9,19})) \land \lnot(\PV{6,19} \land \PV{8,19})) \land \lnot(\PV{6,19} \\
+& \land \PV{9,19})) \land \lnot(\PV{8,19} \land \PV{9,19}))) \land ((\PV{6,21} \lor \PV{8,21}) \land \lnot(\PV{6,21} \land \PV{8,21}))) \\
+& \land (((((((((\PV{1,24} \lor \PV{6,24}) \lor \PV{8,24}) \lor \PV{9,24}) \land \lnot(\PV{1,24} \land \PV{6,24})) \\
+& \land \lnot(\PV{1,24} \land \PV{8,24})) \land \lnot(\PV{1,24} \land \PV{9,24})) \land \lnot(\PV{6,24} \land \PV{8,24})) \land \lnot(\PV{6,24} \\
+& \land \PV{9,24})) \land \lnot(\PV{8,24} \land \PV{9,24}))) \land (((((\PV{1,27} \lor \PV{8,27}) \lor \PV{9,27}) \land \lnot(\PV{1,27} \\
+& \land \PV{8,27})) \land \lnot(\PV{1,27} \land \PV{9,27})) \land \lnot(\PV{8,27} \land \PV{9,27}))) \land (((((((((\PV{2,28} \\
+& \lor \PV{4,28}) \lor \PV{6,28}) \lor \PV{8,28}) \land \lnot(\PV{2,28} \land \PV{4,28})) \land \lnot(\PV{2,28} \land \PV{6,28})) \land \lnot(\PV{2,28} \\
+& \land \PV{8,28})) \land \lnot(\PV{4,28} \land \PV{6,28})) \land \lnot(\PV{4,28} \land \PV{8,28})) \land \lnot(\PV{6,28} \land \PV{8,28}))) \\
+& \land ((\PV{2,29} \lor \PV{8,29}) \land \lnot(\PV{2,29} \land \PV{8,29}))) \land (((((((((\PV{1,31} \\
+& \lor \PV{4,31}) \lor \PV{6,31}) \lor \PV{8,31}) \land \lnot(\PV{1,31} \land \PV{4,31})) \land \lnot(\PV{1,31} \land \PV{6,31})) \land \lnot(\PV{1,31} \\
+& \land \PV{8,31})) \land \lnot(\PV{4,31} \land \PV{6,31})) \land \lnot(\PV{4,31} \land \PV{8,31})) \land \lnot(\PV{6,31} \land \PV{8,31}))) \\
+& \land (((((\PV{1,32} \lor \PV{2,32}) \lor \PV{6,32}) \land \lnot(\PV{1,32} \land \PV{2,32})) \land \lnot(\PV{1,32} \land \PV{6,32})) \\
+& \land \lnot(\PV{2,32} \land \PV{6,32}))) \land (((((((((\PV{1,33} \lor \PV{2,33}) \lor \PV{6,33}) \\
+& \lor \PV{8,33}) \land \lnot(\PV{1,33} \land \PV{2,33})) \land \lnot(\PV{1,33} \land \PV{6,33})) \land \lnot(\PV{1,33} \land \PV{8,33})) \\
+& \land \lnot(\PV{2,33} \land \PV{6,33})) \land \lnot(\PV{2,33} \land \PV{8,33})) \land \lnot(\PV{6,33} \land \PV{8,33}))) \land (((((\PV{2,37} \\
+& \lor \PV{4,37}) \lor \PV{6,37}) \land \lnot(\PV{2,37} \land \PV{4,37})) \land \lnot(\PV{2,37} \land \PV{6,37})) \land \lnot(\PV{4,37} \land \PV{6,37}))) \\
+& \land (((((\PV{1,40} \lor \PV{4,40}) \lor \PV{6,40}) \land \lnot(\PV{1,40} \land \PV{4,40})) \land \lnot(\PV{1,40} \land \PV{6,40})) \\
+& \land \lnot(\PV{4,40} \land \PV{6,40}))) \land (((((\PV{1,43} \lor \PV{2,43}) \lor \PV{4,43}) \land \lnot(\PV{1,43} \\
+& \land \PV{2,43})) \land \lnot(\PV{1,43} \land \PV{4,43})) \land \lnot(\PV{2,43} \land \PV{4,43}))) \land ((\PV{1,45} \lor \PV{2,45}) \\
+& \land \lnot(\PV{1,45} \land \PV{2,45}))) \land (((((\PV{2,48} \lor \PV{4,48}) \lor \PV{8,48}) \land \lnot(\PV{2,48} \\
+& \land \PV{4,48})) \land \lnot(\PV{2,48} \land \PV{8,48})) \land \lnot(\PV{4,48} \land \PV{8,48}))) \land (((((\PV{4,49} \\
+& \lor \PV{8,49}) \lor \PV{9,49}) \land \lnot(\PV{4,49} \land \PV{8,49})) \land \lnot(\PV{4,49} \land \PV{9,49})) \land \lnot(\PV{8,49} \land \PV{9,49}))) \\
+& \land (((((\PV{2,51} \lor \PV{8,51}) \lor \PV{9,51}) \land \lnot(\PV{2,51} \land \PV{8,51})) \land \lnot(\PV{2,51} \land \PV{9,51})) \\
+& \land \lnot(\PV{8,51} \land \PV{9,51}))) \land ((\PV{2,52} \lor \PV{4,52}) \land \lnot(\PV{2,52} \land \PV{4,52}))) \land (((((\PV{2,55} \\
+& \lor \PV{8,55}) \lor \PV{9,55}) \land \lnot(\PV{2,55} \land \PV{8,55})) \land \lnot(\PV{2,55} \land \PV{9,55})) \land \lnot(\PV{8,55} \land \PV{9,55}))) \\
+& \land (((((\PV{2,56} \lor \PV{8,56}) \lor \PV{9,56}) \land \lnot(\PV{2,56} \land \PV{8,56})) \land \lnot(\PV{2,56} \land \PV{9,56})) \\
+& \land \lnot(\PV{8,56} \land \PV{9,56}))) \land (((((((((\PV{1,59} \lor \PV{2,59}) \lor \PV{6,59}) \\
+& \lor \PV{9,59}) \land \lnot(\PV{1,59} \land \PV{2,59})) \land \lnot(\PV{1,59} \land \PV{6,59})) \land \lnot(\PV{1,59} \land \PV{9,59})) \\
+& \land \lnot(\PV{2,59} \land \PV{6,59})) \land \lnot(\PV{2,59} \land \PV{9,59})) \land \lnot(\PV{6,59} \land \PV{9,59}))) \land (((((((((\PV{1,60} \\
+& \lor \PV{2,60}) \lor \PV{6,60}) \lor \PV{9,60}) \land \lnot(\PV{1,60} \land \PV{2,60})) \land \lnot(\PV{1,60} \land \PV{6,60})) \land \lnot(\PV{1,60} \\
+& \land \PV{9,60})) \land \lnot(\PV{2,60} \land \PV{6,60})) \land \lnot(\PV{2,60} \land \PV{9,60})) \land \lnot(\PV{6,60} \land \PV{9,60}))) \\
+& \land (((((\PV{2,63} \lor \PV{8,63}) \lor \PV{9,63}) \land \lnot(\PV{2,63} \land \PV{8,63})) \land \lnot(\PV{2,63} \land \PV{9,63})) \\
+& \land \lnot(\PV{8,63} \land \PV{9,63}))) \land ((\PV{2,64} \lor \PV{9,64}) \land \lnot(\PV{2,64} \land \PV{9,64}))) \land ((\PV{2,69} \\
+& \lor \PV{9,69}) \land \lnot(\PV{2,69} \land \PV{9,69}))) \land ((\PV{2,77} \lor \PV{9,77}) \land \lnot(\PV{2,77} \land \PV{9,77}))) \\
+& \land (((((\PV{2,79} \lor \PV{8,79}) \lor \PV{9,79}) \land \lnot(\PV{2,79} \land \PV{8,79})) \land \lnot(\PV{2,79} \land \PV{9,79})) \\
+& \land \lnot(\PV{8,79} \land \PV{9,79}))) \land (((((\PV{2,81} \lor \PV{8,81}) \lor \PV{9,81}) \land \lnot(\PV{2,81} \\
+& \land \PV{8,81})) \land \lnot(\PV{2,81} \land \PV{9,81})) \land \lnot(\PV{8,81} \land \PV{9,81}))) \land (((((((((((((\PV{1,7} \\
+& \lor \PV{1,5}) \lor \PV{1,4}) \lor \PV{1,1}) \land \lnot(\PV{1,7} \land \PV{1,5})) \land \lnot(\PV{1,7} \land \PV{1,4})) \land \lnot(\PV{1,7} \\
+& \land \PV{1,1})) \land \lnot(\PV{1,5} \land \PV{1,4})) \land \lnot(\PV{1,5} \land \PV{1,1})) \land \lnot(\PV{1,4} \land \PV{1,1})) \land ((\PV{2,3} \\
+& \lor \PV{2,1}) \land \lnot(\PV{2,3} \land \PV{2,1}))) \land ((\PV{4,3} \lor \PV{4,1}) \land \lnot(\PV{4,3} \land \PV{4,1}))) \land (((((((((\PV{8,7} \\
+& \lor \PV{8,4}) \lor \PV{8,3}) \lor \PV{8,1}) \land \lnot(\PV{8,7} \land \PV{8,4})) \land \lnot(\PV{8,7} \land \PV{8,3})) \land \lnot(\PV{8,7} \\
+& \land \PV{8,1})) \land \lnot(\PV{8,4} \land \PV{8,3})) \land \lnot(\PV{8,4} \land \PV{8,1})) \land \lnot(\PV{8,3} \land \PV{8,1}))) \\
+& \land (((((((((\PV{9,7} \lor \PV{9,5}) \lor \PV{9,4}) \lor \PV{9,1}) \land \lnot(\PV{9,7} \land \PV{9,5})) \\
+& \land \lnot(\PV{9,7} \land \PV{9,4})) \land \lnot(\PV{9,7} \land \PV{9,1})) \land \lnot(\PV{9,5} \land \PV{9,4})) \land \lnot(\PV{9,5} \\
+& \land \PV{9,1})) \land \lnot(\PV{9,4} \land \PV{9,1})))) \land (((((\PV{1,16} \lor \PV{1,13}) \land \lnot(\PV{1,16} \\
+& \land \PV{1,13})) \land ((\PV{6,13} \lor \PV{6,12}) \land \lnot(\PV{6,13} \land \PV{6,12}))) \land (((((((((\PV{8,16} \\
+& \lor \PV{8,13}) \lor \PV{8,12}) \lor \PV{8,11}) \land \lnot(\PV{8,16} \land \PV{8,13})) \land \lnot(\PV{8,16} \land \PV{8,12})) \land \lnot(\PV{8,16} \\
+& \land \PV{8,11})) \land \lnot(\PV{8,13} \land \PV{8,12})) \land \lnot(\PV{8,13} \land \PV{8,11})) \land \lnot(\PV{8,12} \land \PV{8,11}))) \\
+& \land (((((\PV{9,16} \lor \PV{9,13}) \lor \PV{9,11}) \land \lnot(\PV{9,16} \land \PV{9,13})) \land \lnot(\PV{9,16} \land \PV{9,11})) \\
+& \land \lnot(\PV{9,13} \land \PV{9,11})))) \land ((((((((\PV{1,27} \lor \PV{1,24}) \lor \PV{1,19}) \\
+& \land \lnot(\PV{1,27} \land \PV{1,24})) \land \lnot(\PV{1,27} \land \PV{1,19})) \land \lnot(\PV{1,24} \land \PV{1,19})) \land (((((\PV{6,24} \\
+& \lor \PV{6,21}) \lor \PV{6,19}) \land \lnot(\PV{6,24} \land \PV{6,21})) \land \lnot(\PV{6,24} \land \PV{6,19})) \land \lnot(\PV{6,21} \land \PV{6,19}))) \\
+& \land (((((((((\PV{8,27} \lor \PV{8,24}) \lor \PV{8,21}) \lor \PV{8,19}) \land \lnot(\PV{8,27} \land \PV{8,24})) \\
+& \land \lnot(\PV{8,27} \land \PV{8,21})) \land \lnot(\PV{8,27} \land \PV{8,19})) \land \lnot(\PV{8,24} \land \PV{8,21})) \land \lnot(\PV{8,24} \\
+& \land \PV{8,19})) \land \lnot(\PV{8,21} \land \PV{8,19}))) \land (((((\PV{9,27} \lor \PV{9,24}) \lor \PV{9,19}) \land \lnot(\PV{9,27} \\
+& \land \PV{9,24})) \land \lnot(\PV{9,27} \land \PV{9,19})) \land \lnot(\PV{9,24} \land \PV{9,19})))) \land (((((((((\PV{1,33} \\
+& \lor \PV{1,32}) \lor \PV{1,31}) \land \lnot(\PV{1,33} \land \PV{1,32})) \land \lnot(\PV{1,33} \land \PV{1,31})) \land \lnot(\PV{1,32} \land \PV{1,31})) \\
+& \land (((((((((\PV{2,33} \lor \PV{2,32}) \lor \PV{2,29}) \lor \PV{2,28}) \land \lnot(\PV{2,33} \land \PV{2,32})) \\
+& \land \lnot(\PV{2,33} \land \PV{2,29})) \land \lnot(\PV{2,33} \land \PV{2,28})) \land \lnot(\PV{2,32} \land \PV{2,29})) \land \lnot(\PV{2,32} \\
+& \land \PV{2,28})) \land \lnot(\PV{2,29} \land \PV{2,28}))) \land ((\PV{4,31} \lor \PV{4,28}) \land \lnot(\PV{4,31} \land \PV{4,28}))) \\
+& \land (((((((((\PV{6,33} \lor \PV{6,32}) \lor \PV{6,31}) \lor \PV{6,28}) \land \lnot(\PV{6,33} \land \PV{6,32})) \\
+& \land \lnot(\PV{6,33} \land \PV{6,31})) \land \lnot(\PV{6,33} \land \PV{6,28})) \land \lnot(\PV{6,32} \land \PV{6,31})) \land \lnot(\PV{6,32} \\
+& \land \PV{6,28})) \land \lnot(\PV{6,31} \land \PV{6,28}))) \land (((((((((\PV{8,33} \lor \PV{8,31}) \\
+& \lor \PV{8,29}) \lor \PV{8,28}) \land \lnot(\PV{8,33} \land \PV{8,31})) \land \lnot(\PV{8,33} \land \PV{8,29})) \land \lnot(\PV{8,33} \land \PV{8,28})) \\
+& \land \lnot(\PV{8,31} \land \PV{8,29})) \land \lnot(\PV{8,31} \land \PV{8,28})) \land \lnot(\PV{8,29} \land \PV{8,28})))) \land ((((((((\PV{1,45} \\
+& \lor \PV{1,43}) \lor \PV{1,40}) \land \lnot(\PV{1,45} \land \PV{1,43})) \land \lnot(\PV{1,45} \land \PV{1,40})) \land \lnot(\PV{1,43} \land \PV{1,40})) \\
+& \land (((((\PV{2,45} \lor \PV{2,43}) \lor \PV{2,37}) \land \lnot(\PV{2,45} \land \PV{2,43})) \land \lnot(\PV{2,45} \land \PV{2,37})) \\
+& \land \lnot(\PV{2,43} \land \PV{2,37}))) \land (((((\PV{4,43} \lor \PV{4,40}) \lor \PV{4,37}) \land \lnot(\PV{4,43} \\
+& \land \PV{4,40})) \land \lnot(\PV{4,43} \land \PV{4,37})) \land \lnot(\PV{4,40} \land \PV{4,37}))) \land ((\PV{6,40} \lor \PV{6,37}) \\
+& \land \lnot(\PV{6,40} \land \PV{6,37})))) \land ((((((((\PV{2,52} \lor \PV{2,51}) \lor \PV{2,48}) \\
+& \land \lnot(\PV{2,52} \land \PV{2,51})) \land \lnot(\PV{2,52} \land \PV{2,48})) \land \lnot(\PV{2,51} \land \PV{2,48})) \land (((((\PV{4,52} \\
+& \lor \PV{4,49}) \lor \PV{4,48}) \land \lnot(\PV{4,52} \land \PV{4,49})) \land \lnot(\PV{4,52} \land \PV{4,48})) \land \lnot(\PV{4,49} \land \PV{4,48}))) \\
+& \land (((((\PV{8,51} \lor \PV{8,49}) \lor \PV{8,48}) \land \lnot(\PV{8,51} \land \PV{8,49})) \land \lnot(\PV{8,51} \land \PV{8,48})) \\
+& \land \lnot(\PV{8,49} \land \PV{8,48}))) \land ((\PV{9,51} \lor \PV{9,49}) \land \lnot(\PV{9,51} \land \PV{9,49})))) \land ((((((\PV{1,60} \\
+& \lor \PV{1,59}) \land \lnot(\PV{1,60} \land \PV{1,59})) \land ((((((((((((((\PV{2,63} \\
+& \lor \PV{2,60}) \lor \PV{2,59}) \lor \PV{2,56}) \lor \PV{2,55}) \land \lnot(\PV{2,63} \land \PV{2,60})) \land \lnot(\PV{2,63} \land \PV{2,59})) \\
+& \land \lnot(\PV{2,63} \land \PV{2,56})) \land \lnot(\PV{2,63} \land \PV{2,55})) \land \lnot(\PV{2,60} \land \PV{2,59})) \land \lnot(\PV{2,60} \\
+& \land \PV{2,56})) \land \lnot(\PV{2,60} \land \PV{2,55})) \land \lnot(\PV{2,59} \land \PV{2,56})) \land \lnot(\PV{2,59} \land \PV{2,55})) \\
+& \land \lnot(\PV{2,56} \land \PV{2,55}))) \land ((\PV{6,60} \lor \PV{6,59}) \land \lnot(\PV{6,60} \land \PV{6,59}))) \land (((((\PV{8,63} \\
+& \lor \PV{8,56}) \lor \PV{8,55}) \land \lnot(\PV{8,63} \land \PV{8,56})) \land \lnot(\PV{8,63} \land \PV{8,55})) \land \lnot(\PV{8,56} \land \PV{8,55}))) \\
+& \land ((((((((((((((\PV{9,63} \lor \PV{9,60}) \lor \PV{9,59}) \lor \PV{9,56}) \\
+& \lor \PV{9,55}) \land \lnot(\PV{9,63} \land \PV{9,60})) \land \lnot(\PV{9,63} \land \PV{9,59})) \land \lnot(\PV{9,63} \land \PV{9,56})) \\
+& \land \lnot(\PV{9,63} \land \PV{9,55})) \land \lnot(\PV{9,60} \land \PV{9,59})) \land \lnot(\PV{9,60} \land \PV{9,56})) \land \lnot(\PV{9,60} \\
+& \land \PV{9,55})) \land \lnot(\PV{9,59} \land \PV{9,56})) \land \lnot(\PV{9,59} \land \PV{9,55})) \land \lnot(\PV{9,56} \land \PV{9,55})))) \\
+& \land (((\PV{2,69} \lor \PV{2,64}) \land \lnot(\PV{2,69} \land \PV{2,64})) \land ((\PV{9,69} \lor \PV{9,64}) \land \lnot(\PV{9,69} \\
+& \land \PV{9,64})))) \land (((((((\PV{2,81} \lor \PV{2,79}) \lor \PV{2,77}) \land \lnot(\PV{2,81} \land \PV{2,79})) \\
+& \land \lnot(\PV{2,81} \land \PV{2,77})) \land \lnot(\PV{2,79} \land \PV{2,77})) \land ((\PV{8,81} \lor \PV{8,79}) \land \lnot(\PV{8,81} \\
+& \land \PV{8,79}))) \land (((((\PV{9,81} \lor \PV{9,79}) \lor \PV{9,77}) \land \lnot(\PV{9,81} \land \PV{9,79})) \land \lnot(\PV{9,81} \\
+& \land \PV{9,77})) \land \lnot(\PV{9,79} \land \PV{9,77})))) \land (((((((\PV{1,19} \lor \PV{1,1}) \land \lnot(\PV{1,19} \\
+& \land \PV{1,1})) \land ((((((((((((((\PV{2,64} \lor \PV{2,55}) \lor \PV{2,37}) \\
+& \lor \PV{2,28}) \lor \PV{2,1}) \land \lnot(\PV{2,64} \land \PV{2,55})) \land \lnot(\PV{2,64} \land \PV{2,37})) \land \lnot(\PV{2,64} \land \PV{2,28})) \\
+& \land \lnot(\PV{2,64} \land \PV{2,1})) \land \lnot(\PV{2,55} \land \PV{2,37})) \land \lnot(\PV{2,55} \land \PV{2,28})) \land \lnot(\PV{2,55} \\
+& \land \PV{2,1})) \land \lnot(\PV{2,37} \land \PV{2,28})) \land \lnot(\PV{2,37} \land \PV{2,1})) \land \lnot(\PV{2,28} \land \PV{2,1}))) \\
+& \land (((((\PV{4,37} \lor \PV{4,28}) \lor \PV{4,1}) \land \lnot(\PV{4,37} \land \PV{4,28})) \land \lnot(\PV{4,37} \land \PV{4,1})) \\
+& \land \lnot(\PV{4,28} \land \PV{4,1}))) \land (((((\PV{6,37} \lor \PV{6,28}) \lor \PV{6,19}) \land \lnot(\PV{6,37} \\
+& \land \PV{6,28})) \land \lnot(\PV{6,37} \land \PV{6,19})) \land \lnot(\PV{6,28} \land \PV{6,19}))) \land (((((((((\PV{8,55} \\
+& \lor \PV{8,28}) \lor \PV{8,19}) \lor \PV{8,1}) \land \lnot(\PV{8,55} \land \PV{8,28})) \land \lnot(\PV{8,55} \land \PV{8,19})) \land \lnot(\PV{8,55} \\
+& \land \PV{8,1})) \land \lnot(\PV{8,28} \land \PV{8,19})) \land \lnot(\PV{8,28} \land \PV{8,1})) \land \lnot(\PV{8,19} \land \PV{8,1}))) \\
+& \land (((((((((\PV{9,64} \lor \PV{9,55}) \lor \PV{9,19}) \lor \PV{9,1}) \land \lnot(\PV{9,64} \land \PV{9,55})) \\
+& \land \lnot(\PV{9,64} \land \PV{9,19})) \land \lnot(\PV{9,64} \land \PV{9,1})) \land \lnot(\PV{9,55} \land \PV{9,19})) \land \lnot(\PV{9,55} \\
+& \land \PV{9,1})) \land \lnot(\PV{9,19} \land \PV{9,1})))) \land ((((\PV{2,56} \lor \PV{2,29}) \land \lnot(\PV{2,56} \\
+& \land \PV{2,29})) \land (((((\PV{8,56} \lor \PV{8,29}) \lor \PV{8,11}) \land \lnot(\PV{8,56} \land \PV{8,29})) \land \lnot(\PV{8,56} \\
+& \land \PV{8,11})) \land \lnot(\PV{8,29} \land \PV{8,11}))) \land ((\PV{9,56} \lor \PV{9,11}) \land \lnot(\PV{9,56} \land \PV{9,11})))) \\
+& \land (((((\PV{2,48} \lor \PV{2,3}) \land \lnot(\PV{2,48} \land \PV{2,3})) \land ((\PV{4,48} \lor \PV{4,3}) \land \lnot(\PV{4,48} \\
+& \land \PV{4,3}))) \land ((\PV{6,21} \lor \PV{6,12}) \land \lnot(\PV{6,21} \land \PV{6,12}))) \land (((((((((\PV{8,48} \\
+& \lor \PV{8,21}) \lor \PV{8,12}) \lor \PV{8,3}) \land \lnot(\PV{8,48} \land \PV{8,21})) \land \lnot(\PV{8,48} \land \PV{8,12})) \land \lnot(\PV{8,48} \\
+& \land \PV{8,3})) \land \lnot(\PV{8,21} \land \PV{8,12})) \land \lnot(\PV{8,21} \land \PV{8,3})) \land \lnot(\PV{8,12} \land \PV{8,3})))) \\
+& \land (((((((((((((\PV{1,40} \lor \PV{1,31}) \lor \PV{1,13}) \lor \PV{1,4}) \land \lnot(\PV{1,40} \\
+& \land \PV{1,31})) \land \lnot(\PV{1,40} \land \PV{1,13})) \land \lnot(\PV{1,40} \land \PV{1,4})) \land \lnot(\PV{1,31} \land \PV{1,13})) \\
+& \land \lnot(\PV{1,31} \land \PV{1,4})) \land \lnot(\PV{1,13} \land \PV{1,4})) \land (((((\PV{4,49} \lor \PV{4,40}) \\
+& \lor \PV{4,31}) \land \lnot(\PV{4,49} \land \PV{4,40})) \land \lnot(\PV{4,49} \land \PV{4,31})) \land \lnot(\PV{4,40} \land \PV{4,31}))) \\
+& \land (((((\PV{6,40} \lor \PV{6,31}) \lor \PV{6,13}) \land \lnot(\PV{6,40} \land \PV{6,31})) \land \lnot(\PV{6,40} \land \PV{6,13})) \\
+& \land \lnot(\PV{6,31} \land \PV{6,13}))) \land (((((((((\PV{8,49} \lor \PV{8,31}) \lor \PV{8,13}) \\
+& \lor \PV{8,4}) \land \lnot(\PV{8,49} \land \PV{8,31})) \land \lnot(\PV{8,49} \land \PV{8,13})) \land \lnot(\PV{8,49} \land \PV{8,4})) \land \lnot(\PV{8,31} \\
+& \land \PV{8,13})) \land \lnot(\PV{8,31} \land \PV{8,4})) \land \lnot(\PV{8,13} \land \PV{8,4}))) \land (((((\PV{9,49} \\
+& \lor \PV{9,13}) \lor \PV{9,4}) \land \lnot(\PV{9,49} \land \PV{9,13})) \land \lnot(\PV{9,49} \land \PV{9,4})) \land \lnot(\PV{9,13} \land \PV{9,4})))) \\
+& \land ((((((((\PV{1,59} \lor \PV{1,32}) \lor \PV{1,5}) \land \lnot(\PV{1,59} \land \PV{1,32})) \land \lnot(\PV{1,59} \\
+& \land \PV{1,5})) \land \lnot(\PV{1,32} \land \PV{1,5})) \land (((((\PV{2,77} \lor \PV{2,59}) \lor \PV{2,32}) \land \lnot(\PV{2,77} \\
+& \land \PV{2,59})) \land \lnot(\PV{2,77} \land \PV{2,32})) \land \lnot(\PV{2,59} \land \PV{2,32}))) \land ((\PV{6,59} \lor \PV{6,32}) \\
+& \land \lnot(\PV{6,59} \land \PV{6,32}))) \land (((((\PV{9,77} \lor \PV{9,59}) \lor \PV{9,5}) \land \lnot(\PV{9,77} \\
+& \land \PV{9,59})) \land \lnot(\PV{9,77} \land \PV{9,5})) \land \lnot(\PV{9,59} \land \PV{9,5})))) \land (((((((((\PV{1,60} \\
+& \lor \PV{1,33}) \lor \PV{1,24}) \land \lnot(\PV{1,60} \land \PV{1,33})) \land \lnot(\PV{1,60} \land \PV{1,24})) \land \lnot(\PV{1,33} \land \PV{1,24})) \\
+& \land (((((((((\PV{2,69} \lor \PV{2,60}) \lor \PV{2,51}) \lor \PV{2,33}) \land \lnot(\PV{2,69} \land \PV{2,60})) \\
+& \land \lnot(\PV{2,69} \land \PV{2,51})) \land \lnot(\PV{2,69} \land \PV{2,33})) \land \lnot(\PV{2,60} \land \PV{2,51})) \land \lnot(\PV{2,60} \\
+& \land \PV{2,33})) \land \lnot(\PV{2,51} \land \PV{2,33}))) \land (((((\PV{6,60} \lor \PV{6,33}) \lor \PV{6,24}) \land \lnot(\PV{6,60} \\
+& \land \PV{6,33})) \land \lnot(\PV{6,60} \land \PV{6,24})) \land \lnot(\PV{6,33} \land \PV{6,24}))) \land (((((\PV{8,51} \\
+& \lor \PV{8,33}) \lor \PV{8,24}) \land \lnot(\PV{8,51} \land \PV{8,33})) \land \lnot(\PV{8,51} \land \PV{8,24})) \land \lnot(\PV{8,33} \land \PV{8,24}))) \\
+& \land (((((((((\PV{9,69} \lor \PV{9,60}) \lor \PV{9,51}) \lor \PV{9,24}) \land \lnot(\PV{9,69} \land \PV{9,60})) \\
+& \land \lnot(\PV{9,69} \land \PV{9,51})) \land \lnot(\PV{9,69} \land \PV{9,24})) \land \lnot(\PV{9,60} \land \PV{9,51})) \land \lnot(\PV{9,60} \\
+& \land \PV{9,24})) \land \lnot(\PV{9,51} \land \PV{9,24})))) \land (((((((((\PV{1,43} \lor \PV{1,16}) \\
+& \lor \PV{1,7}) \land \lnot(\PV{1,43} \land \PV{1,16})) \land \lnot(\PV{1,43} \land \PV{1,7})) \land \lnot(\PV{1,16} \land \PV{1,7})) \land (((((\PV{2,79} \\
+& \lor \PV{2,52}) \lor \PV{2,43}) \land \lnot(\PV{2,79} \land \PV{2,52})) \land \lnot(\PV{2,79} \land \PV{2,43})) \land \lnot(\PV{2,52} \land \PV{2,43}))) \\
+& \land ((\PV{4,52} \lor \PV{4,43}) \land \lnot(\PV{4,52} \land \PV{4,43}))) \land (((((\PV{8,79} \lor \PV{8,16}) \\
+& \lor \PV{8,7}) \land \lnot(\PV{8,79} \land \PV{8,16})) \land \lnot(\PV{8,79} \land \PV{8,7})) \land \lnot(\PV{8,16} \land \PV{8,7}))) \\
+& \land (((((\PV{9,79} \lor \PV{9,16}) \lor \PV{9,7}) \land \lnot(\PV{9,79} \land \PV{9,16})) \land \lnot(\PV{9,79} \land \PV{9,7})) \\
+& \land \lnot(\PV{9,16} \land \PV{9,7})))) \land (((((\PV{1,45} \lor \PV{1,27}) \land \lnot(\PV{1,45} \land \PV{1,27})) \\
+& \land (((((\PV{2,81} \lor \PV{2,63}) \lor \PV{2,45}) \land \lnot(\PV{2,81} \land \PV{2,63})) \land \lnot(\PV{2,81} \land \PV{2,45})) \\
+& \land \lnot(\PV{2,63} \land \PV{2,45}))) \land (((((\PV{8,81} \lor \PV{8,63}) \lor \PV{8,27}) \land \lnot(\PV{8,81} \\
+& \land \PV{8,63})) \land \lnot(\PV{8,81} \land \PV{8,27})) \land \lnot(\PV{8,63} \land \PV{8,27}))) \land (((((\PV{9,81} \\
+& \lor \PV{9,63}) \lor \PV{9,27}) \land \lnot(\PV{9,81} \land \PV{9,63})) \land \lnot(\PV{9,81} \land \PV{9,27})) \land \lnot(\PV{9,63} \land \PV{9,27})))) \\
+& \land (((((((\PV{1,19} \lor \PV{1,1}) \land \lnot(\PV{1,19} \land \PV{1,1})) \land ((\PV{2,3} \lor \PV{2,1}) \\
+& \land \lnot(\PV{2,3} \land \PV{2,1}))) \land ((\PV{4,3} \lor \PV{4,1}) \land \lnot(\PV{4,3} \land \PV{4,1}))) \land (((((\PV{6,21} \\
+& \lor \PV{6,19}) \lor \PV{6,12}) \land \lnot(\PV{6,21} \land \PV{6,19})) \land \lnot(\PV{6,21} \land \PV{6,12})) \land \lnot(\PV{6,19} \land \PV{6,12}))) \\
+& \land ((((((((((((((((((((\PV{8,21} \\
+& \lor \PV{8,19}) \lor \PV{8,12}) \lor \PV{8,11}) \lor \PV{8,3}) \lor \PV{8,1}) \land \lnot(\PV{8,21} \land \PV{8,19})) \land \lnot(\PV{8,21} \land \PV{8,12})) \\
+& \land \lnot(\PV{8,21} \land \PV{8,11})) \land \lnot(\PV{8,21} \land \PV{8,3})) \land \lnot(\PV{8,21} \land \PV{8,1})) \land \lnot(\PV{8,19} \\
+& \land \PV{8,12})) \land \lnot(\PV{8,19} \land \PV{8,11})) \land \lnot(\PV{8,19} \land \PV{8,3})) \land \lnot(\PV{8,19} \land \PV{8,1})) \\
+& \land \lnot(\PV{8,12} \land \PV{8,11})) \land \lnot(\PV{8,12} \land \PV{8,3})) \land \lnot(\PV{8,12} \land \PV{8,1})) \land \lnot(\PV{8,11} \\
+& \land \PV{8,3})) \land \lnot(\PV{8,11} \land \PV{8,1})) \land \lnot(\PV{8,3} \land \PV{8,1}))) \land (((((\PV{9,19} \\
+& \lor \PV{9,11}) \lor \PV{9,1}) \land \lnot(\PV{9,19} \land \PV{9,11})) \land \lnot(\PV{9,19} \land \PV{9,1})) \land \lnot(\PV{9,11} \land \PV{9,1})))) \\
+& \land ((((((((((((\PV{1,24} \lor \PV{1,13}) \lor \PV{1,5}) \lor \PV{1,4}) \land \lnot(\PV{1,24} \\
+& \land \PV{1,13})) \land \lnot(\PV{1,24} \land \PV{1,5})) \land \lnot(\PV{1,24} \land \PV{1,4})) \land \lnot(\PV{1,13} \land \PV{1,5})) \\
+& \land \lnot(\PV{1,13} \land \PV{1,4})) \land \lnot(\PV{1,5} \land \PV{1,4})) \land ((\PV{6,24} \lor \PV{6,13}) \land \lnot(\PV{6,24} \\
+& \land \PV{6,13}))) \land (((((\PV{8,24} \lor \PV{8,13}) \lor \PV{8,4}) \land \lnot(\PV{8,24} \land \PV{8,13})) \land \lnot(\PV{8,24} \\
+& \land \PV{8,4})) \land \lnot(\PV{8,13} \land \PV{8,4}))) \land (((((((((\PV{9,24} \lor \PV{9,13}) \\
+& \lor \PV{9,5}) \lor \PV{9,4}) \land \lnot(\PV{9,24} \land \PV{9,13})) \land \lnot(\PV{9,24} \land \PV{9,5})) \land \lnot(\PV{9,24} \land \PV{9,4})) \\
+& \land \lnot(\PV{9,13} \land \PV{9,5})) \land \lnot(\PV{9,13} \land \PV{9,4})) \land \lnot(\PV{9,5} \land \PV{9,4})))) \land (((((((\PV{1,27} \\
+& \lor \PV{1,16}) \lor \PV{1,7}) \land \lnot(\PV{1,27} \land \PV{1,16})) \land \lnot(\PV{1,27} \land \PV{1,7})) \land \lnot(\PV{1,16} \land \PV{1,7})) \\
+& \land (((((\PV{8,27} \lor \PV{8,16}) \lor \PV{8,7}) \land \lnot(\PV{8,27} \land \PV{8,16})) \land \lnot(\PV{8,27} \land \PV{8,7})) \\
+& \land \lnot(\PV{8,16} \land \PV{8,7}))) \land (((((\PV{9,27} \lor \PV{9,16}) \lor \PV{9,7}) \land \lnot(\PV{9,27} \\
+& \land \PV{9,16})) \land \lnot(\PV{9,27} \land \PV{9,7})) \land \lnot(\PV{9,16} \land \PV{9,7})))) \land ((((((((((((\PV{2,48} \\
+& \lor \PV{2,37}) \lor \PV{2,29}) \lor \PV{2,28}) \land \lnot(\PV{2,48} \land \PV{2,37})) \land \lnot(\PV{2,48} \land \PV{2,29})) \land \lnot(\PV{2,48} \\
+& \land \PV{2,28})) \land \lnot(\PV{2,37} \land \PV{2,29})) \land \lnot(\PV{2,37} \land \PV{2,28})) \land \lnot(\PV{2,29} \land \PV{2,28})) \\
+& \land (((((\PV{4,48} \lor \PV{4,37}) \lor \PV{4,28}) \land \lnot(\PV{4,48} \land \PV{4,37})) \land \lnot(\PV{4,48} \land \PV{4,28})) \\
+& \land \lnot(\PV{4,37} \land \PV{4,28}))) \land ((\PV{6,37} \lor \PV{6,28}) \land \lnot(\PV{6,37} \land \PV{6,28}))) \land (((((\PV{8,48} \\
+& \lor \PV{8,29}) \lor \PV{8,28}) \land \lnot(\PV{8,48} \land \PV{8,29})) \land \lnot(\PV{8,48} \land \PV{8,28})) \land \lnot(\PV{8,29} \land \PV{8,28})))) \\
+& \land ((((((((((((((\PV{1,40} \lor \PV{1,33}) \lor \PV{1,32}) \lor \PV{1,31}) \\
+& \land \lnot(\PV{1,40} \land \PV{1,33})) \land \lnot(\PV{1,40} \land \PV{1,32})) \land \lnot(\PV{1,40} \land \PV{1,31})) \land \lnot(\PV{1,33} \\
+& \land \PV{1,32})) \land \lnot(\PV{1,33} \land \PV{1,31})) \land \lnot(\PV{1,32} \land \PV{1,31})) \land (((((\PV{2,51} \\
+& \lor \PV{2,33}) \lor \PV{2,32}) \land \lnot(\PV{2,51} \land \PV{2,33})) \land \lnot(\PV{2,51} \land \PV{2,32})) \land \lnot(\PV{2,33} \land \PV{2,32}))) \\
+& \land (((((\PV{4,49} \lor \PV{4,40}) \lor \PV{4,31}) \land \lnot(\PV{4,49} \land \PV{4,40})) \land \lnot(\PV{4,49} \land \PV{4,31})) \\
+& \land \lnot(\PV{4,40} \land \PV{4,31}))) \land (((((((((\PV{6,40} \lor \PV{6,33}) \lor \PV{6,32}) \\
+& \lor \PV{6,31}) \land \lnot(\PV{6,40} \land \PV{6,33})) \land \lnot(\PV{6,40} \land \PV{6,32})) \land \lnot(\PV{6,40} \land \PV{6,31})) \\
+& \land \lnot(\PV{6,33} \land \PV{6,32})) \land \lnot(\PV{6,33} \land \PV{6,31})) \land \lnot(\PV{6,32} \land \PV{6,31}))) \land (((((((((\PV{8,51} \\
+& \lor \PV{8,49}) \lor \PV{8,33}) \lor \PV{8,31}) \land \lnot(\PV{8,51} \land \PV{8,49})) \land \lnot(\PV{8,51} \land \PV{8,33})) \land \lnot(\PV{8,51} \\
+& \land \PV{8,31})) \land \lnot(\PV{8,49} \land \PV{8,33})) \land \lnot(\PV{8,49} \land \PV{8,31})) \land \lnot(\PV{8,33} \land \PV{8,31}))) \\
+& \land ((\PV{9,51} \lor \PV{9,49}) \land \lnot(\PV{9,51} \land \PV{9,49})))) \land ((((\PV{1,45} \lor \PV{1,43}) \\
+& \land \lnot(\PV{1,45} \land \PV{1,43})) \land (((((\PV{2,52} \lor \PV{2,45}) \lor \PV{2,43}) \land \lnot(\PV{2,52} \land \PV{2,45})) \\
+& \land \lnot(\PV{2,52} \land \PV{2,43})) \land \lnot(\PV{2,45} \land \PV{2,43}))) \land ((\PV{4,52} \lor \PV{4,43}) \land \lnot(\PV{4,52} \\
+& \land \PV{4,43})))) \land (((((((\PV{2,64} \lor \PV{2,56}) \lor \PV{2,55}) \land \lnot(\PV{2,64} \land \PV{2,56})) \\
+& \land \lnot(\PV{2,64} \land \PV{2,55})) \land \lnot(\PV{2,56} \land \PV{2,55})) \land ((\PV{8,56} \lor \PV{8,55}) \land \lnot(\PV{8,56} \\
+& \land \PV{8,55}))) \land (((((\PV{9,64} \lor \PV{9,56}) \lor \PV{9,55}) \land \lnot(\PV{9,64} \land \PV{9,56})) \land \lnot(\PV{9,64} \\
+& \land \PV{9,55})) \land \lnot(\PV{9,56} \land \PV{9,55})))) \land (((((\PV{1,60} \lor \PV{1,59}) \land \lnot(\PV{1,60} \\
+& \land \PV{1,59})) \land (((((((((\PV{2,77} \lor \PV{2,69}) \lor \PV{2,60}) \lor \PV{2,59}) \land \lnot(\PV{2,77} \\
+& \land \PV{2,69})) \land \lnot(\PV{2,77} \land \PV{2,60})) \land \lnot(\PV{2,77} \land \PV{2,59})) \land \lnot(\PV{2,69} \land \PV{2,60})) \\
+& \land \lnot(\PV{2,69} \land \PV{2,59})) \land \lnot(\PV{2,60} \land \PV{2,59}))) \land ((\PV{6,60} \lor \PV{6,59}) \land \lnot(\PV{6,60} \\
+& \land \PV{6,59}))) \land (((((((((\PV{9,77} \lor \PV{9,69}) \lor \PV{9,60}) \lor \PV{9,59}) \land \lnot(\PV{9,77} \\
+& \land \PV{9,69})) \land \lnot(\PV{9,77} \land \PV{9,60})) \land \lnot(\PV{9,77} \land \PV{9,59})) \land \lnot(\PV{9,69} \land \PV{9,60})) \\
+& \land \lnot(\PV{9,69} \land \PV{9,59})) \land \lnot(\PV{9,60} \land \PV{9,59})))) \land (((((((\PV{2,81} \\
+& \lor \PV{2,79}) \lor \PV{2,63}) \land \lnot(\PV{2,81} \land \PV{2,79})) \land \lnot(\PV{2,81} \land \PV{2,63})) \land \lnot(\PV{2,79} \land \PV{2,63})) \\
+& \land (((((\PV{8,81} \lor \PV{8,79}) \lor \PV{8,63}) \land \lnot(\PV{8,81} \land \PV{8,79})) \land \lnot(\PV{8,81} \land \PV{8,63})) \\
+& \land \lnot(\PV{8,79} \land \PV{8,63}))) \land (((((\PV{9,81} \lor \PV{9,79}) \lor \PV{9,63}) \land \lnot(\PV{9,81} \land \PV{9,79})) \\
+& \land \lnot(\PV{9,81} \land \PV{9,63})) \land \lnot(\PV{9,79} \land \PV{9,63})))
 \end{align*}
 
 % that's all folks
