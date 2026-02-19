@@ -1,0 +1,676 @@
+/* vim: noet:ts=4:sts=4:sw=4 */
+
+/**
+ * Symbolic
+ *
+ * @file
+ * @author  David Llewellyn-Jones <david@flypig.co.uk>
+ * @version 1.0
+ *
+ * @section LICENSE
+ *
+ * SPDX-License-Identifier: MIT
+ * Copyright © 2026 David Llewellyn-Jones
+ * See symbolic.h, COPYING file or website for licence
+ *
+ * @section DESCRIPTION
+ *
+ * Library for the construction of nested symbolic propositions.
+ * 5/8/2003
+ * http://www.flypig.co.uk/symbolic
+ *
+ * Implements a main function for simple testing of the library.
+ *
+ */
+
+//////////////////////////////////////////////////////////////////
+// Includes
+
+#include "symbolic.h"
+#include "symbolic_private.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <ctype.h>
+
+//////////////////////////////////////////////////////////////////
+// Defines
+
+//////////////////////////////////////////////////////////////////
+// Structures
+
+//////////////////////////////////////////////////////////////////
+// Global variables
+
+#if defined _MEM_PROFILE
+static int gnPropMemAllocated = 0;
+#endif
+
+//////////////////////////////////////////////////////////////////
+// Function prototypes
+
+bool SubstituteRecursive (Operation * psMain, Operation * psFind, Operation * psSub);
+int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2);
+int CompareOperationsPair (Operation * psMain, Operation * psCompare1, Operation * psCompare2);
+
+//////////////////////////////////////////////////////////////////
+// Main application
+
+//#if !defined _DEBUG
+//inline void noprintf (char * szNull, ...) {
+//	szNull = szNull;
+//}
+//#endif
+
+/**
+ * Reset memory allocation details.
+ *
+ */
+void PropMemReset (void) {
+#if defined _MEM_PROFILE
+	printf ("Memory profiling reset\n");
+	gnPropMemAllocated = 0;
+#else
+	printf ("No memory profiling\n");
+#endif
+}
+
+/**
+ * Output current memory allocation details.
+ *
+ */
+void PropMemOutput (void) {
+#if defined _MEM_PROFILE
+	printf ("Total memory blocks allocated = %d\n", gnPropMemAllocated);
+#endif
+}
+
+/**
+ * Replacement for malloc to also profile memory usage. Replicates
+ * void * malloc (size_t size)
+ *
+ * @param size the amount of memory to allocate in bytes.
+ * @return pointer to the allocated memory.
+ *
+ */
+void * PropMemMalloc (size_t size) {
+#if defined _MEM_PROFILE
+	gnPropMemAllocated += 1;
+#endif
+	return malloc (size);
+}
+
+/**
+ * Replacement for calloc to also profile memory usage. Replicates
+ * void * calloc (size_t n, size_t size)
+ * A chunk of memor of size (n * size) will be allocted on the heap
+ * and its contents set to all zero bytes.
+ *
+ * @param n number of blocks to allocate.
+ * @param size the size of each memory block to allocate in bytes.
+ * @return pointer to the allocated memory.
+ *
+ */
+//////////////////////////////////////////////////////////////////
+void * PropMemCalloc (size_t n, size_t size) {
+#if defined _MEM_PROFILE
+	gnPropMemAllocated += 1;
+#endif
+	return calloc (n, size);
+}
+
+/**
+ * Replacement for free to also profile memory usage. Replicates
+ * void free (void * ptr)
+ *
+ * @param ptr pointer to the memory to free.
+ *
+ */
+void PropMemFree (void * ptr) {
+#if defined _MEM_PROFILE
+	gnPropMemAllocated -= 1;
+#endif
+	return free (ptr);
+}
+
+/**
+ * Create true/false truth value operation.
+ *
+ * @param boTruth the initial value of the Operation.
+ * @return pointer to the created Operation.
+ *
+ */
+Operation * CreateTruthValue (bool const boTruth) {
+	Operation * psOp;
+
+	psOp = (Operation*)PropMalloc (sizeof(Operation));
+	psOp->eOpType = OPTYPE_TRUTHVALUE;
+	psOp->Vars.boTruth = boTruth;
+
+	return psOp;
+}
+
+/**
+ * Create a variable.
+ *
+ * @param szVar the name of the variable.
+ * @return pointer to the created Operation.
+ *
+ */
+Operation * CreateVariable (char const * szVar) {
+	Operation * psOp;
+	int nNameLen;
+
+	psOp = (Operation*)PropMalloc (sizeof(Operation));
+	psOp->eOpType = OPTYPE_VARIABLE;
+	psOp->Vars.psVar = (OpVariable*)PropMalloc(sizeof(OpVariable));
+
+	// Store the user functioon name
+	nNameLen = (int)strlen (szVar);
+	psOp->Vars.psVar->szVar = (char *)PropMalloc (nNameLen + 1);
+	strncpy (psOp->Vars.psVar->szVar, szVar, nNameLen);
+	psOp->Vars.psVar->szVar[nNameLen] = 0;
+
+	psOp->Vars.psVar->psValue = NULL;
+
+	return psOp;
+}
+
+/**
+ * Create a unary operation.
+ * Note that psVar1 is used directly, rather than being copied. As such it will 
+ * be freed when the resulting combined Operation is freed recursively.
+ *
+ * @param eOpType the type of the operation (see OPUNARY for the acceptable
+ *        types).
+ * @param psVar1 the Operation that the unary operator will be applied to.
+ * @return pointer to the created Operation.
+ *
+ */
+Operation * CreateUnary (OPUNARY eOpType, Operation * psVar1) {
+	Operation * psOp;
+
+	psOp = (Operation*)PropMalloc (sizeof(Operation));
+	psOp->eOpType = OPTYPE_UNARY;
+	psOp->Vars.psUnary = (OpUnary*)PropMalloc(sizeof(OpUnary));
+	psOp->Vars.psUnary->eOpType = eOpType;
+	psOp->Vars.psUnary->psVar1 = psVar1;
+
+	return psOp;
+}
+
+/**
+ * Create a binary operation.
+ * Note that psVar1 and psVar2 are used directly, rather than being copied. As
+ * such they will be freed when the resulting combined Operation is freed
+ * recursively.
+ *
+ * @param eOpType the type of the operation (see OPBINARY for the acceptable
+ *        types).
+ * @param psVar1 the LHS Operation that the binary operator will apply to.
+ * @param psVar2 the RHS Operation that the binary operator will apply to.
+ * @return pointer to the created Operation.
+ *
+ */
+Operation * CreateBinary (OPBINARY eOpType, Operation * psVar1, Operation * psVar2) {
+	Operation * psOp;
+
+	psOp = (Operation*)PropMalloc (sizeof(Operation));
+	psOp->eOpType = OPTYPE_BINARY;
+	psOp->Vars.psBinary = (OpBinary*)PropMalloc(sizeof(OpBinary));
+	psOp->Vars.psBinary->eOpType = eOpType;
+	psOp->Vars.psBinary->psVar1 = psVar1;
+	psOp->Vars.psBinary->psVar2 = psVar2;
+
+	return psOp;
+}
+
+/**
+ * Recursively free up all of the memory used by a formula and its sub formulas.
+ * Care should be taken not to perform multiple frees, by freeing up an
+ * Operation that was already freed by this.
+ *
+ * @param psOp the Operation that will be freed, along with all of its
+ *        sub-Operations.
+ *
+ */
+void FreeRecursive (Operation * psOp) {
+	if (psOp) {
+		switch (psOp->eOpType) {
+			case OPTYPE_TRUTHVALUE:
+				// Nothing else to free - backtrack
+				break;
+			case OPTYPE_VARIABLE:
+				// Free up the variable string and decrement
+				// variable reference if there is one,
+				// then backtrack
+				if (psOp->Vars.psVar->psValue) {
+					DecrementVarRef (psOp->Vars.psVar->psValue);
+				}
+				PropFree (psOp->Vars.psVar->szVar);
+				PropFree (psOp->Vars.psVar);
+				break;
+			case OPTYPE_UNARY:
+				// Free up any operations further down the tree
+				if (psOp->Vars.psUnary) {
+					FreeRecursive (psOp->Vars.psUnary->psVar1);
+					PropFree (psOp->Vars.psUnary);
+				}
+				// Then backtrack
+				break;
+			case OPTYPE_BINARY:
+				// Free up any operations further down the tree
+				if (psOp->Vars.psBinary) {
+					FreeRecursive (psOp->Vars.psBinary->psVar1);
+					FreeRecursive (psOp->Vars.psBinary->psVar2);
+					PropFree (psOp->Vars.psBinary);
+				}
+				// Then backtrack
+				break;
+			default:
+				printf("Invalid operation type\n");
+				break;
+		}
+
+		PropFree (psOp);
+	}
+}
+
+/**
+ * Recursively copy a formula and all its subformulas. Note that copies will
+ * also be made of all sub-Operations, so the original and copy should be
+ * freed separately.
+ *
+ * @param psOp the Operation that will be copied, along with all of its
+ *        sub-Operations.
+ * @return the newly created copy.
+ *
+ */
+Operation * CopyRecursive (Operation * psOp)
+{
+	Operation * psReturn = NULL;
+	if (psOp) {
+		switch (psOp->eOpType) {
+			case OPTYPE_TRUTHVALUE:
+				psReturn = CreateTruthValue (psOp->Vars.boTruth);
+				break;
+			case OPTYPE_VARIABLE:
+				psReturn = CreateVariable (psOp->Vars.psVar->szVar);
+				psReturn->Vars.psVar->psValue = psOp->Vars.psVar->psValue;
+				break;
+			case OPTYPE_UNARY:
+				psReturn = CreateUnary (psOp->Vars.psUnary->eOpType,
+					CopyRecursive (psOp->Vars.psUnary->psVar1));
+				break;
+			case OPTYPE_BINARY:
+				psReturn = CreateBinary (psOp->Vars.psBinary->eOpType,
+					CopyRecursive (psOp->Vars.psBinary->psVar1),
+					CopyRecursive (psOp->Vars.psBinary->psVar2));
+				break;
+			default:
+				printf("Invalid operation type\n");
+				break;
+		}
+	}
+	return psReturn;
+}
+
+/**
+ * Compare two formulae recursively. This will return true if and only if
+ * the Operation and all its sub-Operations have the same content.
+ *
+ * @param psOp1 the Operation to compare against psOp2.
+ * @param psOp2 the Operation to compare against psOp1.
+ * @return true iff the two Operations have identical content.
+ *
+ */
+bool CompareOperations (Operation * psOp1, Operation * psOp2) {
+	bool boReturn = TRUE;
+
+	if ((psOp1) && (psOp2)) {
+		if (psOp1->eOpType == psOp2->eOpType) {
+			switch (psOp1->eOpType) {
+				case OPTYPE_TRUTHVALUE:
+					if (psOp1->Vars.boTruth != psOp2->Vars.boTruth) {
+						boReturn = FALSE;
+					}
+					break;
+				case OPTYPE_VARIABLE:
+					if (strcmp (psOp1->Vars.psVar->szVar, psOp2->Vars.psVar->szVar) != 0) {
+						boReturn = FALSE;
+					}
+					break;
+				case OPTYPE_UNARY:
+					if (psOp1->Vars.psUnary->eOpType != psOp2->Vars.psUnary->eOpType) {
+						boReturn = FALSE;
+					}
+					else {
+						boReturn = CompareOperations (psOp1->Vars.psUnary->psVar1,
+							psOp2->Vars.psUnary->psVar1);
+					}
+					break;
+				case OPTYPE_BINARY:
+					if (psOp1->Vars.psBinary->eOpType != psOp2->Vars.psBinary->eOpType) {
+						boReturn = FALSE;
+					}
+					else {
+						boReturn = (CompareOperations (psOp1->Vars.psBinary->psVar1,
+							psOp2->Vars.psBinary->psVar1)
+							&& CompareOperations (psOp1->Vars.psBinary->psVar2,
+							psOp2->Vars.psBinary->psVar2));
+					}
+					break;
+				default:
+					printf("Invalid operation type\n");
+					break;
+			}
+		}
+		else {
+			boReturn = FALSE;
+		}
+	}
+	else {
+		boReturn = FALSE;
+	}
+
+	return boReturn;
+}
+
+/**
+ * Search a formula for a given subformula. Performs a recursive comparison,
+ * so there will only be a match if both the psFind Operation and its
+ * sub-Operations match an Operation within psMain.
+ *
+ * @param psMain the Operation to search in.
+ * @param psFind the Operation to search for.
+ * @return pointer to the Operation found, or NULL o/w.
+ *
+ */
+Operation * FindOperation (Operation * psMain, Operation * psFind) {
+	Operation * psReturn = NULL;
+	bool boSame;
+
+	if ((psMain) && (psFind)) {
+		switch (psMain->eOpType) {
+			case OPTYPE_VARIABLE:
+			case OPTYPE_TRUTHVALUE:
+				boSame = CompareOperations (psMain, psFind);
+				if (boSame) {
+					psReturn = psMain;
+				}
+				break;
+			case OPTYPE_UNARY:
+				psReturn = FindOperation (psMain->Vars.psUnary->psVar1, psFind);
+				if (!psReturn) {
+					boSame = CompareOperations (psMain, psFind);
+					if (boSame) {
+						psReturn = psMain;
+					}
+				}
+				break;
+			case OPTYPE_BINARY:
+				psReturn = FindOperation (psMain->Vars.psBinary->psVar1, psFind);
+				if (!psReturn) {
+					psReturn = FindOperation (psMain->Vars.psBinary->psVar2, psFind);
+					if (!psReturn) {
+						boSame = CompareOperations (psMain, psFind);
+						if (boSame) {
+							psReturn = psMain;
+						}
+					}
+				}
+				break;
+			default:
+				printf("Invalid operation type\n");
+				break;
+		}
+	}
+	return psReturn;
+}
+
+/**
+ * Substitute all instances of a given subformula for a formula. When found
+ * the substituted formula will be a copy of psSub (rather than a pointer to
+ * it). A substitution may cause the root operation to move in memory, so any
+ * stored instances of psMain should be replaces by whatever this function
+ * return.
+ *
+ * @param psMain the Operation to search in.
+ * @param psFind the Operation to search for.
+ * @param psSub the Operation to substitue instances of psFind for.
+ * @return new pointer to the altered Operation. This may, or may not, be the
+ *         same as psMain depending on whether a substitution occurs.
+ *
+ */
+Operation * SubstituteOperation (Operation * psMain, Operation * psFind, Operation * psSub) {
+	bool boFind;
+	Operation * psReturn;
+
+	boFind = SubstituteRecursive (psMain, psFind, psSub);
+	if (boFind) {
+		FreeRecursive (psMain);
+		psReturn = CopyRecursive (psSub);
+	}
+	else {
+		psReturn = psMain;
+	}
+	return psReturn;
+}
+
+/**
+ * Substitute recursively all instances of a given subformula for a formula.
+ * When found the substituted formula will be a copy of psSub (rather than a 
+ * pointer to it).
+ * Internal operation. Use SubstituteOperation instead.
+ *
+ * @param psMain the Operation to search in.
+ * @param psFind the Operation to search for.
+ * @param psSub the Operation to substitue instances of psFind for.
+ * @return true iff the root Operation entirely matches psFind (and so should
+ *         be substituted).
+ *
+ */
+bool SubstituteRecursive (Operation * psMain, Operation * psFind, Operation * psSub) {
+	bool boSubstitute = FALSE;
+	bool boFind;
+
+	if ((psMain) && (psSub)) {
+		switch (psMain->eOpType) {
+			case OPTYPE_VARIABLE:
+			case OPTYPE_TRUTHVALUE:
+			case OPTYPE_UNARY:
+				boSubstitute = CompareOperations (psMain, psFind);
+				if (!boSubstitute) {
+					boFind = SubstituteRecursive (psMain->Vars.psUnary->psVar1, psFind, psSub);
+					if (boFind) {
+						FreeRecursive (psMain->Vars.psUnary->psVar1);
+						psMain->Vars.psUnary->psVar1 = CopyRecursive (psSub);
+					}
+				}
+				break;
+			case OPTYPE_BINARY:
+				boSubstitute = CompareOperations (psMain, psFind);
+				if (!boSubstitute) {
+					boFind = SubstituteRecursive (psMain->Vars.psBinary->psVar1,
+						psFind, psSub);
+					if (boFind) {
+						FreeRecursive (psMain->Vars.psBinary->psVar1);
+						psMain->Vars.psBinary->psVar1 = CopyRecursive (psSub);
+					}
+					boFind = SubstituteRecursive (psMain->Vars.psBinary->psVar2, psFind, psSub);
+					if (boFind) {
+						FreeRecursive (psMain->Vars.psBinary->psVar2);
+						psMain->Vars.psBinary->psVar2 = CopyRecursive (psSub);
+					}
+				}
+				break;
+			default:
+				printf("Invalid operation type\n");
+				break;
+		}
+	}
+	return boSubstitute;
+}
+
+/**
+ * Substitute all instances of a given pair of subformula for respective 
+ * formulae. When found the substituted formulae will be a copy of psSub 
+ * (rather than a pointer to it). A substitution may cause the root operation 
+ * to move in memory, so any stored instances of psMain should be replaces by 
+ * whatever this function return.
+ * Note that this is different from applying SubstituteOperation twice. Use
+ * of this function will ensure the two substitutions don't interact (for 
+ * example, in the case where one substitution might otherwise cause a match
+ * for the second substitution).
+ *
+ * @param psMain the Operation to search in.
+ * @param psFind1 the first Operation to search for.
+ * @param psSub1 the first Operation to substitue instances of psFind1 for.
+ * @param psFind2 the second Operation to search for.
+ * @param psSub2 the first Operation to substitue instances of psFind2 for.
+ * @return new pointer to the altered Operation. This may, or may not, be the
+ *         same as psMain depending on whether a substitution occurs.
+ *
+ */
+Operation * SubstituteOperationPair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2) {
+	int nFind;
+	Operation * psReturn;
+
+	nFind = SubstituteRecursivePair (psMain, psFind1, psSub1, psFind2, psSub2);
+	switch (nFind) {
+		default:
+		case 0:
+			psReturn = psMain;
+			break;
+		case 1:
+			FreeRecursive (psMain);
+			psReturn = CopyRecursive (psSub1);
+			break;
+		case 2:
+			FreeRecursive (psMain);
+			psReturn = CopyRecursive (psSub2);
+			break;
+	}
+	return psReturn;
+}
+
+/**
+ * Substitute recursively all instances of a given pair of subformula for 
+ * respective formulae. When found the substituted formula will be a copy of 
+ * psSub (rather than a pointer to it).
+ * Note that this is different from applying SubstituteOperation twice. Use
+ * of this function will ensure the two substitutions don't interact (for 
+ * example, in the case where one substitution might otherwise cause a match
+ * for the second substitution).
+ * Internal operation. Use SubstituteOperationPair instead.
+ *
+ * @param psMain the Operation to search in.
+ * @param psFind1 the first Operation to search for.
+ * @param psSub1 the first Operation to substitue instances of psFind1 for.
+ * @param psFind2 the second Operation to search for.
+ * @param psSub2 the first Operation to substitue instances of psFind2 for.
+ * @return 1 if the root Operation entirely matches psFind1;
+ *         2 if the root Operation entirely matches psFind2;
+ *         0 o/w.
+ *         In the case of 1 or 2 the root operation should be entirely 
+ *         substituted by psSub1 or psSub2 respectively.
+ *
+ */
+int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2) {
+	int nSubstitute = 0;
+	int nFind;
+
+	if ((psMain) && (psSub1) && (psSub2)) {
+		switch (psMain->eOpType) {
+			case OPTYPE_VARIABLE:
+			case OPTYPE_TRUTHVALUE:
+			case OPTYPE_UNARY:
+				nSubstitute = CompareOperationsPair (psMain, psFind1, psFind2);
+				if (nSubstitute == 0) {
+					nFind = SubstituteRecursivePair (psMain->Vars.psUnary->psVar1,
+						psFind1, psSub1, psFind2, psSub2);
+					switch (nFind) {
+						case 1:
+							FreeRecursive (psMain->Vars.psUnary->psVar1);
+							psMain->Vars.psUnary->psVar1 = CopyRecursive (psSub1);
+							break;
+						case 2:
+							FreeRecursive (psMain->Vars.psUnary->psVar1);
+							psMain->Vars.psUnary->psVar1 = CopyRecursive (psSub2);
+							break;
+						default:
+							// Do nothing
+							break;
+					}
+				}
+				break;
+			case OPTYPE_BINARY:
+				nSubstitute = CompareOperationsPair (psMain, psFind1, psFind2);
+				if (nSubstitute == 0) {
+					nFind = SubstituteRecursivePair (psMain->Vars.psBinary->psVar1,
+						psFind1, psSub1, psFind2, psSub2);
+					switch (nFind) {
+						case 1:
+							FreeRecursive (psMain->Vars.psBinary->psVar1);
+							psMain->Vars.psBinary->psVar1 = CopyRecursive (psSub1);
+							break;
+						case 2:
+							FreeRecursive (psMain->Vars.psBinary->psVar1);
+							psMain->Vars.psBinary->psVar1 = CopyRecursive (psSub2);
+							break;
+						default:
+							// Do nothing
+							break;
+					}
+					nFind = SubstituteRecursivePair (psMain->Vars.psBinary->psVar2,
+						psFind1, psSub1, psFind2, psSub2);
+					switch (nFind) {
+						case 1:
+							FreeRecursive (psMain->Vars.psBinary->psVar2);
+							psMain->Vars.psBinary->psVar2 = CopyRecursive (psSub1);
+							break;
+						case 2:
+							FreeRecursive (psMain->Vars.psBinary->psVar2);
+							psMain->Vars.psBinary->psVar2 = CopyRecursive (psSub2);
+							break;
+						default:
+							// Do nothing
+							break;
+					}
+				}
+				break;
+			default:
+				printf("Invalid operation type\n");
+				break;
+		}
+	}
+	return nSubstitute;
+}
+
+/**
+ * Compare a pair of formulae against another formula.
+ *
+ * @param psMain the Operation to compare to.
+ * @param psCompare1 the first Operation to compare against.
+ * @param psCompare2 the second Operation to compare against.
+ * @return 1 if psMain entirely matches psCompare1;
+ *         2 if psMain entirely matches psCompare2;
+ *         0 o/w.
+ *
+ */
+int CompareOperationsPair (Operation * psMain, Operation * psCompare1, Operation * psCompare2) {
+	int nReturn = 0;
+
+	if (CompareOperations (psMain, psCompare1)) {
+		nReturn = 1;
+	}
+	else {
+		if (CompareOperations (psMain, psCompare2)) {
+			nReturn = 2;
+		}
+	}
+	return nReturn;
+}
+
