@@ -5,8 +5,18 @@
 %\usepackage{mathtools}
 \usepackage{colonequals} % because unicode-math has broken "::=" somehow
 \usepackage{simplebnf}
-%\usepackage[raggedrightboxes]{ragged2e}
-\usepackage[Ragged, size=footnote, shape=up]{sidenotesplus}
+%
+\newcommand{\myrules}{
+\ndrules % include standard rules
+\renewcommand{\ii}{\by{$\to$I}}
+\renewcommand{\ie}{\by{$\to$E}}
+\def\x{\by{X}}
+\def\ip{\by{IP}}}
+\usepackage[rules=myrules]{fitch}
+% \usepackage[raggedrightboxes]{ragged2e}
+\usepackage[Ragged, size=footnote, shape=up, alerton]{sidenotesplus}
+\usepackage{subcaption}
+\DeclareCaptionStyle{sidecaption}{font=footnotesize, justification=raggedright}
 \usepackage[dvipsnames]{xcolor}
 %% 
 %%\usepackage[style=authoryear]{biblatex}
@@ -138,9 +148,9 @@ terms used to described the object language are said to be part of the
 % is the conclusion of an argument, is also part of the metalanguage.
 % TODO: Maybe? Or should we not be using \vDash ?
 
-\section{Semantics}
+\subsection{Semantics}
 
-\subsection{Valuations}
+\subsubsection{Valuations}
 
 A \defn[truth values ($\tr$ and $\fa$)]{truth value} is one of `$\tr$'
 (true) or `$\fa$' (false).  (The lighter shade for $\fa$ is just to make
@@ -201,7 +211,7 @@ tables of the standard connectives.
   \end{tabular}
 \end{figure}
 
-\subsection{Arguments (reprise)}
+\subsubsection{Arguments (reprise)}
 
 We now recapitulate the ideas of section~\ref{sec:english} as they apply to propositional logic rather than in general.
 
@@ -233,5 +243,272 @@ one may appeal to the meaning of the sentence letters to establish
 validity.
 
 If $\wff{C}$ is a tautology we may write $\vDash \wff{C}$. Likewise, if $\wff{C}$ is a contradiction we may write $\wff{C} \vDash$. If the sentences $\wff{A}_1,\dotsc, \wff{A}_n$ are jointly unsatisfiable, we may write $\wff{A}_1,\dotsc, \wff{A}_n \vDash$.  
+
+\subsection{Natural deduction}
+
+\subsubsection{Proofs}
+
+A \defn{proof} is a numbered sequence of
+\emph{lines}. Figure~\ref{fig:egproof} shows an example proof of seven
+lines.
+\begin{marginfigure}
+  \caption{\label{fig:egproof}A proof of
+    $(A \wedge B) \to C\; \therefore\, A \to (B \to C)$ in Fitch notation. On any line, the
+    ``nesting depth'' is shown by the number of vertical lines to the
+    left of the proposition.}
+ \small \[
+  \begin{nd}
+    \hypo{hyp}{(A \wedge B) \to C} \by{PR}{}
+    \open
+     \hypo{A}{A}          \by{AS}{}
+     \open
+      \hypo{B}{B}         \by{AS}{}
+      \have{4}{A \wedge B}     \ai{A, B}
+      \have{5}{C}         \ie{hyp, 4}
+     \close
+     \have{6}{B \to C}      \ii{B-5}
+    \close
+    \have{7}{A \to (B \to C)} \ii{A-6}
+  \end{nd}
+\]
+\end{marginfigure}%
+Together with its number, each line comprises:
+\begin{enumerate}
+\item a propositional formula (that is, a sentence);
+\item the rule by which this line was derived (to be explained later); 
+\item a list of \emph{antecedents} (the numbers of the previous lines
+  from which this line is obtained) or an indication that this line is a
+  premise or an assumption); and 
+\item a \emph{nesting depth}\sidenote{``Nesting depth'' is not a
+    standard term.} (a natural number, also to be explained later).
+\end{enumerate}
+\emph{Example:} On line~\ndref{4} of the proof shown in figure~\ref{fig:egproof}, the propositional formula is $A \wedge B$, the derivation rule is $\wedge I$, the antecedents are lines \ndref{A} and~\ndref{B}, and the nesting depth is~3.
+
+The rules of proofs are as follows:
+\begin{enumerate}
+\item The nesting depth starts at~1, indicated by a single vertical line
+  after the line number. There is then a line for each premise (having
+  the derivation rule ``PR'') followed by a horizontal rule.
+\item Each subsequent line in the proof is then one of three types:
+  \begin{enumerate}
+  \item \emph{Derivation}. (No change of nesting depth.) An application
+    of one of the derivation rules (see table~\ref{tab:derivrules}). The
+    antecedents are those required by the derivation rule and must all
+    be lines above this one (that is, having smaller line numbers)
+    \emph{and} have a nesting depth no greater than this one (that is,
+    one may not refer to lines in sub-proofs that have already
+    concluded).
+
+  \item \emph{Sub-proof introduction}. (Nesting depth increases by~1.)
+    The increase in nesting depth is shown by an extra vertical line to
+    the left. The proposition for this line maybe be any propositional
+    formula and is the assumption of the sub-proof, indicated by ``AS''
+    as the derivation rule.  (In some sense, the opening of the whole
+    proof is simply an instance of this type of line, albeit with
+    multiple assumptions.) One writes a horizontal rule below the
+    assumption.
+  \item \emph{Sub-proof conclusion}. (Nesting depth decreases by~1.)
+    Certain derivation rules reduce the nesting depth and ``close out''
+    a sub-proof. The antecendents are precisely the lines of the
+    sub-proof.
+  \end{enumerate}
+\end{enumerate}
+
+\subsubsection{Derivation rules}
+\begin{margintable}
+  \caption{Derivation rules for natural deduction proofs.\label{tab:derivrules}}\centering
+  \begin{tabular}{@{}lr@{}}
+    \toprule
+    Rule & Figure  \\
+    \midrule
+    $\wedge$I and $\wedge E$ & \ref{fig:rule:conj} \\
+    $\vee$I and $\vee E$ & \ref{fig:rule:disj} \\
+    $\to$I and $\to E$ & \ref{fig:rule:impl} \\
+    $\neg$I and $\neg E$ & \ref{fig:rule:neg} \\
+    \midrule
+    R (Reiteration) & \ref{fig:rule:reit}  \\
+    X (Explosion)   & \ref{fig:rule:expl} \\
+    \midrule
+    IP (Indirect proof) & \ref{fig:rule:ind} \\
+    \bottomrule
+  \end{tabular}
+\end{margintable}
+For each connective, there is a pair of derivation rules. They are known
+as ``introduction rules'' (where the connective is introduced by the
+rule) and ``elimination rules'' (where the connective is removed by the
+rule).
+% Conjunction
+\begin{figure}[ht]\centering
+  \sidecaption{Conjunction. Given both $\wff{A}$ and $\wff{B}$ one may
+    conclude $\wff{A\wedge B}$. Contrariwise, given $\wff{A} \wedge \wff{B}$ one may conclude $\wff{A}$ and
+    also $\wff{B}$. \label{fig:rule:conj}}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Conjunction introduction.}
+    \[
+      \begin{nd}
+        \have[m]{m}{\wff{A}}
+        \have[n]{n}{\wff{B}}
+        \have[~]{o}{\wff{A} \wedge \wff{B}} \ai{m, n}
+      \end{nd}
+    \]
+  \end{subfigure}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Conjunction elimination.}
+    \begin{equation*}
+      \begin{nd}
+        \have[m]{m}{\wff{A \wedge B}}
+        \have[~]{o}{\wff{A}} \ae{m}
+      \end{nd}
+    \end{equation*}
+    \begin{equation*}
+      \begin{nd}
+        \have[m]{m}{\wff{A \wedge B}}
+        \have[~]{o}{\wff{B}} \ae{m}
+      \end{nd}
+    \end{equation*}
+  \end{subfigure}
+\end{figure}
+
+%% Disjunction
+\begin{figure}[ht]\centering
+  \sidecaption{Disjunction. Given $\wff{A}$ (or given $\wff{B}$) one may conclude $\wff{A}\vee \wff{B}$. Contrariwise, given $\wff{A}\vee \wff{B}$, a proof of $\wff{C}$ from $\wff{A}$, and a proof of $\wff{C}$ from $\wff{B}$, one may conclude~$\wff{C}$.\label{fig:rule:disj}}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Disjunction introduction.}
+    \[
+      \begin{nd}
+        \have[m]{m}{\wff{A}}
+        \have[~]{o}{\wff{A} \vee \wff{B}} \oi{m}
+      \end{nd}
+    \]
+    \[
+      \begin{nd}
+        \have[m]{m}{\wff{B}}
+        \have[~]{o}{\wff{A} \vee \wff{B}} \oi{m}
+      \end{nd}
+    \]
+    \end{subfigure}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Disjunction elimination.}
+    \[
+      \begin{nd}
+        \have[m]{m}{\wff{A} \vee \wff{B}}
+        \open
+        \hypo[i]{i}{\wff{A}} \by{AS}{}
+        \have[j]{j}{\wff{C}}
+        \close
+        \open
+        \hypo[k]{k}{\wff{B}} \by{AS}{}
+        \have[l]{l}{\wff{C}}
+        \close
+        \have[n]{n}{\wff{C}} \oe{m,i-j,k-l}
+      \end{nd}
+    \]
+  \end{subfigure}
+\end{figure}
+
+%% Conditional
+\begin{figure}[ht]\centering
+  \sidecaption{Conditional. If in the present context one may infer
+    $\wff{B}$ from an assumption of~$\wff{A}$, then one may conclude $\wff{A}\to\wff{B}$. Conversely if one has $\wff{A}\to\wff{B}$ and also $\wff{A}$, then one may conclude~$\wff{B}$.\label{fig:rule:impl}}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Conditional introduction.}
+    \[
+      \begin{nd}
+        \open
+        \hypo[i]{i}{\wff{A}}  \by{AS}{}
+        \have[j]{j}{\wff{B}}
+        \close
+        \have[~]{}{\wff{A} \to \wff{B}} \ii{i-j}
+      \end{nd}
+    \]
+    \end{subfigure}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Conditional elimination (aka, \emph{modus ponens}).}
+    \[
+      \begin{nd}
+        \have[m]{m}{\wff{A} \to \wff{B}}
+        \have[n]{n}{\wff{A}}
+        \have[~]{}{\wff{B}} \ie{m,n}
+      \end{nd}
+    \]
+  \end{subfigure}
+\end{figure}
+The rules for negation follow the same pattern but note that now the
+symbol ``$\bot$'' is required.\sidenote{And you might wonder what happened to $\top$.}
+%% Negation
+\begin{figure}[ht]\centering
+  \sidecaption{Negation. If an assumption of $\wff{A}$ leads to a
+    contradiction, then one may conclude~$\neg\wff{A}$. Conversely, if one
+    has both $\neg\wff{A}$ and $\wff{A}$ then one may
+    conclude~$\bot$.\label{fig:rule:neg}}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Negation introduction.}
+    \[
+      \begin{nd}
+        \open
+        \hypo[i]{i}{\wff{A}} 
+        \have[j]{j}{\bot}
+        \close
+        \have[~]{}{\neg\wff{A}} \ni{i-j}
+      \end{nd}
+    \]
+    \end{subfigure}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Negation elimination.}
+    \[
+      \begin{nd}
+        \have[m]{m}{\neg\wff{A}}
+        \have[n]{n}{\wff{A}}
+        \have[~]{}{\bot} \ne{m,n}
+      \end{nd}
+    \]
+  \end{subfigure}
+\end{figure}
+
+There are two rules that \emph{sort} of follow the pattern of
+introduction and elimination if you squint. ``Reiteration'' is something
+like ``from a known proposition one may conclude the same proposition,''
+and ``explosion'' is ``from a contradiction one may conclude
+anything.''
+%% Reiteration
+\begin{figure}[ht]
+  \sidecaption{Reiteration and explosion. From $\wff{A}$ one may at any
+    time derive~$\wff{A}$. However, from a contradiction anything at all follows.}
+  \begin{subfigure}{0.48\textwidth}
+  \subcaption{Reiteration.\label{fig:rule:reit}}
+  \[
+    \begin{nd}
+      \have[m]{m}{\wff{A}}
+      \have[~]{o}{\wff{A}}\r{m}
+    \end{nd}
+  \]
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+  \subcaption{Explosion.\label{fig:rule:expl}}
+  \[
+    \begin{nd}
+      \have[m]{m}{\bot}
+      \have[~]{o}{\wff{A}} \x{m}
+    \end{nd}
+  \]
+\end{subfigure}
+\end{figure}
+
+Finally, there is a lone rule called ``indirect
+proof.''\sidenote{Indirect proof is sort of the ``fifth postulate'' of
+  classical logic. It's not like the others, there are alternatives, and
+  some people reject it.}
+\begin{figure}[ht]
+  \sidecaption{Indirect proof (aka, \emph{reductio ad absurdum}). To prove $\wff{A}$, start by assuming $\neg\wff{A}$ and derive a contradiction.\label{fig:rule:ind}}
+  \[
+    \begin{nd}
+      \open
+      \hypo[i]{na}{\neg\wff{A}}
+      \have[~]{false}{\bot}
+      \close
+      \have[~]{a}{\wff{A}} \ip{i}
+    \end{nd}
+  \]
+\end{figure}
 
 \end{document}
