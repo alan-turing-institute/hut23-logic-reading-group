@@ -13,10 +13,10 @@ A basic DP SAT solver, very much not optimised, especially in space.
 
 The input should be in conjunctive normal form. The representation used is:
 
-<formula> ::= (<clause> ...)
-<clause> ::= (<literal> ...)
-<literal> ::= (<var> . #t) | (<var> . #f)
-<var> ::= integer?
+<formula>  ::= (<clause> ...)
+ <clause>  ::= (<literal> ...)
+<literal>  ::= (<var> . #t) | (<var> . #f)
+    <var>  ::= integer?
 
 (<var> . #f) represents the negation of (<var> . #t)
 
@@ -138,9 +138,9 @@ variable occurs exactly once.
         (map (λ (ln) (map string->number (string-split ln))) _) 
         (apply append _)
         (group-on-zeros)                ; now grouped by clauses
-        (map (λ (clause) (map (λ (v) (if (negative? v) (neg (- v)) (pos v)))
-                              clause))
-             _))))
+        (map (λ (clause)
+               (map (λ (v) (if (negative? v) (neg (- v)) (pos v))) clause))
+             _ ))))
 
 ;; xs : a list of numbers, through of as groups where each group is separated by a 0
 (define (group-on-zeros xs)
