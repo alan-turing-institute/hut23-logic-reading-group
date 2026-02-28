@@ -248,14 +248,15 @@ If $\wff{C}$ is a tautology we may write $\vDash \wff{C}$. Likewise, if $\wff{C}
 
 \subsubsection{Proofs}
 
-A \defn{proof} is a numbered sequence of
-\emph{lines}. Figure~\ref{fig:egproof} shows an example proof of seven
-lines.
+A \defn{proof} is a numbered sequence of \emph{lines} satisfying certain
+conditions explained below. Figure~\ref{fig:egproof} shows an example
+proof of seven lines.
 \begin{marginfigure}
   \caption{\label{fig:egproof}A proof of
     $(A \wedge B) \to C\; \therefore\, A \to (B \to C)$ in Fitch notation. On any line, the
     ``nesting depth'' is shown by the number of vertical lines to the
-    left of the proposition.}
+    left of the proposition. Lines 2--6 constitute a sub-proof; and lines
+    3--5 are a sub-sub-proof.}
  \small \[
   \begin{nd}
     \hypo{hyp}{(A \wedge B) \to C} \by{PR}{}
@@ -284,37 +285,39 @@ Together with its number, each line comprises:
 \end{enumerate}
 \emph{Example:} On line~\ndref{4} of the proof shown in figure~\ref{fig:egproof}, the propositional formula is $A \wedge B$, the derivation rule is $\wedge I$, the antecedents are lines \ndref{A} and~\ndref{B}, and the nesting depth is~3.
 
-The rules of proofs are as follows:
-\begin{enumerate}
-\item The nesting depth starts at~1, indicated by a single vertical line
-  after the line number. There is then a line for each premise (having
-  the derivation rule ``PR'') followed by a horizontal rule.
-\item Each subsequent line in the proof is then one of three types:
-  \begin{enumerate}
-  \item \emph{Derivation}. (No change of nesting depth.) An application
-    of one of the derivation rules (see table~\ref{tab:derivrules}). The
-    antecedents are those required by the derivation rule and must all
-    be lines above this one (that is, having smaller line numbers)
-    \emph{and} have a nesting depth no greater than this one (that is,
-    one may not refer to lines in sub-proofs that have already
-    concluded).
+To begin a proof, one writes down one line for each premise, numbered
+sequentially from~1 and labelled with ``PR,'' and followed by a
+horizontal rule.
 
-  \item \emph{Sub-proof introduction}. (Nesting depth increases by~1.)
-    The increase in nesting depth is shown by an extra vertical line to
-    the left. The proposition for this line maybe be any propositional
-    formula and is the assumption of the sub-proof, indicated by ``AS''
-    as the derivation rule.  (In some sense, the opening of the whole
-    proof is simply an instance of this type of line, albeit with
-    multiple assumptions.) One writes a horizontal rule below the
-    assumption.
-  \item \emph{Sub-proof conclusion}. (Nesting depth decreases by~1.)
-    Certain derivation rules reduce the nesting depth and ``close out''
-    a sub-proof. The antecendents are precisely the lines of the
-    sub-proof.
-  \end{enumerate}
+To a first approximation, the conditions on subsequent lines are that
+the proposition in each line must follow from one or more previous lines
+according to one of the rules of derivation described in
+section~\ref{sec:rules-of-derivation} and table~\ref{tab:derivrules}.
+There is one wrinkle and that is that there may be ``sub-proofs'' within
+the main proof (and nested sub-sub-proofs within the sub-proofs, and so
+on).
+
+To begin a sub-proof, one increases the nesting depth by~1, drawing an
+additional vertical rule in the margin.  Then one writes down the
+assumptions of the sub-proof (labelled by ``AS'') and continues as
+normal.
+
+Certain rules of derivation ``complete'' the sub-proof. These rules
+decrease the nesting depth by~1 before writing down the conclusion of
+the sub-proof. At that point, the sub-proof is said to be ``closed''
+and---critically---subsequent lines may not refer to any of the lines within
+the closed proof except for the conclusion.
+
+Thus, the full rules for each line are:
+\begin{enumerate}
+\item A line may be an application of a derivation rule; the antecedents
+  must be lines that precede this one \emph{and} that are not part of
+  any sub-proof that has been closed other than its conclusion;
+\item A line may start a new sub-proof. The proposition on this line may
+  be any proposition.
 \end{enumerate}
 
-\subsubsection{Derivation rules}
+\subsubsection{Derivation rules}\label{sec:rules-of-derivation}
 \begin{margintable}
   \caption{Derivation rules for natural deduction proofs.\label{tab:derivrules}}\centering
   \begin{tabular}{@{}lr@{}}
