@@ -300,21 +300,19 @@ on).
 To begin a sub-proof, one increases the nesting depth by~1, drawing an
 additional vertical rule in the margin.  Then one writes down the
 assumptions of the sub-proof (labelled by ``AS'') and continues as
-normal.
-
-Certain rules of derivation ``complete'' the sub-proof. These rules
-decrease the nesting depth by~1 before writing down the conclusion of
-the sub-proof. At that point, the sub-proof is said to be ``closed''
-and---critically---subsequent lines may not refer to any of the lines within
-the closed proof except for the conclusion.
+normal. Certain rules of derivation ``complete'' the sub-proof. These
+rules decrease the nesting depth by~1 before writing down the conclusion
+of the sub-proof.  At that point, the sub-proof is said to be ``closed''
+and---critically---subsequent lines may not refer to any of the lines
+within the closed proof except for the conclusion.
 
 Thus, the full rules for each line are:
 \begin{enumerate}
 \item A line may be an application of a derivation rule; the antecedents
   must be lines that precede this one \emph{and} that are not part of
-  any sub-proof that has been closed other than its conclusion;
-\item A line may start a new sub-proof. The proposition on this line may
-  be any proposition.
+  any sub-proof that has been closed (other than its conclusion);
+\item A line may start a new sub-proof.  The proposition on this line
+  may be any proposition.
 \end{enumerate}
 
 \subsubsection{Derivation rules}\label{sec:rules-of-derivation}
@@ -513,5 +511,45 @@ proof.''\sidenote{Indirect proof is sort of the ``fifth postulate'' of
     \end{nd}
   \]
 \end{figure}
+
+\subsubsection{Arguments again}
+
+If there is a proof whose premises are $\wff{A}_1$, $\wff{A}_2$, \dots, $\wff{A}_n$, and whose conclusion is $\wff{C}$, we write
+\begin{equation*}
+  \wff{A}_1, \wff{A}_2, \dotsc, \wff{A}_n \vdash \wff{C}.
+\end{equation*}
+The symbol ``$\vdash$'' is called a \defn[turnstile, $\vdash$]{turnstile}.
+
+A proposition $\wff{C}$ which follows from no premises, $\vdash\wff{C}$ is
+called a \defn{theorem}.  Propositions $\wff{A}_1$, $\wff{A}_2$, \dots,
+$\wff{A}_n$ are \defn[joint consistency / inconsistency]{jointly
+  inconsistent} if $\wff{A}_1, \wff{A}_2, \dots, \wff{A}_n \vdash \bot$.
+Sentences that are not jointly inconsistent are \defn*{jointly
+  consistent}.
+
+\subsection{Metalogic}
+A proposition or sentence (harking back to section~\ref{sec:english}) is
+a kind of statement that could be true or false.  Often, when we utter
+such a sentence, we mean in fact to assert that it is true.  When we do
+this, we are said to be making a \defn{judgement}.\sidenote{The term
+  ``judgement'' was popularised by Per Martin-Löf and has come to be
+  prevalant in computer science.  In Anglo-Saxon philsophy the term
+  ``assertion'' is often used instead.}  Thus, in the sentence, ``if it
+is raining, then I will get wet'', the part ``it is raining'' is a
+proposition---no one is saying here that it is (or isn't) raining. But
+when I say, for example, ``Look!  It is raining!'' I do mean to
+\emph{assert} that it is raining; that is, I am making a judgement that
+a particular proposition---the proposition ``it is raining,''---is true.
+
+Another kind of judgement is $\wff{A}_1, \dots,\wff{A}_n \vdash C$; this is the judgement that $\wff{C}$ is derivable from the $\wff{A}_i$ following the rules of derivation.
+
+I \emph{believe} that $\wff{A}_1, \dots,\wff{A}_n \vDash C$ is also a kind of
+judgement; namely, the judgement that $\wff{C}$ is entailed by the~$\wff{A}_i$. 
+
+
+\appendix
+\section{Sequents}
+
+
 
 \end{document}
