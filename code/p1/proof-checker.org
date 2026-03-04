@@ -1,0 +1,49 @@
+Ideas on proof checking
+
+#+begin_src BNF
+  <proof> = < 
+
+#+end_src
+
+
+Examples:
+
+#+begin_src 
+  ... lines containing a and b
+
+  let x : A /\ B = andI a b in ...
+
+  let f : A -> B = (given x : A then ...) in ...
+
+  apply f x (implication elimination)
+
+  andI a b
+  orI_l a
+  orI_r b
+
+  andE_l c
+  andE_r c
+
+  orE x f g (case x of ... f ... g)
+
+  let x : ~A = (given y : A then absurd) (negation introduction)
+  (apply ~A to A to get absurd) (negation elimination)
+
+
+  let x : A = absurd (explosion)
+
+  IP?
+  let x : A = (given y : ~A then absurd)
+#+end_src
+
+Proof of LEM
+
+let lem : (P \/ ~P) =
+  given not_lem : ~(P \/ ~P) then
+    let notp = given x : P then
+      let pnotp = orI_l p in
+        apply not_lem lem
+    in
+    let pnotp = orI_r notp in
+      apply not_lem lem
+        
