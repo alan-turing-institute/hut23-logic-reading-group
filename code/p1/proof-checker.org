@@ -1,49 +1,163 @@
-Ideas on proof checking
+:PROPERTIES:
+:header-args: :noweb no-export :exports code :padline yes
+:END:
+#+title: Proof checking
 
-#+begin_src BNF
-  <proof> = < 
+Notes on proof checking for “Fitch-stylenatural deduction” in
+propositional logic. (The proofs that are written as a sequence of
+numbered lines, with nested sub-proofs.)
 
+These notes say what data structure I think a proof should be
+represented by. That is similar to, but not entirely the same as,
+the syntax of a serialisation format. The following defines the data
+structure in Racket, and the serialisation format is s-expressions.
+
+There are a few things to say up front. I shall replace the line
+numbers with explicit names: $x$, $y$, $z$, and so on, of which I
+shall assume one has available as many as necessary. Next, many of the
+propositions which one writes in the normal style are unnecessary and
+can be omitted, since they can be deduced from the deduction rules
+which are the important parts of the proof. The propositions that
+can’t be removed are the ones that come from “outside” the proof:
+namely, the premisses and the assumptions at the head of
+sub-proofs. The tricky part is saying which names are “accessible” at
+any point since names become “inaccessible” once their enclosing
+sub-proof concludes. (There’s also a wrinkle about the operator
+“not”.)
+
+In Scheme, the fundamental datatype is a list. A list is written as a
+space-separated sqeuence of elements, surrounded by parentheses. For
+example, ~(andI x1 x2)~ is a list of three elements. The empty list is
+written ~()~, or sometimes ~null~. In the example list ~(andI x1 x2)~
+the elements of the list are /symbols/, which are the kind of thing
+you use to name variables. Lists need not be homogeneous in the type
+of the their elements: the list ~(x (y 2) z)~ has three elements, the
+second of which is a list of two elements, a symbol and a number.
+
+The thing that is written as, for example, =P /\ Q |- P=, is called a
+/judgement/. A judgement is zero more more premisses (to the left of
+the turnstile) and a conclusion (to the right). Although in our case
+we are constructing not merely a conclusion but a whole proof I will
+use the same terminology.
+
+Here is the syntax of judgements. A judgement is a list of two
+elements: a list of zero or more premisses, and a proof.
+#+name Judgement syntax
+#+begin_src bnf
+<judgement> ::= ( ( <premiss>* ) <proof> )
 #+end_src
 
-
-Examples:
-
-#+begin_src 
-  ... lines containing a and b
-
-  let x : A /\ B = andI a b in ...
-
-  let f : A -> B = (given x : A then ...) in ...
-
-  apply f x (implication elimination)
-
-  andI a b
-  orI_l a
-  orI_r b
-
-  andE_l c
-  andE_r c
-
-  orE x f g (case x of ... f ... g)
-
-  let x : ~A = (given y : A then absurd) (negation introduction)
-  (apply ~A to A to get absurd) (negation elimination)
-
-
-  let x : A = absurd (explosion)
-
-  IP?
-  let x : A = (given y : ~A then absurd)
+A premiss is a list of a name and a proposition.
+#+name: Judgement syntax
+#+begin_src bnf
+  <premiss> ::= (<name> <proposition>)
 #+end_src
 
-Proof of LEM
+A name is any symbol.
+#+name: Judgement syntax
+#+begin_src bnf
+  <name> ::= x | y | z | ...
+#+end_src
 
-let lem : (P \/ ~P) =
-  given not_lem : ~(P \/ ~P) then
-    let notp = given x : P then
-      let pnotp = orI_l p in
-        apply not_lem lem
-    in
-    let pnotp = orI_r notp in
-      apply not_lem lem
+A proposition has its own little sub-language:
+#+name: Judgement syntax
+#+begin_src bnf
+  <prop> ::= false
+           | (conj <prop> <prop>)
+           | (disj <prop> <prop>)
+	   | (impl <prop> <prop>)
+#+end_src
+(I've omitted equivalence because it’s easily written in terms of
+implication; and I’ve omitted negation because of the wrinkle that
+will be explained later. On the other hand, false ($\bot$) is now
+included as its own kind of proposition.)
+
+A /proof/ has one of four forms:
+#+name: Judgement syntax
+#+begin_src bnf
+  <proof> ::= <name>
+            | <deduction>
+            | ( let ( <name> <deduction> ) <proof> )
+            | ( lambda ( <name> <prop> ) <proof> ) 
+
+  <deduction> ::= ( <rule> (@ <prop>) <name>* )
+  
+  <rule> ::= andI | andE_left | andE_right
+           | orI_left | orI_right | orE
+           | apply | false
+#+end_src
+The first form, ~<name>~, names a previous line in the proof. The
+second form, ~<deduction>~, is an application of one of the rules of
+deduction. The “let” form introduces a new name which is then
+available in the enclosed ~<proof>~. Finally, the “lambda” form
+introduces a new assumption, which is available in the enclosed
+~<proof>~ (but not outside it!). 
+
+The definition of ~<proof>~ is recursive: A ~<proof>~ that has the
+form of a “let” say, may include a nested proof within it. This is how
+we deal with the idea that each line of the proof may only refer to
+lines above it.  
+
+
+
+
+
+The data struction is:
+#+name: Data structures
+#+begin_src racket
+  (struct Name (sym) #:transparent)
+#+end_src
+A ~struct~ is Racket's version of a record type: a set of named
+fields. The qualifier ~#:transparent~ makes the struct introspectable
+(which should really have been the default). 
+
+A /premiss/ is a name together with a proposition. We need the name to
+be able to refer to the premiss later; and we need the proposition
+because it can’t be deduced from anything because it’s a premiss.
+#+name: Data structures
+#+begin_src racket
+  (struct Premiss (name prop) #:transparent)
+#+end_src
+
+Propositions are a little mini-language themselves. They are:
+#+name: Data structures
+#+begin_src racket
+  (struct PROP       ()    #:transparent)
+  (struct FALSE PROP ()    #:transparent)
+  (struct CONJ  PROP (p q) #:transparent)
+  (struct DISJ  PROP (p q) #:transparent)
+  (struct IMPL  PROP (p q) #:transparent)
+#+end_src
+
+The conclusion of a proof is witten as, for example, =P /\ Q |-
+P=. This construction is known as a /judgement/. A judgement is zero
+more more premisses (to the left of the turnstile) and a conclusion
+(to the right). Although in our case we are constructing not merely a
+conclusion but a whole proof I will use the same terminology. 
+#+name: Data structures
+#+begin_src racket
+ (struct Judgement (premisses proof) #:transparent) 
+#+end_src
+(The “*” means “any finite number of, including zero.”)
+
+A /proof/ has one of the following forms:
+#+name: Data structures
+#+begin_src racket
+  ;; A <name> is a kind of proof: <name> is already defined
+  (struct Deduction (prim names) #:transparent)
+  (struct Lambda (name prop proof) #:transparent)
+  (struct Let (name deduction proof) #+transparent)
+#+end_src
+The first form, ~<name>~, represents a trivial proof that simply names
+a previous line (for example, a premiss). The second form, a
+deduction, is the application of one of the rules of deduction to
+however many lines it requires. A “lambda” is an apparently-strange
+name for a sub-proof. Finally a “let” describes how  
+
+A deduction represents a single line in a proof. 
+
+
+
+
+
         
