@@ -126,6 +126,16 @@ struct _Operation {
 	} Vars;
 };
 
+typedef struct _OperationMap {
+    char * szVar;
+    Operation * psOp;
+} OperationMap;
+
+struct _Extract {
+    int nCount;
+    OperationMap * apsOps;
+};
+
 //////////////////////////////////////////////////////////////////
 // Function prototypes
 
