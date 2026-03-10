@@ -32,6 +32,8 @@ Discussions occur on Slack in the `hut23-logic-reading-group` channel (formerly 
 | 29 January  | ∀x: II. Truth-functional logic, §§ **4**, **5**, and **6**               | **§5**: D.8, G.1, H.2, and I;<br /> **§6**: A.1, A.3, and B |
 | 5 February  | ∀x: **7** and **8** (from II); and **9**, **10**, and **11** (from III). | **§11**: A.2, A.5, B.1, C.3                                 |
 | 12 February | ∀x: **12** and **13** (optionally **14** and **15**)                     | **15**: A.4, B.2, C.3, E.6, I.2                             |
-| 19 February | ∀x: **16** and **17** (Proofs)                                           | **17**: C.1, C.3, C.5, C.7, C.11 
-|             |                                                                          |
+| 19 February | ∀x: **16** and **17** (Proofs)                                           | **17**: C.1, C.3, C.5, C.7, C.11                            |
+| 5 March     | _No session -- REG offsite_                                              |
+| 12 March    | Proof-theoretic concepts ∀x: **20**, **21**, *22*                        | **20**: A.1, A.2, A.3, A.4                                  |
+
 

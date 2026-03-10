@@ -3,7 +3,7 @@
 ;; Manipulate propositions
 
 (provide (struct-out PROP)
-         (struct-out LIT)
+         (struct-out VALUE)
          (struct-out ATOM)
          (struct-out NEG)
          (struct-out CONJ)
@@ -28,19 +28,19 @@ A propositional formula is:
 
 |#
 
-(struct PROP      ()    #:transparent)
-(struct LIT  PROP (val) #:transparent)
-(struct ATOM PROP (sym) #:transparent)
-(struct NEG  PROP (p)   #:transparent)
-(struct CONJ PROP (p q) #:transparent)
-(struct DISJ PROP (p q) #:transparent)
-(struct IMPL PROP (p q) #:transparent)
-(struct EQV  PROP (p q) #:transparent)
+(struct PROP       ()    #:transparent)
+(struct VALUE PROP (val) #:transparent)
+(struct ATOM  PROP (sym) #:transparent)
+(struct NEG   PROP (p)   #:transparent)
+(struct CONJ  PROP (p q) #:transparent)
+(struct DISJ  PROP (p q) #:transparent)
+(struct IMPL  PROP (p q) #:transparent)
+(struct EQV   PROP (p q) #:transparent)
 
 ;; Input and output
 (define (proposition P)
   (match P
-    [(or #t #f)      (LIT P)]
+    [(or #t #f)      (VALUE P)]
     [(? symbol? v)   (ATOM v)]
     [(list 'not ψ)   (NEG (proposition ψ))]
     [(list 'and ψ χ) (CONJ (proposition ψ) (proposition χ))]
@@ -66,8 +66,8 @@ A propositional formula is:
         (subformula->string α)
         (with-brackets α)))
   (match φ
-    [(LIT #t)         "#t"]
-    [(LIT #f)         "#f"]
+    [(VALUE #t)         "#t"]
+    [(VALUE #f)         "#f"]
     [(ATOM sym)       (symbol->string sym)]
     [(NEG ψ)          (string-append "¬" (subformula->string ψ))]
     [(CONJ ψ χ)
@@ -102,7 +102,7 @@ A propositional formula is:
 
 (define (prop-eval φ env)
   (match φ
-    [(LIT v)    v]
+    [(VALUE v)  v]
     [(ATOM s)   (dict-ref env s)]
     [(NEG ψ)    (not (prop-eval ψ env))]
     [(CONJ ψ χ) (and (prop-eval ψ env) (prop-eval χ env))]
@@ -120,8 +120,8 @@ A propositional formula is:
 (define (prop-letters φ)
   (sort
    (match φ
-     [(LIT _)    '()]
-     [(ATOM v)   (list v)]
+     [(VALUE _) '()]
+     [(ATOM v)  (list v)]
      [(NEG ψ)   (prop-letters ψ)]
      [(or (CONJ ψ χ) (DISJ ψ χ) (IMPL ψ χ) (EQV ψ χ))
       (set-union (prop-letters ψ) (prop-letters χ))])
