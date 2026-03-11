@@ -53,7 +53,9 @@ static int gnPropMemAllocated = 0;
 
 bool SubstituteRecursive (Operation * psMain, Operation * psFind, Operation * psSub);
 int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2);
+int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount);
 int CompareOperationsPair (Operation * psMain, Operation * psCompare1, Operation * psCompare2);
+int CompareOperationsMany (Operation * psMain, Operation ** psCompare, int nCount);
 
 //////////////////////////////////////////////////////////////////
 // Main application
@@ -650,6 +652,122 @@ int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation 
 }
 
 /**
+ * Substitute all instances of a given array of subformula for respective
+ * formulae. When found the substituted formulae will be a copy of an instance
+ * from apsSub rather than a pointer to it). A substitution may cause the root
+ * operation to move in memory, so any stored instances of psMain should be
+ * replaced by whatever this function return.
+ * Note that this is different from applying SubstituteOperation multiple
+ * times. Use of this function will ensure all substitutions are applied
+ * without interacting (for example, in the case where one substitution
+ * might otherwise cause a match for a later substitution).
+ *
+ * @param psMain the Operation to search in.
+ * @param apsFind an array of Operation instances to search for.
+ * @param apsSub an array of Operation instances to substitue instances of psFind for.
+ * @param nCount the length of the arrays (they must both be the same length).
+ * @return new pointer to the altered Operation. This may, or may not, be the
+ *         same as psMain depending on whether a substitution occurs.
+ *
+ */
+Operation * SubstituteOperationMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount) {
+	int nFind;
+	Operation * psReturn;
+	bool boNull;
+
+	boNull = FALSE;
+	for (nFind = 0; (nFind < nCount) && !boNull; ++nFind) {
+		boNull = (apsSub[nFind] == NULL);
+	}
+
+	if (boNull) {
+		psReturn = psMain;
+	}
+	else {
+		nFind = SubstituteRecursiveMany (psMain, apsFind, apsSub, nCount);
+		if (nFind == 0) {
+			psReturn = psMain;
+		}
+		else {
+			FreeRecursive (psMain);
+			psReturn = CopyRecursive (apsSub[(nFind - 1)]);
+		}
+	}
+
+	return psReturn;
+}
+
+/**
+ * Substitute recursively all instances of a given array of subformula for
+ * respective formulae. When found the substituted formulae will be a copy of
+ * an instance from apsSub rather than a pointer to it). A substitution may
+ * cause the root operation to move in memory, so any stored instances of
+ * psMain should be replaced by whatever this function return.
+ * Note that this is different from applying SubstituteOperation multiple
+ * times. Use of this function will ensure all substitutions are applied
+ * without interacting (for example, in the case where one substitution
+ * might otherwise cause a match for a later substitution).
+ * Internal operation. Use SubstituteOperationPair instead.
+ *
+ * @param psMain the Operation to search in.
+ * @param apsFind an array of Operation instances to search for.
+ * @param apsSub an array of Operation instances to substitue instances of psFind for.
+ * @param nCount the length of the arrays (they must both be the same length).
+ * @return an integer representing which item in the apsFind array was matched;
+ *         This is an enumeration, not an index, so the first item returns the value1
+ *         the second item the value 2 and so on.
+ *         0 is returned if there is no match.
+ *         In the case a non-zero value the root operation should be entirely
+ *         substituted the respective entry in apsSub.
+ *
+ */
+int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount) {
+	int nSubstitute = 0;
+	int nFind;
+	int nPos;
+
+	if (psMain != NULL) {
+		switch (psMain->eOpType) {
+			case OPTYPE_VARIABLE:
+			case OPTYPE_TRUTHVALUE:
+			case OPTYPE_UNARY:
+				nSubstitute = CompareOperationsMany (psMain, apsFind, nCount);
+				if (nSubstitute == 0) {
+					nFind = SubstituteRecursiveMany (psMain->Vars.psUnary->psVar1,
+						apsFind, apsSub, nCount);
+					if (nFind != 0) {
+						FreeRecursive (psMain->Vars.psUnary->psVar1);
+						psMain->Vars.psUnary->psVar1 = CopyRecursive (apsSub[(nFind - 1)]);
+					}
+				}
+				break;
+			case OPTYPE_BINARY:
+				nSubstitute = CompareOperationsMany (psMain, apsFind, nCount);
+				if (nSubstitute == 0) {
+					nFind = SubstituteRecursiveMany (psMain->Vars.psBinary->psVar1,
+						apsFind, apsSub, nCount);
+					if (nFind != 0) {
+						FreeRecursive (psMain->Vars.psBinary->psVar1);
+						psMain->Vars.psBinary->psVar1 = CopyRecursive (apsSub[(nFind - 1)]);
+					}
+
+					nFind = SubstituteRecursiveMany (psMain->Vars.psBinary->psVar2,
+						apsFind, apsSub, nCount);
+					if (nFind != 0) {
+						FreeRecursive (psMain->Vars.psBinary->psVar2);
+						psMain->Vars.psBinary->psVar2 = CopyRecursive (apsSub[(nFind - 1)]);
+					}
+				}
+				break;
+			default:
+				printf("Invalid operation type\n");
+				break;
+		}
+	}
+	return nSubstitute;
+}
+
+/**
  * Compare a pair of formulae against another formula.
  *
  * @param psMain the Operation to compare to.
@@ -669,6 +787,30 @@ int CompareOperationsPair (Operation * psMain, Operation * psCompare1, Operation
 	else {
 		if (CompareOperations (psMain, psCompare2)) {
 			nReturn = 2;
+		}
+	}
+	return nReturn;
+}
+
+/**
+ * Compare multiple formulae against a single formula.
+ *
+ * @param psMain the Operation to compare to.
+ * @param apsCompare an array of Operation instances to compare against.
+ * @param nCount the number of operations in the array.
+ * @return an integer representing which item in the array matched.
+ *         This is an enumeration not an index, so the first item takes the value 1,
+ *         the second item the value 2 and so on;
+ *         0 if there is no match.
+ *
+ */
+int CompareOperationsMany (Operation * psMain, Operation ** apsCompare, int nCount) {
+	int nReturn = 0;
+	int nPos;
+
+	for (nPos = 0; (nPos < nCount) && nReturn == 0; ++nPos) {
+		if (CompareOperations (psMain, apsCompare[nPos])) {
+			nReturn = nPos + 1;
 		}
 	}
 	return nReturn;

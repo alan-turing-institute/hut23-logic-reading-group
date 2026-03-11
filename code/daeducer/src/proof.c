@@ -174,174 +174,23 @@ bool proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_REITERATION: {
-			if (uCount == 2) {
-				size_t uRef;
-				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu", &uRef);
-				if (uReadCount == 1) {
-					if (proof_step_scoped(psProof, uRef - 1)) {
-						Step* psRef = proof_get_step(psProof, uRef - 1);
-						if (psRef) {
-							psStep->uRefCount = 1;
-							psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-							psStep->psRef[0] = psRef;
-							psStep->psResult = CopyRecursive(psRef->psResult);
-							boError = FALSE;
-						}
-					}
-					else {
-						szError = "Back reference is out of scope.";
-					}
-				}
-				else {
-					szError = "The reiteration command takes one back reference as a parameter.";
-				}
-			}
+			boError = !lemma(psProof, szCommand, uPiece, uCount, 1, (char const*[]) {"A"}, "A", psStep, &szError);
 		}
 		break;
 		case STEP_CONJUNCTION_INTRO: {
-			if (uCount == 3) {
-				size_t auRef[2];
-				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu %lu", &auRef[0], &auRef[1]);
-				if (uReadCount == 2) {
-					if (proof_step_scoped(psProof, auRef[0] - 1) && proof_step_scoped(psProof, auRef[1] - 1)) {
-						Step* apsRef[2];
-						apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
-						apsRef[1] = proof_get_step(psProof, auRef[1] - 1);
-						if (apsRef[0] && apsRef[1]) {
-							psStep->uRefCount = 2;
-							psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-							psStep->psRef[0] = apsRef[0];
-							psStep->psRef[1] = apsRef[1];
-							psStep->psResult = CreateBinary(OPBINARY_LAND, CopyRecursive(psStep->psRef[0]->psResult), CopyRecursive(psStep->psRef[1]->psResult));
-							boError = FALSE;
-						}
-					}
-					else {
-						szError = "Back reference is out of scope.";
-					}
-				}
-				else {
-					szError = "The and_intro command takes two back references as parameters.";
-				}
-			}
+			boError = !lemma(psProof, szCommand, uPiece, uCount, 2, (char const*[]) {"A", "B"}, "(A ^ B)", psStep, &szError);
 		}
 		break;
 		case STEP_CONJUNCTION_ELIM_LEFT: {
-			if (uCount == 2) {
-				size_t uRef;
-				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu", &uRef);
-				if (uReadCount == 1) {
-					if (proof_step_scoped(psProof, uRef - 1)) {
-						Step* psRef = proof_get_step(psProof, uRef - 1);
-						if (psRef) {
-							psPattern = CreateBinary(OPBINARY_LAND, CreateVariable("A"), CreateVariable("B"));
-							psExtract = ExtractPattern(psPattern, psRef->psResult);
-							if (psExtract) {
-								psStep->uRefCount = 1;
-								psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-								psStep->psRef[0] = psRef;
-								psStep->psResult = CopyRecursive(ExtractValue(psExtract, "A"));
-								boError = FALSE;
-								FreeExtract(psExtract);
-								psExtract = NULL;
-							}
-							FreeRecursive(psPattern);
-							psPattern = NULL;
-						}
-					}
-					else {
-						szError = "Back reference is out of scope.";
-					}
-				}
-				else {
-					szError = "The and_elim_left command takes one back reference as a parameter.";
-				}
-			}
+			boError = !lemma(psProof, szCommand, uPiece, uCount, 1, (char const*[]) {"(A ^ B)"}, "A", psStep, &szError);
 		}
 		break;
 		case STEP_CONJUNCTION_ELIM_RIGHT: {
-			if (uCount == 2) {
-				size_t uRef;
-				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu", &uRef);
-				if (uReadCount == 1) {
-					if (proof_step_scoped(psProof, uRef - 1)) {
-						Step* psRef = proof_get_step(psProof, uRef - 1);
-						if (psRef) {
-							psPattern = CreateBinary(OPBINARY_LAND, CreateVariable("A"), CreateVariable("B"));
-							psExtract = ExtractPattern(psPattern, psRef->psResult);
-							if (psExtract) {
-								psStep->uRefCount = 1;
-								psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-								psStep->psRef[0] = psRef;
-								psStep->psResult = CopyRecursive(ExtractValue(psExtract, "B"));
-								boError = FALSE;
-								FreeExtract(psExtract);
-								psExtract = NULL;
-							}
-							else {
-								szError = "Referenced expression must take the form (A ^ B).";
-							}
-							FreeRecursive(psPattern);
-							psPattern = NULL;
-						}
-					}
-					else {
-						szError = "Back reference is out of scope.";
-					}
-				}
-				else {
-					szError = "The and_elim_right command takes one back reference as a parameter.";
-				}
-			}
+			boError = !lemma(psProof, szCommand, uPiece, uCount, 1, (char const*[]) {"(A ^ B)"}, "B", psStep, &szError);
 		}
 		break;
 		case STEP_IMPLICATION_ELIM: {
-			if (uCount == 3) {
-				size_t auRef[2];
-				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu %lu", &auRef[0], &auRef[1]);
-				if (uReadCount == 2) {
-					if (proof_step_scoped(psProof, auRef[0] - 1) && proof_step_scoped(psProof, auRef[1] - 1)) {
-						Step* apsRef[2];
-						apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
-						apsRef[1] = proof_get_step(psProof, auRef[1] - 1);
-						if (apsRef[0] && apsRef[1]) {
-							psPattern = CreateBinary(OPBINARY_LIMP, CreateVariable("A"), CreateVariable("B"));
-							psExtract = ExtractPattern(psPattern, apsRef[0]->psResult);
-							if (psExtract) {
-								if (CompareOperations(ExtractValue(psExtract, "A"), apsRef[1]->psResult)) {
-									psStep->uRefCount = 2;
-									psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-									psStep->psRef[0] = apsRef[0];
-									psStep->psRef[1] = apsRef[1];
-									psStep->psResult = CopyRecursive(ExtractValue(psExtract, "B"));
-									boError = FALSE;
-									FreeExtract(psExtract);
-									psExtract = NULL;
-								}
-								else {
-									szError = "The left hand side of the implication in the first reference must match the second reference.";
-								}
-								FreeRecursive(psPattern);
-								psPattern = NULL;
-							}
-							else {
-								szError = "The first referenced expression must take the form (A -> B).";
-							}
-						}
-					}
-					else {
-						szError = "Back reference is out of scope.";
-					}
-				}
-			}
-			else {
-				szError = "The imp_elim command takes two back references as parameters.";
-			}
+			boError = !lemma(psProof, szCommand, uPiece, uCount, 2, (char const*[]) {"(A -> B)", "A"}, "B", psStep, &szError);
 		}
 		break;
 		case STEP_IMPLICATION_INTRO: {
@@ -514,56 +363,7 @@ bool proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_NEGATION_ELIM: {
-			if (uCount == 3) {
-				size_t auRef[2];
-				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu %lu", &auRef[0], &auRef[1]);
-				if (uReadCount == 2) {
-					Step* apsRef[2];
-					apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
-					apsRef[1] = proof_get_step(psProof, auRef[1] - 1);
-					if (apsRef[0] && apsRef[1]) {
-						if (proof_step_scoped(psProof, auRef[0] - 1)) {
-							if (proof_step_scoped(psProof, auRef[1] - 1)) {
-								psPattern = CreateUnary(OPUNARY_NOT, CreateVariable("A"));
-								psExtract = ExtractPattern(psPattern, apsRef[0]->psResult);
-								if (psExtract) {
-									if (CompareOperations(ExtractValue(psExtract, "A"), apsRef[1]->psResult)) {
-										psStep->uRefCount = 2;
-										psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-										psStep->psRef[0] = apsRef[0];
-										psStep->psRef[1] = apsRef[1];
-										psStep->psResult = CreateTruthValue(FALSE);
-										boError = FALSE;
-									}
-									else {
-										szError = "Second backreference must be the same as the first with the negation removed.";
-									}
-									FreeExtract(psExtract);
-									psExtract = NULL;
-								}
-								else {
-									szError = "First backreference must be in the form !A.";
-								}
-								FreeRecursive(psPattern);
-								psPattern = NULL;
-							}
-							else {
-								szError = "The second back reference is out of scope.";
-							}
-						}
-						else {
-							szError = "The first back reference is out of scope.";
-						}
-					}
-				}
-				else {
-					szError = "Back reference is out of scope.";
-				}
-			}
-			else {
-				szError = "The not_elim command takes two back references as parameters.";
-			}
+			boError = !lemma(psProof, szCommand, uPiece, uCount, 2, (char const*[]) {"!A", "A"}, "FALSE", psStep, &szError);
 		}
 		break;
 		case STEP_NEGATION_INTRO: {
@@ -607,6 +407,7 @@ bool proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_INDIRECT_PROOF: {
+
 			if (uCount == 3) {
 				size_t auRef[2];
 				size_t uReadCount;

@@ -72,7 +72,7 @@ Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee) {
     int nPos;
     char const * szVar;
 
-    psExtract = CreateExtract();
+    psExtract = CreateExtract ();
 
     psVariables = CreateVariables (psPattern, NULL);
 
@@ -149,6 +149,56 @@ bool ExtractRecursive (Extract * psExtract, Operation * psPattern, Operation * p
     return boSuccess;
 }
 
+Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee, int nCount) {
+    Extract * psExtract;
+    bool boResult;
+    Variable * psVariables;
+    Variable * psVariableCurrent;
+    int nVariableCount;
+    int nPos;
+    char const * szVar;
+
+    psExtract = CreateExtract ();
+
+    psVariables = NULL;
+    for (nPos = 0; nPos < nCount; ++nPos) {
+        psVariables = CreateVariables (apsPattern[nPos], psVariables);
+    }
+
+    nVariableCount = VariableCount (psVariables);
+    psExtract->nCount = nVariableCount;
+    if (nVariableCount > 0) {
+        psExtract->apsOps = calloc(nVariableCount, sizeof(OperationMap));
+
+        psVariableCurrent = VariableFirst(psVariables);
+        nPos = 0;
+        while (psVariableCurrent) {
+            szVar = VariableName (psVariableCurrent);
+
+            psExtract->apsOps[nPos].szVar = calloc(strlen(szVar) + 1, sizeof(char));
+            strcpy(psExtract->apsOps[nPos].szVar, szVar);
+
+            psVariableCurrent = VariableNext (psVariableCurrent);
+            nPos += 1;
+            assert(nPos <= nVariableCount);
+        }
+    }
+
+    psVariables = FreeVariables (psVariables);
+
+    boResult = TRUE;
+    for (nPos = 0; (nPos < nCount) && boResult; ++nPos) {
+        boResult = ExtractRecursive(psExtract, apsPattern[nPos], apsScrutinee[nPos]);
+    }
+
+    if (boResult == FALSE) {
+        FreeExtract(psExtract);
+        psExtract = NULL;
+    }
+
+    return psExtract;
+}
+
 int ExtractCount(Extract * psExtract) {
     return psExtract->nCount;
 }
@@ -161,6 +211,17 @@ char * ExtractName(Extract * psExtract, int nPosition) {
     }
 
     return szName;
+}
+
+Operation * ExtractValueFromPos(Extract * psExtract, int nPosition) {
+    Operation * psValue = NULL;
+    int nPos;
+
+    if ((nPosition >= 0) && (nPosition < psExtract->nCount)) {
+        psValue = psExtract->apsOps[nPosition].psOp;
+    }
+
+    return psValue;
 }
 
 Operation * ExtractValue(Extract * psExtract, char const * const szName) {

@@ -164,6 +164,7 @@ Operation * FindOperation (Operation * psMain, Operation * psFind);
 // Manipulating operations mathematically
 Operation * SubstituteOperation (Operation * psMain, Operation * psFind, Operation * psSub);
 Operation * SubstituteOperationPair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2);
+Operation * SubstituteOperationMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount);
 Operation * SimplifyOperation (Operation * psOp);
 bool CompareOperations (Operation * psOp1, Operation * psOp2);
 double ApproximateOperation (Operation * psOp);
@@ -187,9 +188,11 @@ char const * VariableName (Variable const * const psVariable);
 
 // Pattern extraction
 Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee);
+Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee, int nCount);
 int ExtractCount(Extract * psExtract);
 char * ExtractName(Extract * psExtract, int nPosition);
 Operation * ExtractValue(Extract * psExtract, char const * const szName);
+Operation * ExtractValueFromPos(Extract * psExtract, int nPosition);
 void FreeExtract(Extract * psExtract);
 
 
