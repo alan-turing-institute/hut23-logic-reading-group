@@ -1,0 +1,44 @@
+Symbolic ReadMe
+===============
+
+Symbolic is a library for manipulating mathematical expressions. Expressions are stored in a structured symbolic form allowing various operations to be performed on them.
+
+The library currently provides the following features.
+
+ * Conversion to and from text.
+ * Manipulation of logical propositional statements.
+ * Reduction of statements using tautologies allowing some basic theorem proving.
+ * Manipulation of mathematical expressions.
+ * Simplification of equations based on a simple rule set.
+ * Differentiation of expressions.
+ * Numerical approximations of equations given variable assignments.
+ * Continued fraction approximations of decimals. 
+
+
+Install
+=======
+
+If you have autoconf you should be able to install using the following 3 commands:
+
+./configure
+make
+make install
+
+
+License
+=======
+
+Read COPYING for information on the license. Symbolic is released under the MIT License.
+
+
+Contact and Links
+=================
+
+More information can be found at: https://www.flypig.co.uk/symbolic
+The source code can be obtained via git from: https://gitlab.com/flypig/libsymbolic
+
+I can be contacted via one of the following.
+
+ * My website: http://www.flypig.co.uk
+ * Email: at david@flypig.co.uk
+

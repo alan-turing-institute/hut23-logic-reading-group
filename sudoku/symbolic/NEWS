@@ -1,0 +1,37 @@
+libsymbolic-0.33: 6-Aug-2015
+  - Updated interface to return number of assignments of user-defined functions.
+
+libsymbolic-0.32: 5-Aug-2015
+  - User defined unary functions can be specified.
+
+libsymbolic-0.31: 14-May-2015
+  - Update configure build process.
+  - Added pkg-config files.
+  - Debianized to allow packaging as a .deb.
+
+libsymbolic-0.30: 21-Aug-2014
+  - Functions for better variable management.
+  - Bug fixes for parsing decimals.
+  - Improved build process.
+
+libsymbolic-0.25: 30-June-2012
+  - Changed C-string output so that (a**b) converts to pos(abs(a), b) rather than pow(a, b). This is to compensate for the fact that pow is undefined for a < 0 in GLSL 1.2.
+  - Updated testing interface to allow user input.
+
+libsymbolic-0.24: 29-May-2012
+  - Minor changes and bugfixes for use with ARM Debian/Raspberry Pi and Functy 0.2.4
+
+libsymbolic-0.21: 15-June-2009
+  - Fixed bug that might occur if variables are created for the same operation twice
+
+libsymbolic-0.2: 14-June-2009
+  - New functions added: tan, cosec, sec, cot, asin, acos, atan, sinh, cosh, tanh, exp, abs
+  - Improved differentiation and approximation routine accuracy
+  - Unary negative operation added
+
+libsymbolic-0.1: 26-April-2009
+	- First pre-release version built from SourceForge.net
+
+libsymbolic-0.1: 12-April-2009
+	- First pre-release version to use the autotools for the build process
+

@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: @PACKAGE_NAME@
+Description: A library for manipulating mathematical expressions.
+URL: http://functy.sourceforge.net/
+Version: @VERSION@
+Libs: -L${libdir} -lsymbolic
+Libs.private: -lz -lm 
+Cflags: -I${includedir} 
+
