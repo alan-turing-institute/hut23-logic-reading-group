@@ -144,7 +144,7 @@ am____libsymbolic_a_OBJECTS = ___libsymbolic_a-approximate.$(OBJEXT) \
 	___libsymbolic_a-simplify.$(OBJEXT) \
 	___libsymbolic_a-convert.$(OBJEXT) \
 	___libsymbolic_a-variables.$(OBJEXT) \
-	___libsymbolic_a-interface.$(OBJEXT)
+	___libsymbolic_a-extract.$(OBJEXT)
 ___libsymbolic_a_OBJECTS = $(am____libsymbolic_a_OBJECTS)
 am__dirstamp = $(am__leading_dot)dirstamp
 am____symbolic_OBJECTS = ___symbolic-interface.$(OBJEXT)
@@ -167,7 +167,7 @@ depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/___libsymbolic_a-approximate.Po \
 	./$(DEPDIR)/___libsymbolic_a-convert.Po \
-	./$(DEPDIR)/___libsymbolic_a-interface.Po \
+	./$(DEPDIR)/___libsymbolic_a-extract.Po \
 	./$(DEPDIR)/___libsymbolic_a-prop.Po \
 	./$(DEPDIR)/___libsymbolic_a-simplify.Po \
 	./$(DEPDIR)/___libsymbolic_a-variables.Po \
@@ -320,7 +320,7 @@ top_builddir = ..
 top_srcdir = ..
 lib_LIBRARIES = ../libsymbolic.a
 include_HEADERS = symbolic.h
-___libsymbolic_a_SOURCES = symbolic_private.h symbolic.h approximate.c prop.c simplify.c convert.c variables.c interface.c
+___libsymbolic_a_SOURCES = symbolic_private.h symbolic.h approximate.c prop.c simplify.c convert.c variables.c extract.c
 ___libsymbolic_a_CFLAGS = -std=c99
 ___symbolic_SOURCES = interface.c
 ___symbolic_CPPFLAGS = -std=c99
@@ -413,7 +413,7 @@ distclean-compile:
 
 include ./$(DEPDIR)/___libsymbolic_a-approximate.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-convert.Po # am--include-marker
-include ./$(DEPDIR)/___libsymbolic_a-interface.Po # am--include-marker
+include ./$(DEPDIR)/___libsymbolic_a-extract.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-prop.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-simplify.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-variables.Po # am--include-marker
@@ -509,19 +509,19 @@ ___libsymbolic_a-variables.obj: variables.c
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-variables.obj `if test -f 'variables.c'; then $(CYGPATH_W) 'variables.c'; else $(CYGPATH_W) '$(srcdir)/variables.c'; fi`
 
-___libsymbolic_a-interface.o: interface.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-interface.o -MD -MP -MF $(DEPDIR)/___libsymbolic_a-interface.Tpo -c -o ___libsymbolic_a-interface.o `test -f 'interface.c' || echo '$(srcdir)/'`interface.c
-	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-interface.Tpo $(DEPDIR)/___libsymbolic_a-interface.Po
-#	$(AM_V_CC)source='interface.c' object='___libsymbolic_a-interface.o' libtool=no \
+___libsymbolic_a-extract.o: extract.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-extract.o -MD -MP -MF $(DEPDIR)/___libsymbolic_a-extract.Tpo -c -o ___libsymbolic_a-extract.o `test -f 'extract.c' || echo '$(srcdir)/'`extract.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-extract.Tpo $(DEPDIR)/___libsymbolic_a-extract.Po
+#	$(AM_V_CC)source='extract.c' object='___libsymbolic_a-extract.o' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-interface.o `test -f 'interface.c' || echo '$(srcdir)/'`interface.c
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-extract.o `test -f 'extract.c' || echo '$(srcdir)/'`extract.c
 
-___libsymbolic_a-interface.obj: interface.c
-	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-interface.obj -MD -MP -MF $(DEPDIR)/___libsymbolic_a-interface.Tpo -c -o ___libsymbolic_a-interface.obj `if test -f 'interface.c'; then $(CYGPATH_W) 'interface.c'; else $(CYGPATH_W) '$(srcdir)/interface.c'; fi`
-	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-interface.Tpo $(DEPDIR)/___libsymbolic_a-interface.Po
-#	$(AM_V_CC)source='interface.c' object='___libsymbolic_a-interface.obj' libtool=no \
+___libsymbolic_a-extract.obj: extract.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-extract.obj -MD -MP -MF $(DEPDIR)/___libsymbolic_a-extract.Tpo -c -o ___libsymbolic_a-extract.obj `if test -f 'extract.c'; then $(CYGPATH_W) 'extract.c'; else $(CYGPATH_W) '$(srcdir)/extract.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-extract.Tpo $(DEPDIR)/___libsymbolic_a-extract.Po
+#	$(AM_V_CC)source='extract.c' object='___libsymbolic_a-extract.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
-#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-interface.obj `if test -f 'interface.c'; then $(CYGPATH_W) 'interface.c'; else $(CYGPATH_W) '$(srcdir)/interface.c'; fi`
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-extract.obj `if test -f 'extract.c'; then $(CYGPATH_W) 'extract.c'; else $(CYGPATH_W) '$(srcdir)/extract.c'; fi`
 
 ___symbolic-interface.o: interface.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(___symbolic_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ___symbolic-interface.o -MD -MP -MF $(DEPDIR)/___symbolic-interface.Tpo -c -o ___symbolic-interface.o `test -f 'interface.c' || echo '$(srcdir)/'`interface.c
@@ -688,7 +688,7 @@ clean-am: clean-generic clean-libLIBRARIES clean-noinstPROGRAMS \
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/___libsymbolic_a-approximate.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-convert.Po
-	-rm -f ./$(DEPDIR)/___libsymbolic_a-interface.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-extract.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-prop.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-simplify.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-variables.Po
@@ -740,7 +740,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/___libsymbolic_a-approximate.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-convert.Po
-	-rm -f ./$(DEPDIR)/___libsymbolic_a-interface.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-extract.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-prop.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-simplify.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-variables.Po

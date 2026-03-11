@@ -83,6 +83,8 @@ typedef struct _Operation Operation;
 typedef struct _Variable Variable;
 // Main user function strucutre
 typedef struct _UserFunc UserFunc;
+// Operation mapping for pattern extraction
+typedef struct _Extract Extract;
 
 // User operation callbacks
 typedef double (*UserApproximate)(double fVar1, void * psContext);
@@ -102,7 +104,7 @@ typedef enum _OPUNARY
 // Textual equivalents of the unary operations
 // TODO: This array should be moved into Convert.cpp
 static char const aszOpUnary[OPUNARY_NUM][7] = {
-	"\\lnot",
+	"!",
 };
 
 // Binary operations
@@ -183,6 +185,12 @@ Variable * VariableNext (Variable * psVariables);
 Variable * VariablePrev (Variable * psVariables);
 char const * VariableName (Variable const * const psVariable);
 
+// Pattern extraction
+Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee);
+int ExtractCount(Extract * psExtract);
+char * ExtractName(Extract * psExtract, int nPosition);
+Operation * ExtractValue(Extract * psExtract, char const * const szName);
+void FreeExtract(Extract * psExtract);
 
 
 #endif // if !defined _H_SYMBOLIC
