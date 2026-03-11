@@ -44,7 +44,7 @@ Here is the syntax of judgements. A judgement is a list of two
 elements: a list of zero or more premisses, and a proof.
 #+name Judgement syntax
 #+begin_src bnf
-<judgement> ::= ( ( <premiss>* ) <proof> )
+  <judgement> ::= ( ( <premiss>* ) <proof> )
 #+end_src
 
 A premiss is a list of a name and a proposition.
@@ -72,26 +72,24 @@ implication; and I’ve omitted negation because of the wrinkle that
 will be explained later. On the other hand, false ($\bot$) is now
 included as its own kind of proposition.)
 
-A /proof/ has one of four forms:
+A /proof/ has one of three forms:
 #+name: Judgement syntax
 #+begin_src bnf
   <proof> ::= <name>
             | <deduction>
             | ( let ( <name> <deduction> ) <proof> )
-            | ( lambda ( <name> <prop> ) <proof> ) 
 
   <deduction> ::= ( <rule> (@ <prop>) <name>* )
+                | ( lambda ( <name> <prop> ) <proof> )
   
   <rule> ::= andI | andE_left | andE_right
            | orI_left | orI_right | orE
            | apply | false
 #+end_src
 The first form, ~<name>~, names a previous line in the proof. The
-second form, ~<deduction>~, is an application of one of the rules of
-deduction. The “let” form introduces a new name which is then
-available in the enclosed ~<proof>~. Finally, the “lambda” form
-introduces a new assumption, which is available in the enclosed
-~<proof>~ (but not outside it!). 
+second form, ~<deduction>~, is either an application of one of the
+rules of deduction or a “lambda”. The “let” form introduces a new name
+which is then available in the enclosed ~<proof>~. 
 
 The definition of ~<proof>~ is recursive: A ~<proof>~ that has the
 form of a “let” say, may include a nested proof within it. This is how
