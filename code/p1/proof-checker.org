@@ -3,21 +3,21 @@
 :END:
 #+title: Proof checking
 
-Notes on proof checking for “Fitch-stylenatural deduction” in
-propositional logic. (The proofs that are written as a sequence of
-numbered lines, with nested sub-proofs.)
+Notes on proof checking for “Fitch-style natural deduction” in
+propositional logic. (These are the proofs that are written as a
+sequence of numbered lines, with nested sub-proofs.)
 
 These notes say what data structure I think a proof should be
 represented by. That is similar to, but not entirely the same as,
 the syntax of a serialisation format. The following defines the data
-structure in Racket, and the serialisation format is s-expressions.
+structure in Racket, and the serialisation format as s-expressions.
 
 There are a few things to say up front. I shall replace the line
 numbers with explicit names: $x$, $y$, $z$, and so on, of which I
-shall assume one has available as many as necessary. Next, many of the
+shall assume one has available as many as necessary. Many of the
 propositions which one writes in the normal style are unnecessary and
 can be omitted, since they can be deduced from the deduction rules
-which are the important parts of the proof. The propositions that
+(which are the important parts of the proof). The propositions that
 can’t be removed are the ones that come from “outside” the proof:
 namely, the premisses and the assumptions at the head of
 sub-proofs. The tricky part is saying which names are “accessible” at
@@ -26,19 +26,20 @@ sub-proof concludes. (There’s also a wrinkle about the operator
 “not”.)
 
 In Scheme, the fundamental datatype is a list. A list is written as a
-space-separated sqeuence of elements, surrounded by parentheses. For
+space-separated sequence of elements, surrounded by parentheses. For
 example, ~(andI x1 x2)~ is a list of three elements. The empty list is
-written ~()~, or sometimes ~null~. In the example list ~(andI x1 x2)~
-the elements of the list are /symbols/, which are the kind of thing
-you use to name variables. Lists need not be homogeneous in the type
-of the their elements: the list ~(x (y 2) z)~ has three elements, the
-second of which is a list of two elements, a symbol and a number.
+written ~()~, or sometimes ~null~. The elements of the list ~(andI x1
+x2)~ are /symbols/, which are the kind of thing you use to name
+variables. (Most languages don't have values of this type.) However,
+lists need not be homogeneous in the type of the their elements: the
+list ~(x (y 2) z)~ has three elements, the second of which is a list
+of two elements, a symbol and a number.
 
 The thing that is written as, for example, =P /\ Q |- P=, is called a
 /judgement/. A judgement is zero more more premisses (to the left of
 the turnstile) and a conclusion (to the right). Although in our case
 we are constructing not merely a conclusion but a whole proof I will
-use the same terminology.
+use the same name for the thing we construct.
 
 Here is the syntax of judgements. A judgement is a list of two
 elements: a list of zero or more premisses, and a proof.
@@ -50,7 +51,7 @@ elements: a list of zero or more premisses, and a proof.
 A premiss is a list of a name and a proposition.
 #+name: Judgement syntax
 #+begin_src bnf
-  <premiss> ::= (<name> <proposition>)
+  <premiss> ::= (<name> <prop>)
 #+end_src
 
 A name is any symbol.
@@ -59,7 +60,7 @@ A name is any symbol.
   <name> ::= x | y | z | ...
 #+end_src
 
-A proposition has its own little sub-language:
+Propositions have their own little sub-language:
 #+name: Judgement syntax
 #+begin_src bnf
   <prop> ::= false
@@ -85,16 +86,17 @@ A /proof/ has one of three forms:
   <rule> ::= andI | andE_left | andE_right
            | orI_left | orI_right | orE
            | apply | false
-#+end_src
-The first form, ~<name>~, names a previous line in the proof. The
-second form, ~<deduction>~, is either an application of one of the
-rules of deduction or a “lambda”. The “let” form introduces a new name
-which is then available in the enclosed ~<proof>~. 
+#+end_src 
+The first form, ~<name>~, names a previous line in the proof. (This
+replaces the rule of repetition.) The second form, ~<deduction>~, is
+either an application of one of the rules of deduction or a
+“lambda”. The “let” form introduces a new name is available in the
+enclosed ~<proof>~ (but not outside it).
 
 The definition of ~<proof>~ is recursive: A ~<proof>~ that has the
 form of a “let” say, may include a nested proof within it. This is how
 we deal with the idea that each line of the proof may only refer to
-lines above it.  
+lines above it.
 
 
 
