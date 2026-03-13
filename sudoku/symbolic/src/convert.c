@@ -54,6 +54,7 @@
 Operation * RecurseToOperation (char const * szString, int nStrLen);
 inline bool StringCheckBinary (char const * szString, int const nStrLen, char const * szOperator);
 bool TryStringToDouble (char const * const szString, int const nStrLen, double * pfDecimal);
+bool TryStringToTruth (char const * const szString, int const nStrLen, bool * pboTruth);
 bool TryUndefinedUnary (char const * szString, int nStrLen, int * pnNameEnd);
 bool CheckBracketsMatch (char const * szString, int nStrLen);
 
@@ -379,6 +380,7 @@ Operation * RecurseToOperation (char const * szString, int nStrLen) {
 	bool boScanned;
 	char * szVariable = NULL;
 	int nNameEnd;
+	bool boTruth;
 
 	// Remove the edge brackets
 	boMatch = TRUE;
@@ -468,14 +470,20 @@ Operation * RecurseToOperation (char const * szString, int nStrLen) {
 			psReturnOp = CreateUnary (eUnary, RecurseToOperation (szString + nRightStart, nStrLen - nRightStart));
 		}
 		else {
-			// Interpret as a variable, since it's all that's left
-			// TODO: Check whether this can really be a valid variable name( (e.g. no brackets)
-			szVariable = (char *)PropMalloc (nStrLen + 1);
-			strncpy (szVariable, szString, nStrLen);
-			szVariable[nStrLen] = '\0';
-			psReturnOp = CreateVariable (szVariable);
-			PropFree (szVariable);
-			szVariable = NULL;
+			boMatch = TryStringToTruth (szString, nStrLen, &boTruth);
+			if (boMatch) {
+				psReturnOp = CreateTruthValue (boTruth);
+			}
+			else {
+				// Interpret as a variable, since it's all that's left
+				// TODO: Check whether this can really be a valid variable name (e.g. no brackets)
+				szVariable = (char *)PropMalloc (nStrLen + 1);
+				strncpy (szVariable, szString, nStrLen);
+				szVariable[nStrLen] = '\0';
+				psReturnOp = CreateVariable (szVariable);
+				PropFree (szVariable);
+				szVariable = NULL;
+			}
 		}
 	}
 
@@ -513,6 +521,37 @@ bool TryStringToDouble (char const * const szString, int const nStrLen, double *
 	}
 
 	return (nScanned == 1);
+}
+
+/**
+ * Try to convert a string to a boolean.
+ * Internal method.
+ *
+ * @param szString the string to convert (may not be zero terminated).
+ * @param nStrLen the length of the string.
+ * @param pboTruth return value of the truth value if it could be converted (unchanged o/w).
+ * @return TRUE if the conversion was successful, FALSE o/w.
+ *
+ */
+bool TryStringToTruth (char const * const szString, int const nStrLen, bool * pboTruth) {
+	bool boResult = FALSE;
+
+	if (strcmp ("TRUE", szString) == 0) {
+		if (pboTruth) {
+			*pboTruth = TRUE;
+		}
+		boResult = TRUE;
+	}
+	else {
+		if (strcmp ("FALSE", szString) == 0) {
+			if (pboTruth) {
+				*pboTruth = FALSE;
+			}
+			boResult = TRUE;
+		}
+	}
+
+	return boResult;
 }
 
 /**

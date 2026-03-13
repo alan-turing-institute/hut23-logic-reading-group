@@ -586,8 +586,9 @@ int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation 
 
 	if ((psMain) && (psSub1) && (psSub2)) {
 		switch (psMain->eOpType) {
-			case OPTYPE_VARIABLE:
 			case OPTYPE_TRUTHVALUE:
+				break;
+			case OPTYPE_VARIABLE:
 			case OPTYPE_UNARY:
 				nSubstitute = CompareOperationsPair (psMain, psFind1, psFind2);
 				if (nSubstitute == 0) {
@@ -728,8 +729,9 @@ int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation
 
 	if (psMain != NULL) {
 		switch (psMain->eOpType) {
-			case OPTYPE_VARIABLE:
 			case OPTYPE_TRUTHVALUE:
+				break;
+			case OPTYPE_VARIABLE:
 			case OPTYPE_UNARY:
 				nSubstitute = CompareOperationsMany (psMain, apsFind, nCount);
 				if (nSubstitute == 0) {
