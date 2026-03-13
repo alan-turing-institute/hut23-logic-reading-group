@@ -1,0 +1,208 @@
+// vim: noet:ts=2:sts=2:sw=2
+
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright © 2026 David Llewellyn-Jones
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+
+#include "symbolic.h"
+
+#include "lemma.h"
+
+struct _Lemma {
+	char* szCommand;
+	char* szAnnotation;
+	size_t uRefNum;
+	Operation** apsPattern;
+	Operation* psResult;
+};
+
+Lemma* lemma_new() {
+	Lemma* psLemma;
+
+	psLemma = calloc(1, sizeof(Lemma));
+
+	return psLemma;
+}
+
+void lemma_delete(Lemma* psLemma) {
+	if (psLemma) {
+		if (psLemma->szCommand) {
+			free(psLemma->szCommand);
+			psLemma->szCommand = NULL;
+		}
+		if (psLemma->szAnnotation) {
+			free(psLemma->szAnnotation);
+			psLemma->szAnnotation = NULL;
+		}
+
+		free(psLemma);
+	}
+}
+
+Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRefNum, char const** aszPattern, char const* szResult) {
+	Lemma* psLemma;
+	size_t uLength;
+	size_t uPos;
+
+	psLemma = lemma_new();
+
+	uLength = strlen(szCommand);
+	psLemma->szCommand = malloc(uLength + 1);
+	strncpy(psLemma->szCommand, szCommand, uLength + 1);
+
+	uLength = strlen(szAnnotation);
+	psLemma->szAnnotation = malloc(uLength + 1);
+	strncpy(psLemma->szAnnotation, szAnnotation, uLength + 1);
+
+	psLemma->apsPattern = calloc(uRefNum, sizeof(Operation*));
+
+	for (uPos = 0; uPos < uRefNum; ++uPos) {
+		psLemma->apsPattern[uPos] = StringToOperation(aszPattern[uPos]);
+	}
+	psLemma->uRefNum = uRefNum;
+	psLemma->psResult = StringToOperation(szResult);
+
+	return psLemma;
+}
+
+bool lemma(Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** szError) {
+	bool boSuccess = FALSE;
+	Lemma* psLemma;
+
+	psLemma = lemma_compile(szCommand, "", uRefNum, aszPattern, szResult);
+	boSuccess = lemma_compiled(psLemma, psProof, szCommand, uPiece, uCount, psStep, szError);
+	lemma_delete(psLemma);
+
+	return boSuccess;
+}
+
+bool lemma_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, Step* psStep, char** szError) {
+	bool boSuccess = FALSE;
+	size_t* auRef;
+	size_t uReadCount;
+	size_t uPos;
+	Step** apsRef;
+	Extract* psExtract;
+	Operation** apsScrutinee;
+	Operation** apsFind;
+	Operation** apsSub;
+	size_t uVarCount;
+
+	if (uCount == (psLemma->uRefNum + 1)) {
+		auRef = calloc(psLemma->uRefNum, sizeof(size_t));
+		apsRef = calloc(psLemma->uRefNum, sizeof(Operation*));
+		uReadCount = 1;
+		for (uPos = 0; (uPos < psLemma->uRefNum) && (uReadCount == 1); ++uPos) {
+			uReadCount = sscanf(szCommand + uPiece[(uPos + 1)], "%lu", &auRef[uPos]);
+		}
+		if ((uPos == psLemma->uRefNum) && (uReadCount == 1)) {
+			boSuccess = TRUE;
+			for (uPos = 0; (uPos < psLemma->uRefNum) && boSuccess; ++uPos) {
+				boSuccess = proof_step_scoped(psProof, auRef[uPos] - 1);
+			}
+			if (boSuccess) {
+				apsScrutinee = calloc(psLemma->uRefNum, sizeof(Operation*));
+
+				for (uPos = 0; (uPos < psLemma->uRefNum) && boSuccess; ++uPos) {
+					apsRef[uPos] = proof_get_step(psProof, auRef[uPos] - 1);
+					apsScrutinee[uPos] = apsRef[uPos]->psResult;
+				}
+				psExtract = ExtractPatternMany(psLemma->apsPattern, apsScrutinee, psLemma->uRefNum);
+				boSuccess = (psExtract != NULL);
+
+				if (boSuccess) {
+					uVarCount = ExtractCount(psExtract);
+
+					apsFind = calloc(uVarCount, sizeof(Operation*));
+					apsSub = calloc(uVarCount, sizeof(Operation*));
+
+					for (uPos = 0; uPos < uVarCount; ++uPos) {
+						apsFind[uPos] = CreateVariable(ExtractName(psExtract, uPos));
+						apsSub[uPos] = ExtractValueFromPos(psExtract, uPos);
+					}
+
+					psStep->uRefCount = psLemma->uRefNum;
+					psStep->psRef = calloc(psLemma->uRefNum, sizeof(Step*));
+
+					for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
+						psStep->psRef[uPos] = apsRef[uPos];
+					}
+					psStep->psResult = SubstituteOperationMany(psLemma->psResult, apsFind, apsSub, uVarCount);
+
+					FreeExtract(psExtract);
+					psExtract = NULL;
+
+					for (uPos = 0; uPos < uVarCount; ++uPos) {
+						FreeRecursive(apsFind[uPos]);
+					}
+					free(apsFind);
+					apsFind = NULL;
+					free(apsSub);
+					apsSub = NULL;
+				}
+				else {
+					*szError = "The referenced expressions must match the rule structure.";
+				}
+
+				free(apsScrutinee);
+				apsScrutinee = NULL;
+			}
+			else {
+				*szError = "At least one of the back references is out of scope.";
+			}
+		}
+		free(auRef);
+		auRef = NULL;
+		free(apsRef);
+		apsRef = NULL;
+	}
+	else {
+		if (psLemma->uRefNum == 1) {
+			*szError = "The command takes exactly one back reference as a parameter.";
+		}
+		else {
+			*szError = "Incorrect number of back references passed to the command as parameters.";
+		}
+	}
+
+	return boSuccess;
+}
+
+Lemma* lemma_from_proof(Proof* psProof) {
+	Lemma* psLemma;
+	size_t uLength;
+	size_t uPos;
+
+	psLemma = lemma_new();
+
+	uLength = strlen(psProof->szCommand);
+	psLemma->szCommand = malloc(uLength + 1);
+	strncpy(psLemma->szCommand, psProof->szCommand, uLength + 1);
+
+	uLength = strlen(psProof->szAnnotation);
+	psLemma->szAnnotation = malloc(uLength + 1);
+	strncpy(psLemma->szAnnotation, psProof->szAnnotation, uLength + 1);
+
+	uPos = 0;
+	while ((uPos < psProof->uStepCount) && (psProof->apsStep[uPos]->eCommand == STEP_PREMISE)) {
+		uPos += 1;
+	}
+
+	psLemma->uRefNum = uPos;
+	psLemma->apsPattern = calloc(uPos, sizeof(Operation*));
+
+	for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
+		psLemma->apsPattern[uPos] = CopyRecursive(psProof->apsStep[uPos]->psResult);
+	}
+
+	if ((psProof->apsStep[(psProof->uStepCount - 1)]->eCommand == STEP_QED) && (psProof->uStepCount > psLemma->uRefNum) && (psProof->uStepCount > 2)) {
+		psLemma->psResult = CopyRecursive(psProof->apsStep[(psProof->uStepCount - 2)]->psResult);
+	}
+
+	return psLemma;
+}
+

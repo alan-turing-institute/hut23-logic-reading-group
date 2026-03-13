@@ -2,7 +2,7 @@
 
 target = daeducer
 
-objects = src/main.o src/utils.o src/step.o src/proof.o
+objects = src/main.o src/utils.o src/step.o src/proof.o src/lemma.o src/ruleset.o
 
 all: $(target)
 

@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "utils.h"
+#include "lemma.h"
 #include "step.h"
 #include "symbolic.h"
 
@@ -22,7 +23,21 @@ Proof* proof_new() {
 }
 
 void proof_delete(Proof* psProof) {
-	free(psProof);
+	if (psProof) {
+		if (psProof->szCommand) {
+			free(psProof->szCommand);
+			psProof->szCommand = NULL;
+		}
+		if (psProof->szAnnotation) {
+			free(psProof->szAnnotation);
+			psProof->szAnnotation = NULL;
+		}
+		if (psProof->szError) {
+			//free(psProof->szError);
+			psProof->szError = NULL;
+		}
+		free(psProof);
+	}
 }
 
 Step* proof_get_step(Proof* psProof, size_t uPos) {
@@ -113,7 +128,7 @@ void proof_print_help() {
 	printf("\n");
 }
 
-bool proof_process_step(Proof* psProof, char* szCommand) {
+void proof_process_step(Proof* psProof, char* szCommand) {
 	size_t uCount;
 	size_t uPos;
 	Step* psStep;
@@ -568,28 +583,50 @@ bool proof_process_step(Proof* psProof, char* szCommand) {
 		break;
 	};
 
+	if (!boContinue) {
+		psProof->boComplete = TRUE;
+	}
+
 	if ((!boError) && boStep) {
 		size_t uPos = psProof->uStepCount;
 		psProof->uStepCount += 1;
 		psProof->apsStep = realloc(psProof->apsStep, psProof->uStepCount * sizeof(Step));
 		psProof->apsStep[uPos] = psStep;
-		proof_print_step(psProof, uPos);
-		printf("\n");
+		//proof_print_step(psProof, uPos);
 	}
 	else {
 		if (boError) {
-			printf("Error: %s\n", szError);
+			//printf("Error: %s\n", szError);
+			psProof->boError = TRUE;
+			psProof->szError = szError;
 		}
 		step_delete(psStep);
 	}
+}
 
-	return boContinue;
+void proof_print_last_step(Proof* psProof) {
+	if (psProof->uStepCount > 0) {
+		step_print(psProof->apsStep[(psProof->uStepCount - 1)]);
+	}
 }
 
 void proof_print_step(Proof* psProof, size_t uStep) {
 	if (uStep < psProof->uStepCount) {
 		step_print(psProof->apsStep[uStep]);
 	}
+}
+
+bool proof_complete(Proof* psProof) {
+	return psProof->boComplete;
+}
+
+bool proof_error(Proof* psProof, char** pszError) {
+	if (psProof->boError) {
+		if (pszError) {
+			*pszError = psProof->szError;
+		}
+	}
+	return psProof->boError;
 }
 
 size_t proof_indent(Proof* psProof) {
@@ -605,3 +642,52 @@ size_t proof_indent(Proof* psProof) {
 	return uIndent;
 }
 
+Proof* proof_load(char const* szFilename) {
+	Proof* psProof;
+	FILE* fhFile;
+	char* szLine;
+	size_t uLength;
+	ssize_t nRead;
+	bool boSuccess;
+	size_t uLine;
+
+	psProof = proof_new();
+	fhFile = fopen(szFilename, "r");
+
+	if (fhFile) {
+		uLength = 64;
+		szLine = calloc(uLength, sizeof(char));
+		nRead = 0;
+
+		boSuccess = TRUE;
+		uLine = 0;
+		while (boSuccess && (nRead != -1)) {
+			nRead = getline(&szLine, &uLength, fhFile);
+			if (nRead != -1) {
+				switch (uLine) {
+					case 0: {
+						psProof->szCommand = calloc(nRead, sizeof(char));
+						strncpy(psProof->szCommand, szLine, nRead);
+						psProof->szCommand[(nRead - 1)] = 0;
+					}
+					break;
+					case 1: {
+						psProof->szAnnotation = calloc(nRead, sizeof(char));
+						strncpy(psProof->szAnnotation, szLine, nRead);
+						psProof->szAnnotation[(nRead - 1)] = 0;
+					}
+					break;
+					default: {
+						proof_process_step(psProof, szLine);
+						boSuccess = proof_error(psProof, NULL);
+					}
+					break;
+				}
+			}
+			uLine += 1;
+		}
+		printf("Loaded: %s\n", psProof->szCommand);
+	}
+
+	return psProof;
+}

@@ -7,10 +7,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "symbolic.h"
 #include "utils.h"
 #include "step.h"
 #include "proof.h"
-#include "symbolic.h"
+#include "ruleset.h"
 
 int main() {
 	char szString[1024];
@@ -18,11 +19,20 @@ int main() {
 	Proof* psProof;
 	size_t uIndent;
 	size_t uCount;
+	Ruleset* psRuleset;
+	bool boError;
+	char* szError;
 
 	printf("Welcome to Daeducer, a simple TFL proof constructor that follows the approach in Chapter 17 of the Forall x: Calgary book on formal logic.\n");
 	printf("Enter help to list the available commands.\n");
 	printf("Enter <ctrl>-d to exit.\n");
 	printf("\n");
+
+	psRuleset = ruleset_load("lemmas");
+
+/*	psProof = proof_load("lemmas/and_or_intro.txt");*/
+/*	proof_delete(psProof);*/
+/*	psProof = NULL;*/
 
 	psProof = proof_new();
 
@@ -36,7 +46,18 @@ int main() {
 		char* szResult = fgets(szString, 1024, stdin);
 		printf(COL_RESET);
 		if (szResult) {
-			boContinue = proof_process_step(psProof, szResult);
+			proof_process_step(psProof, szResult);
+
+			boError = proof_error(psProof, &szError);
+			if (!boError) {
+				proof_print_last_step(psProof);
+				printf("\n");
+			}
+			else {
+				printf("Error: %s\n", szError);
+			}
+
+			boContinue = !proof_complete(psProof);
 		}
 		else {
 			boContinue = FALSE;
