@@ -66,36 +66,30 @@ Extract * CreateExtract() {
 Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee) {
     Extract * psExtract;
     bool boResult;
-    Variable * psVariables;
-    Variable * psVariableCurrent;
     int nVariableCount;
     int nPos;
     char const * szVar;
+    VariableNames * psVariableNames;
 
     psExtract = CreateExtract ();
+    psVariableNames = CreateVariableNames();
 
-    psVariables = CreateVariables (psPattern, NULL);
-
-    nVariableCount = VariableCount (psVariables);
+    VariableNamesExtract(psVariableNames, psPattern);
+    nVariableCount = VariableNamesCount (psVariableNames);
     psExtract->nCount = nVariableCount;
+
     if (nVariableCount > 0) {
         psExtract->apsOps = calloc(nVariableCount, sizeof(OperationMap));
 
-        psVariableCurrent = VariableFirst(psVariables);
-        nPos = 0;
-        while (psVariableCurrent) {
-            szVar = VariableName (psVariableCurrent);
+        for (nPos = 0; nPos < nVariableCount; ++nPos) {
+            szVar = VariableNamesGet (psVariableNames, nPos);
 
             psExtract->apsOps[nPos].szVar = calloc(strlen(szVar) + 1, sizeof(char));
             strcpy(psExtract->apsOps[nPos].szVar, szVar);
-
-            psVariableCurrent = VariableNext (psVariableCurrent);
-            nPos += 1;
-            assert(nPos <= nVariableCount);
         }
     }
 
-    psVariables = FreeVariables (psVariables);
+    psVariableNames = FreeVariableNames (psVariableNames);
 
     boResult = ExtractRecursive(psExtract, psPattern, psScrutinee);
 
@@ -157,34 +151,30 @@ Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee
     int nVariableCount;
     int nPos;
     char const * szVar;
+    VariableNames * psVariableNames;
 
     psExtract = CreateExtract ();
+    psVariableNames = CreateVariableNames();
 
     psVariables = NULL;
     for (nPos = 0; nPos < nCount; ++nPos) {
-        psVariables = CreateVariables (apsPattern[nPos], psVariables);
+        VariableNamesExtract(psVariableNames, apsPattern[nPos]);
     }
-
-    nVariableCount = VariableCount (psVariables);
+    nVariableCount = VariableNamesCount (psVariableNames);
     psExtract->nCount = nVariableCount;
+
     if (nVariableCount > 0) {
         psExtract->apsOps = calloc(nVariableCount, sizeof(OperationMap));
 
-        psVariableCurrent = VariableFirst(psVariables);
-        nPos = 0;
-        while (psVariableCurrent) {
-            szVar = VariableName (psVariableCurrent);
+        for (nPos = 0; nPos < nVariableCount; ++nPos) {
+            szVar = VariableNamesGet (psVariableNames, nPos);
 
             psExtract->apsOps[nPos].szVar = calloc(strlen(szVar) + 1, sizeof(char));
             strcpy(psExtract->apsOps[nPos].szVar, szVar);
-
-            psVariableCurrent = VariableNext (psVariableCurrent);
-            nPos += 1;
-            assert(nPos <= nVariableCount);
         }
     }
 
-    psVariables = FreeVariables (psVariables);
+    psVariableNames = FreeVariableNames (psVariableNames);
 
     boResult = TRUE;
     for (nPos = 0; (nPos < nCount) && boResult; ++nPos) {

@@ -124,6 +124,19 @@ void * PropMemCalloc (size_t n, size_t size) {
 }
 
 /**
+ * Replacement for realloc to also profile memory usage. Replicates
+ * void * realloc (void * ptr, size_t size)
+ *
+ * @param ptr pointer to the memory to resize.
+ * @param size the amount of memory to allocate in bytes.
+ * @return pointer to the allocated memory.
+ *
+ */
+void * PropMemRealloc (void * ptr, size_t size) {
+	return realloc (ptr, size);
+}
+
+/**
  * Replacement for free to also profile memory usage. Replicates
  * void free (void * ptr)
  *
