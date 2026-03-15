@@ -8,9 +8,10 @@
 #include <string.h>
 
 #include "utils.h"
-#include "lemma.h"
 #include "step.h"
+#include "ruleset.h"
 #include "symbolic.h"
+#include "lemma.h"
 
 #include "proof.h"
 
@@ -38,6 +39,14 @@ void proof_delete(Proof* psProof) {
 		}
 		free(psProof);
 	}
+}
+
+void proof_attach_ruleset(Proof* psProof, Ruleset* psRuleset) {
+	psProof->psRuleset = psRuleset;
+}
+
+Ruleset* proof_detach_ruleset(Proof* psProof) {
+	return psProof->psRuleset;
 }
 
 Step* proof_get_step(Proof* psProof, size_t uPos) {
@@ -138,6 +147,9 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 	char * szError = "Unknown error.";
 	bool boContinue;
 	bool boStep;
+	bool boFound;
+	size_t uIndex;
+	Lemma* psLemma;
 
 	boContinue = TRUE;
 	boStep = TRUE;
@@ -188,24 +200,19 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 			}
 		}
 		break;
-		case STEP_REITERATION: {
-			boError = !lemma(psProof, szCommand, uPiece, uCount, 1, (char const*[]) {"A"}, "A", psStep, &szError);
-		}
-		break;
-		case STEP_CONJUNCTION_INTRO: {
-			boError = !lemma(psProof, szCommand, uPiece, uCount, 2, (char const*[]) {"A", "B"}, "(A ^ B)", psStep, &szError);
-		}
-		break;
-		case STEP_CONJUNCTION_ELIM_LEFT: {
-			boError = !lemma(psProof, szCommand, uPiece, uCount, 1, (char const*[]) {"(A ^ B)"}, "A", psStep, &szError);
-		}
-		break;
-		case STEP_CONJUNCTION_ELIM_RIGHT: {
-			boError = !lemma(psProof, szCommand, uPiece, uCount, 1, (char const*[]) {"(A ^ B)"}, "B", psStep, &szError);
-		}
-		break;
-		case STEP_IMPLICATION_ELIM: {
-			boError = !lemma(psProof, szCommand, uPiece, uCount, 2, (char const*[]) {"(A -> B)", "A"}, "B", psStep, &szError);
+		case STEP_REITERATION:
+			// Intentional fallthrough
+		case STEP_CONJUNCTION_INTRO:
+			// Intentional fallthrough
+		case STEP_CONJUNCTION_ELIM_LEFT:
+			// Intentional fallthrough
+		case STEP_CONJUNCTION_ELIM_RIGHT:
+			// Intentional fallthrough
+		case STEP_IMPLICATION_ELIM:
+			// Intentional fallthrough
+		case STEP_NEGATION_ELIM: {
+			psLemma = ruleset_get_lemma(psProof->psRuleset, eCommand);
+			boError = !lemma_apply_compiled(psLemma, psProof, szCommand, uPiece, uCount, psStep, &szError);
 		}
 		break;
 		case STEP_IMPLICATION_INTRO: {
@@ -377,10 +384,6 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 			}
 		}
 		break;
-		case STEP_NEGATION_ELIM: {
-			boError = !lemma(psProof, szCommand, uPiece, uCount, 2, (char const*[]) {"!A", "A"}, "FALSE", psStep, &szError);
-		}
-		break;
 		case STEP_NEGATION_INTRO: {
 			if (uCount == 3) {
 				size_t auRef[2];
@@ -543,7 +546,6 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 				if (psStep->uIndent == 0) {
 					boError = FALSE;
 					boContinue = FALSE;
-					proof_print(psProof);
 				}
 				else {
 					szError = "You must discharge your subproofs before you can complete your main proof.";
@@ -578,7 +580,14 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		default: {
-			szError = "Command not recognised.";
+			boFound = ruleset_get_command_index_start(psProof->psRuleset, szCommand + uPiece[0], uLength[0], STEP_CONTROL, &uIndex);
+			if (boFound) {
+				psLemma = ruleset_get_lemma(psProof->psRuleset, uIndex);
+				boError = !lemma_apply_compiled(psLemma, psProof, szCommand, uPiece, uCount, psStep, &szError);
+			}
+			if (!boFound) {
+				szError = "Command not recognised.";
+			}
 		}
 		break;
 	};
@@ -642,7 +651,7 @@ size_t proof_indent(Proof* psProof) {
 	return uIndent;
 }
 
-Proof* proof_load(char const* szFilename) {
+Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
 	Proof* psProof;
 	FILE* fhFile;
 	char* szLine;
@@ -650,8 +659,11 @@ Proof* proof_load(char const* szFilename) {
 	ssize_t nRead;
 	bool boSuccess;
 	size_t uLine;
+	bool boComplete;
+	char* szError;
 
 	psProof = proof_new();
+	proof_attach_ruleset(psProof, psRuleset);
 	fhFile = fopen(szFilename, "r");
 
 	if (fhFile) {
@@ -679,15 +691,34 @@ Proof* proof_load(char const* szFilename) {
 					break;
 					default: {
 						proof_process_step(psProof, szLine);
-						boSuccess = proof_error(psProof, NULL);
+						boSuccess = !proof_error(psProof, NULL);
 					}
 					break;
 				}
+				uLine += 1;
 			}
-			uLine += 1;
 		}
+	}
+
+	boComplete = proof_complete(psProof);
+
+	if (boSuccess && boComplete) {
 		printf("Loaded: %s\n", psProof->szCommand);
+		psProof->uStepCount = uLine - 2;
+	}
+	else {
+		proof_error(psProof, &szError);
+		if (szError) {
+			printf("Error loading proof %s: %s\n", psProof->szCommand, szError);
+		}
+		else {
+			printf("Error loading proof: %s\n", szFilename);
+		}
+		proof_delete(psProof);
+		psProof = NULL;
 	}
 
 	return psProof;
 }
+
+

@@ -35,8 +35,6 @@ typedef enum _STEP {
 	STEP_NUM
 } STEP;
 
-typedef struct _Step Step;
-
 struct _Step {
 	char* szName;
 	STEP eCommand;

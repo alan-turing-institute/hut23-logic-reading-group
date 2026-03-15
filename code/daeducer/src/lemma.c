@@ -9,16 +9,10 @@
 #include <stdarg.h>
 
 #include "symbolic.h"
+#include "proof.h"
+#include "step.h"
 
 #include "lemma.h"
-
-struct _Lemma {
-	char* szCommand;
-	char* szAnnotation;
-	size_t uRefNum;
-	Operation** apsPattern;
-	Operation* psResult;
-};
 
 Lemma* lemma_new() {
 	Lemma* psLemma;
@@ -69,18 +63,18 @@ Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRe
 	return psLemma;
 }
 
-bool lemma(Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** szError) {
+bool lemma_apply(Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** pszError) {
 	bool boSuccess = FALSE;
 	Lemma* psLemma;
 
 	psLemma = lemma_compile(szCommand, "", uRefNum, aszPattern, szResult);
-	boSuccess = lemma_compiled(psLemma, psProof, szCommand, uPiece, uCount, psStep, szError);
+	boSuccess = lemma_apply_compiled(psLemma, psProof, szCommand, uPiece, uCount, psStep, pszError);
 	lemma_delete(psLemma);
 
 	return boSuccess;
 }
 
-bool lemma_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, Step* psStep, char** szError) {
+bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, Step* psStep, char** pszError) {
 	bool boSuccess = FALSE;
 	size_t* auRef;
 	size_t uReadCount;
@@ -145,14 +139,14 @@ bool lemma_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand, size_
 					apsSub = NULL;
 				}
 				else {
-					*szError = "The referenced expressions must match the rule structure.";
+					*pszError = "The referenced expressions must match the rule structure.";
 				}
 
 				free(apsScrutinee);
 				apsScrutinee = NULL;
 			}
 			else {
-				*szError = "At least one of the back references is out of scope.";
+				*pszError = "At least one of the back references is out of scope.";
 			}
 		}
 		free(auRef);
@@ -162,10 +156,10 @@ bool lemma_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand, size_
 	}
 	else {
 		if (psLemma->uRefNum == 1) {
-			*szError = "The command takes exactly one back reference as a parameter.";
+			*pszError = "The command takes exactly one back reference as a parameter.";
 		}
 		else {
-			*szError = "Incorrect number of back references passed to the command as parameters.";
+			*pszError = "Incorrect number of back references passed to the command as parameters.";
 		}
 	}
 
@@ -199,7 +193,7 @@ Lemma* lemma_from_proof(Proof* psProof) {
 		psLemma->apsPattern[uPos] = CopyRecursive(psProof->apsStep[uPos]->psResult);
 	}
 
-	if ((psProof->apsStep[(psProof->uStepCount - 1)]->eCommand == STEP_QED) && (psProof->uStepCount > psLemma->uRefNum) && (psProof->uStepCount > 2)) {
+	if ((psProof->uStepCount > 2) && (psProof->uStepCount > psLemma->uRefNum) && (psProof->apsStep[(psProof->uStepCount - 1)]->eCommand == STEP_QED)) {
 		psLemma->psResult = CopyRecursive(psProof->apsStep[(psProof->uStepCount - 2)]->psResult);
 	}
 

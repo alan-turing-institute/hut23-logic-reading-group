@@ -6,14 +6,21 @@
 #ifndef _LEMMA_H
 #define _LEMMA_H
 
-#include "proof.h"
+#include "daeducer.h"
 
-typedef struct _Lemma Lemma;
+struct _Lemma {
+	char* szCommand;
+	char* szAnnotation;
+	size_t uRefNum;
+	Operation** apsPattern;
+	Operation* psResult;
+};
 
 Lemma* lemma_new();
 void lemma_delete(Lemma* psLemma);
-bool lemma(Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** szError);
-bool lemma_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, Step* psStep, char** szError);
+bool lemma_apply(Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** pszError);
+Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRefNum, char const** aszPattern, char const* szResult);
+bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, Step* psStep, char** pszError);
 Lemma* lemma_from_proof(Proof* psProof);
 
 #endif // _LEMMA_H

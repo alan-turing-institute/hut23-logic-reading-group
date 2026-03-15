@@ -6,13 +6,14 @@
 #ifndef _RULESET_H
 #define _RULSET_H
 
-#include "proof.h"
-
-typedef struct _Ruleset Ruleset;
+#include "daeducer.h"
 
 Ruleset* ruleset_new();
 void ruleset_delete(Ruleset* psRuleset);
 Ruleset* ruleset_load(char const* szDirectory);
+bool ruleset_get_command_index(Ruleset* psRuleset, char const* szCommand, size_t uLength, size_t* puIndex);
+bool ruleset_get_command_index_start(Ruleset* psRuleset, char const* szCommand, size_t uLength, size_t uStartPos, size_t* puIndex);
+Lemma* ruleset_get_lemma(Ruleset* psRuleset, size_t uIndex);
 
 #endif // _LEMMA_H
 

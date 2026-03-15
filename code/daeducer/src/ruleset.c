@@ -9,9 +9,12 @@
 #include <stdarg.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 #include "symbolic.h"
+#include "proof.h"
 #include "lemma.h"
+#include "step.h"
 
 #include "ruleset.h"
 
@@ -20,6 +23,7 @@ struct _Ruleset {
 	size_t uLemmaNum;
 };
 
+void ruleset_initialise(Ruleset* psRuleset);
 void ruleset_load_recursive(Ruleset* psRuleset, char const* szDirectory);
 
 Ruleset* ruleset_new()
@@ -27,6 +31,8 @@ Ruleset* ruleset_new()
 	Ruleset* psRuleset;
 
 	psRuleset = calloc(1, sizeof(Ruleset));
+
+	ruleset_initialise(psRuleset);
 
 	return psRuleset;
 }
@@ -46,6 +52,21 @@ void ruleset_delete(Ruleset* psRuleset)
 
 		free(psRuleset);
 	}
+}
+
+void ruleset_initialise(Ruleset* psRuleset) {
+	assert(psRuleset->uLemmaNum == 0);
+	assert(psRuleset->apsLemma == NULL);
+
+	psRuleset->uLemmaNum = (size_t)STEP_CONTROL;
+	psRuleset->apsLemma = calloc(psRuleset->uLemmaNum, sizeof(Lemma*));
+
+	psRuleset->apsLemma[STEP_REITERATION] = lemma_compile("reiteration", "RE", 1, (char const*[]) {"A"}, "A");
+	psRuleset->apsLemma[STEP_CONJUNCTION_INTRO] = lemma_compile("and_intro", "^I", 2, (char const*[]) {"A", "B"}, "(A ^ B)");
+	psRuleset->apsLemma[STEP_CONJUNCTION_ELIM_LEFT] = lemma_compile("and_elim_left", "^E", 1, (char const*[]) {"(A ^ B)"}, "A");
+	psRuleset->apsLemma[STEP_CONJUNCTION_ELIM_RIGHT] = lemma_compile("and_elim_right", "^E", 1, (char const*[]) {"(A ^ B)"}, "B");
+	psRuleset->apsLemma[STEP_IMPLICATION_ELIM] = lemma_compile("imp_elim", "->E", 2, (char const*[]) {"(A -> B)", "A"}, "B");
+	psRuleset->apsLemma[STEP_NEGATION_ELIM] = lemma_compile("not_intro", "!I", 2, (char const*[]) {"!A", "A"}, "FALSE");
 }
 
 Ruleset* ruleset_load(char const* szDirectory) {
@@ -93,7 +114,7 @@ void ruleset_load_recursive(Ruleset* psRuleset, char const* szDirectory) {
 						}
 						break;
 						case S_IFREG: {
-							psProof = proof_load(szPath);
+							psProof = proof_load(psRuleset, szPath);
 							if (psProof) {
 								psLemma = lemma_from_proof(psProof);
 								proof_delete(psProof);
@@ -116,3 +137,41 @@ void ruleset_load_recursive(Ruleset* psRuleset, char const* szDirectory) {
 		printf("Couldn't open directory: %s\n", szDirectory);
 	}
 }
+
+bool ruleset_get_command_index(Ruleset* psRuleset, char const* szCommand, size_t uLength, size_t* puIndex) {
+	return ruleset_get_command_index_start(psRuleset, szCommand, uLength, 0, puIndex);
+}
+
+bool ruleset_get_command_index_start(Ruleset* psRuleset, char const* szCommand, size_t uLength, size_t uStartPos, size_t* puIndex) {
+	bool boFound;
+	size_t uPos;
+
+	boFound = FALSE;
+	if (psRuleset) {
+		for (uPos = uStartPos; (uPos < psRuleset->uLemmaNum) && (!boFound); ++uPos) {
+			if (strncmp(szCommand, psRuleset->apsLemma[uPos]->szCommand, uLength) == 0) {
+				if (puIndex) {
+					*puIndex = uPos;
+				}
+				boFound = TRUE;
+			}
+		}
+	}
+
+	return boFound;
+}
+
+
+Lemma* ruleset_get_lemma(Ruleset* psRuleset, size_t uIndex) {
+	Lemma* psLemma;
+
+	if (uIndex < psRuleset->uLemmaNum) {
+		psLemma = psRuleset->apsLemma[uIndex];
+	}
+	else {
+		psLemma = NULL;
+	}
+
+	return psLemma;
+}
+

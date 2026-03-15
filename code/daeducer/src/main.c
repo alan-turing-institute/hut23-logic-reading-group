@@ -35,6 +35,7 @@ int main() {
 /*	psProof = NULL;*/
 
 	psProof = proof_new();
+	proof_attach_ruleset(psProof, psRuleset);
 
 	while (boContinue) {
 		uIndent = proof_indent(psProof);
@@ -63,7 +64,12 @@ int main() {
 			boContinue = FALSE;
 		}
 	}
+	proof_print(psProof);
+
 	printf(COL_RESET "\n");
+
+	proof_delete(psProof);
+	ruleset_delete(psRuleset);
 
 	return 0;
 }
