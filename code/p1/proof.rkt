@@ -8,6 +8,15 @@
 (struct IMPL  PROP (p q) #:transparent)
 
 
+;; <name>  ::= symbol?
+
+;;          | (lambda <name> <prop> <proof>)
+
+;; <deduction> ::= (AndI <> <>)
+;;                 (AndE_l <>)
+ 
+;;
+
 ;; Primitive rules
 (struct AndI   (tl tr)   #:transparent)
 (struct AndE-l (t)       #:transparent)
@@ -16,7 +25,6 @@
 (struct OrI-r  (t)       #:transparent)
 (struct OrE    (t tl tr) #:transparent)
 (struct App    (t1 t2)   #:transparent)
-
 
 (struct Lam () #:transparent)
 (struct Let () #:transparent)
