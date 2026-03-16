@@ -18,9 +18,11 @@ struct _Lemma {
 
 Lemma* lemma_new();
 void lemma_delete(Lemma* psLemma);
-bool lemma_apply(Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** pszError);
+bool lemma_apply(Proof *psProof, Command* psCommand, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** pszError);
 Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRefNum, char const** aszPattern, char const* szResult);
-bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, Step* psStep, char** pszError);
+bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, Step* psStep, char** pszError);
+
+
 Lemma* lemma_from_proof(Proof* psProof);
 
 #endif // _LEMMA_H

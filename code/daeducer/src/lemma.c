@@ -11,6 +11,7 @@
 #include "symbolic.h"
 #include "proof.h"
 #include "step.h"
+#include "command.h"
 
 #include "lemma.h"
 
@@ -39,18 +40,13 @@ void lemma_delete(Lemma* psLemma) {
 
 Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRefNum, char const** aszPattern, char const* szResult) {
 	Lemma* psLemma;
-	size_t uLength;
 	size_t uPos;
 
 	psLemma = lemma_new();
 
-	uLength = strlen(szCommand);
-	psLemma->szCommand = malloc(uLength + 1);
-	strncpy(psLemma->szCommand, szCommand, uLength + 1);
+	psLemma->szCommand = strdup(szCommand);
 
-	uLength = strlen(szAnnotation);
-	psLemma->szAnnotation = malloc(uLength + 1);
-	strncpy(psLemma->szAnnotation, szAnnotation, uLength + 1);
+	psLemma->szAnnotation = strdup(szAnnotation);
 
 	psLemma->apsPattern = calloc(uRefNum, sizeof(Operation*));
 
@@ -63,18 +59,18 @@ Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRe
 	return psLemma;
 }
 
-bool lemma_apply(Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** pszError) {
+bool lemma_apply(Proof *psProof, Command* psCommand, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** pszError) {
 	bool boSuccess = FALSE;
 	Lemma* psLemma;
 
-	psLemma = lemma_compile(szCommand, "", uRefNum, aszPattern, szResult);
-	boSuccess = lemma_apply_compiled(psLemma, psProof, szCommand, uPiece, uCount, psStep, pszError);
+	psLemma = lemma_compile(psCommand->szCommand, "", uRefNum, aszPattern, szResult);
+	boSuccess = lemma_apply_compiled(psLemma, psProof, psCommand, psStep, pszError);
 	lemma_delete(psLemma);
 
 	return boSuccess;
 }
 
-bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, Step* psStep, char** pszError) {
+bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, Step* psStep, char** pszError) {
 	bool boSuccess = FALSE;
 	size_t* auRef;
 	size_t uReadCount;
@@ -86,12 +82,12 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand,
 	Operation** apsSub;
 	size_t uVarCount;
 
-	if (uCount == (psLemma->uRefNum + 1)) {
+	if (psCommand->uCount == psLemma->uRefNum) {
 		auRef = calloc(psLemma->uRefNum, sizeof(size_t));
 		apsRef = calloc(psLemma->uRefNum, sizeof(Operation*));
 		uReadCount = 1;
 		for (uPos = 0; (uPos < psLemma->uRefNum) && (uReadCount == 1); ++uPos) {
-			uReadCount = sscanf(szCommand + uPiece[(uPos + 1)], "%lu", &auRef[uPos]);
+			uReadCount = sscanf(psCommand->aszParameter[uPos], "%lu", &auRef[uPos]);
 		}
 		if ((uPos == psLemma->uRefNum) && (uReadCount == 1)) {
 			boSuccess = TRUE;
@@ -161,6 +157,7 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, char const* szCommand,
 		else {
 			*pszError = "Incorrect number of back references passed to the command as parameters.";
 		}
+		printf("Was %lu, should have been %lu\n", psCommand->uCount, psLemma->uRefNum);
 	}
 
 	return boSuccess;

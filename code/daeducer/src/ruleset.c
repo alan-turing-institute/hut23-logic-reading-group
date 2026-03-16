@@ -138,18 +138,18 @@ void ruleset_load_recursive(Ruleset* psRuleset, char const* szDirectory) {
 	}
 }
 
-bool ruleset_get_command_index(Ruleset* psRuleset, char const* szCommand, size_t uLength, size_t* puIndex) {
-	return ruleset_get_command_index_start(psRuleset, szCommand, uLength, 0, puIndex);
+bool ruleset_get_command_index(Ruleset* psRuleset, char const* szCommand, size_t* puIndex) {
+	return ruleset_get_command_index_start(psRuleset, szCommand, 0, puIndex);
 }
 
-bool ruleset_get_command_index_start(Ruleset* psRuleset, char const* szCommand, size_t uLength, size_t uStartPos, size_t* puIndex) {
+bool ruleset_get_command_index_start(Ruleset* psRuleset, char const* szCommand, size_t uStartPos, size_t* puIndex) {
 	bool boFound;
 	size_t uPos;
 
 	boFound = FALSE;
 	if (psRuleset) {
 		for (uPos = uStartPos; (uPos < psRuleset->uLemmaNum) && (!boFound); ++uPos) {
-			if (strncmp(szCommand, psRuleset->apsLemma[uPos]->szCommand, uLength) == 0) {
+			if (strcmp(szCommand, psRuleset->apsLemma[uPos]->szCommand) == 0) {
 				if (puIndex) {
 					*puIndex = uPos;
 				}

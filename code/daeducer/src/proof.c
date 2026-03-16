@@ -12,6 +12,7 @@
 #include "ruleset.h"
 #include "symbolic.h"
 #include "lemma.h"
+#include "command.h"
 
 #include "proof.h"
 
@@ -137,8 +138,7 @@ void proof_print_help() {
 	printf("\n");
 }
 
-void proof_process_step(Proof* psProof, char* szCommand) {
-	size_t uCount;
+void proof_process_step(Proof* psProof, Command* psCommand) {
 	size_t uPos;
 	Step* psStep;
 	Operation* psPattern;
@@ -154,25 +154,16 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 	boContinue = TRUE;
 	boStep = TRUE;
 
-	// Find out how many pieces there are
-	uCount = split_command(szCommand, NULL, NULL);
-
-	// Split the command into pieces
-	size_t* uPiece = calloc(uCount, sizeof(size_t));
-	size_t* uLength = calloc(uCount, sizeof(size_t));
-	uCount = split_command(szCommand, uPiece, uLength);
-
 	uPos = 0;
-	STEP eCommand = STEP_INVALID;
-	while ((eCommand == STEP_INVALID) && (uPos < STEP_NUM)) {
-		if (strncmp(aszCommand[uPos], szCommand + uPiece[0], uLength[0]) == 0) {
-			eCommand = (STEP)uPos;
+	while ((psCommand->eCommand == STEP_INVALID) && (uPos < STEP_NUM)) {
+		if (strcmp(aszCommand[uPos], psCommand->szCommand) == 0) {
+			psCommand->eCommand = (STEP)uPos;
 		}
 		uPos += 1;
 	}
 
 	psStep = step_new();
-	psStep->eCommand = eCommand;
+	psStep->eCommand = psCommand->eCommand;
 	if (psProof->uStepCount > 0) {
 		psStep->uIndent = psProof->apsStep[(psProof->uStepCount - 1)]->uIndent;
 	}
@@ -184,11 +175,11 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 	snprintf(psStep->szName, uNameSize, "%lu", psProof->uStepCount + 1);
 
 	boError = TRUE;
-	switch (eCommand) {
+	switch (psCommand->eCommand) {
 		case STEP_PREMISE: {
-			if (uCount >= 2) {
+			if (psCommand->uCount == 1) {
 				if ((psProof->uStepCount == 0) || (psProof->apsStep[(psProof->uStepCount - 1)]->eCommand == STEP_PREMISE)) {
-					psStep->psResult = StringToOperation(szCommand + uPiece[1]);
+					psStep->psResult = StringToOperation(psCommand->aszParameter[0]);
 					boError = FALSE;
 				}
 				else {
@@ -211,15 +202,16 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		case STEP_IMPLICATION_ELIM:
 			// Intentional fallthrough
 		case STEP_NEGATION_ELIM: {
-			psLemma = ruleset_get_lemma(psProof->psRuleset, eCommand);
-			boError = !lemma_apply_compiled(psLemma, psProof, szCommand, uPiece, uCount, psStep, &szError);
+			psLemma = ruleset_get_lemma(psProof->psRuleset, psCommand->eCommand);
+			boError = !lemma_apply_compiled(psLemma, psProof, psCommand, psStep, &szError);
 		}
 		break;
 		case STEP_IMPLICATION_INTRO: {
-			if (uCount == 3) {
+			if (psCommand->uCount == 2) {
 				size_t auRef[2];
 				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu %lu", &auRef[0], &auRef[1]);
+				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &auRef[0]);
+				uReadCount += sscanf(psCommand->aszParameter[1], "%lu", &auRef[1]);
 				if (uReadCount == 2) {
 					Step* apsRef[2];
 					apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
@@ -248,12 +240,12 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_DISJUNCTION_INTRO_LEFT: {
-			if (uCount >= 3) {
+			if (psCommand->uCount == 2) {
 				size_t uRef;
 				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu", &uRef);
+				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &uRef);
 				if (uReadCount == 1) {
-					psStep->psInput = StringToOperation(szCommand + uPiece[2]);
+					psStep->psInput = StringToOperation(psCommand->aszParameter[1]);
 					if (proof_step_scoped(psProof, uRef - 1)) {
 						Step* psRef;
 						psRef = proof_get_step(psProof, uRef - 1);
@@ -279,12 +271,12 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_DISJUNCTION_INTRO_RIGHT: {
-			if (uCount >= 3) {
+			if (psCommand->uCount == 2) {
 				size_t uRef;
 				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu", &uRef);
+				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &uRef);
 				if (uReadCount == 1) {
-					psStep->psInput = StringToOperation(szCommand + uPiece[2]);
+					psStep->psInput = StringToOperation(psCommand->aszParameter[1]);
 					if (proof_step_scoped(psProof, uRef - 1)) {
 						Step* psRef;
 						psRef = proof_get_step(psProof, uRef - 1);
@@ -310,10 +302,14 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_DISJUNCTION_ELIM: {
-			if (uCount == 6) {
+			if (psCommand->uCount == 5) {
 				size_t auRef[5];
 				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu %lu %lu %lu %lu", &auRef[0], &auRef[1], &auRef[2], &auRef[3], &auRef[4]);
+				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &auRef[0]);
+				uReadCount += sscanf(psCommand->aszParameter[1], "%lu", &auRef[1]);
+				uReadCount += sscanf(psCommand->aszParameter[2], "%lu", &auRef[2]);
+				uReadCount += sscanf(psCommand->aszParameter[3], "%lu", &auRef[3]);
+				uReadCount += sscanf(psCommand->aszParameter[4], "%lu", &auRef[4]);
 				if (uReadCount == 5) {
 					if (proof_step_scoped(psProof, auRef[0] - 1)) {
 						if (proof_scoped_subproof(psProof, auRef[1] - 1, auRef[2] - 1)) {
@@ -385,10 +381,11 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_NEGATION_INTRO: {
-			if (uCount == 3) {
+			if (psCommand->uCount == 2) {
 				size_t auRef[2];
 				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu %lu", &auRef[0], &auRef[1]);
+				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &auRef[0]);
+				uReadCount += sscanf(psCommand->aszParameter[1], "%lu", &auRef[1]);
 				if (uReadCount == 2) {
 					Step* apsRef[2];
 					apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
@@ -425,11 +422,11 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_INDIRECT_PROOF: {
-
-			if (uCount == 3) {
+			if (psCommand->uCount == 2) {
 				size_t auRef[2];
 				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu %lu", &auRef[0], &auRef[1]);
+				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &auRef[0]);
+				uReadCount += sscanf(psCommand->aszParameter[1], "%lu", &auRef[1]);
 				if (uReadCount == 2) {
 					Step* apsRef[2];
 					apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
@@ -477,12 +474,12 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_EXPLOSION: {
-			if (uCount >= 3) {
+			if (psCommand->uCount == 2) {
 				size_t uRef;
 				size_t uReadCount;
-				uReadCount = sscanf(szCommand + uPiece[1], "%lu", &uRef);
+				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &uRef);
 				if (uReadCount == 1) {
-					psStep->psInput = StringToOperation(szCommand + uPiece[2]);
+					psStep->psInput = StringToOperation(psCommand->aszParameter[1]);
 					if (proof_step_scoped(psProof, uRef - 1)) {
 						Step* psRef;
 						psRef = proof_get_step(psProof, uRef - 1);
@@ -516,8 +513,8 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_ASSUMPTION: {
-			if (uCount >= 2) {
-				psStep->psResult = StringToOperation(szCommand + uPiece[1]);
+			if (psCommand->uCount == 1) {
+				psStep->psResult = StringToOperation(psCommand->aszParameter[0]);
 				psStep->uIndent += 1;
 				boError = FALSE;
 			}
@@ -527,7 +524,7 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_DISCHARGE: {
-			if (uCount == 1) {
+			if (psCommand->uCount == 0) {
 				if (psStep->uIndent > 0) {
 					psStep->uIndent -= 1;
 					boError = FALSE;
@@ -542,7 +539,7 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_QED: {
-			if (uCount == 1) {
+			if (psCommand->uCount == 0) {
 				if (psStep->uIndent == 0) {
 					boError = FALSE;
 					boContinue = FALSE;
@@ -557,7 +554,7 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_PRINT: {
-			if (uCount == 1) {
+			if (psCommand->uCount == 0) {
 				boError = FALSE;
 				boStep = FALSE;
 				proof_print(psProof);
@@ -569,7 +566,7 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		case STEP_HELP: {
-			if (uCount == 1) {
+			if (psCommand->uCount == 0) {
 				boError = FALSE;
 				boStep = FALSE;
 				proof_print_help();
@@ -580,10 +577,10 @@ void proof_process_step(Proof* psProof, char* szCommand) {
 		}
 		break;
 		default: {
-			boFound = ruleset_get_command_index_start(psProof->psRuleset, szCommand + uPiece[0], uLength[0], STEP_CONTROL, &uIndex);
+			boFound = ruleset_get_command_index_start(psProof->psRuleset, psCommand->szCommand, STEP_CONTROL, &uIndex);
 			if (boFound) {
 				psLemma = ruleset_get_lemma(psProof->psRuleset, uIndex);
-				boError = !lemma_apply_compiled(psLemma, psProof, szCommand, uPiece, uCount, psStep, &szError);
+				boError = !lemma_apply_compiled(psLemma, psProof, psCommand, psStep, &szError);
 			}
 			if (!boFound) {
 				szError = "Command not recognised.";
@@ -661,10 +658,12 @@ Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
 	size_t uLine;
 	bool boComplete;
 	char* szError;
+	Command* psCommand;
 
 	psProof = proof_new();
 	proof_attach_ruleset(psProof, psRuleset);
 	fhFile = fopen(szFilename, "r");
+	psCommand = command_new();
 
 	if (fhFile) {
 		uLength = 64;
@@ -690,8 +689,12 @@ Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
 					}
 					break;
 					default: {
-						proof_process_step(psProof, szLine);
-						boSuccess = !proof_error(psProof, NULL);
+						boSuccess = command_parse(psCommand, szLine);
+						if (boSuccess) {
+							proof_process_step(psProof, psCommand);
+							boSuccess = !proof_error(psProof, NULL);
+							command_reset(psCommand);
+						}
 					}
 					break;
 				}
@@ -700,10 +703,11 @@ Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
 		}
 	}
 
+	command_delete(psCommand);
 	boComplete = proof_complete(psProof);
 
 	if (boSuccess && boComplete) {
-		printf("Loaded: %s\n", psProof->szCommand);
+		//printf("Loaded: %s\n", psProof->szCommand);
 		psProof->uStepCount = uLine - 2;
 	}
 	else {

@@ -35,7 +35,7 @@ Proof* proof_load(Ruleset* psRuleset, char const* szFilename);
 void proof_attach_ruleset(Proof* psProof, Ruleset* psRuleset);
 Ruleset* proof_detach_ruleset(Proof* psProof);
 Step* proof_get_step(Proof* psProof, size_t uPos);
-void proof_process_step(Proof* psProof, char* szCommand);
+void proof_process_step(Proof* psProof, Command* psCommand);
 void proof_print_step(Proof* psProof, size_t uStep);
 void proof_print_last_step(Proof* psProof);
 size_t proof_indent(Proof* psProof);
