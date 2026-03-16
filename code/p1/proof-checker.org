@@ -86,7 +86,7 @@ A /proof/ has one of three forms:
   
   <rule> ::= andI | andE_left | andE_right
            | orI_left | orI_right | orE
-           | apply | false
+           | apply | EFQ | RAA
 #+end_src 
 The first form, ~<name>~, names a previous line in the proof. (This
 replaces the rule of repetition.) The second form, ~<deduction>~, is
