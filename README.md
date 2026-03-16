@@ -34,6 +34,7 @@ Discussions occur on Slack in the `hut23-logic-reading-group` channel (formerly 
 | 12 February | ∀x: **12** and **13** (optionally **14** and **15**)                     | **15**: A.4, B.2, C.3, E.6, I.2                             |
 | 19 February | ∀x: **16** and **17** (Proofs)                                           | **17**: C.1, C.3, C.5, C.7, C.11                            |
 | 5 March     | _No session -- REG offsite_                                              |
-| 12 March    | Proof-theoretic concepts ∀x: **20**, **21**, *22*                        | **20**: A.1, A.2, A.3, A.4                                  |
+| 12 March    | Proof-theoretic concepts ∀x: **20**, **21**, **22**                      | **20**: A.1, A.2, A.3, A.4                                  |
+| 19 March    | Same reading as 12 March                                                 | **20**: A.4                                                 |
 
 
