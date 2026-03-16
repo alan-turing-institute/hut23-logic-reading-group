@@ -45,7 +45,7 @@ Here is the syntax of judgements. A judgement is a list of two
 elements: a list of zero or more premisses, and a proof.
 #+name Judgement syntax
 #+begin_src bnf
-  <judgement> ::= ( ( <premiss>* ) <proof> )
+  <judgement> ::= ( ( <premiss>* ) <prop> <proof> )
 #+end_src
 
 A premiss is a list of a name and a proposition.
@@ -80,7 +80,8 @@ A /proof/ has one of three forms:
             | <deduction>
             | ( let ( <name> <deduction> ) <proof> )
 
-  <deduction> ::= ( <rule> (@ <prop>) <name>* )
+  <deduction> ::= <name>
+                | ( <rule> (@ <prop>) <name>* )
                 | ( lambda ( <name> <prop> ) <proof> )
   
   <rule> ::= andI | andE_left | andE_right
