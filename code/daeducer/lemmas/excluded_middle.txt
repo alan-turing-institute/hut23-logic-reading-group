@@ -1,0 +1,22 @@
+excluded_middle
+LEM
+premise A -> B
+premise !A -> B
+assumption !(A v !A)
+assumption A
+or_intro_left 4, !A
+not_elim 3, 5
+discharge
+not_intro 4, 6
+or_intro_right 8, A
+not_elim 3, 9
+discharge
+indirect 3, 10
+assumption A
+imp_elim 1, 13
+discharge
+assumption !A
+imp_elim 2, 16
+discharge
+or_elim 12, 13, 14, 16, 17
+qed
