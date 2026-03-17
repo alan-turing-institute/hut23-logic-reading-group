@@ -149,7 +149,7 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 						psStep->apsInput[uPos] = apsScrutinee[(psLemma->uRefNum + uPos)];
 					}
 
-					psStep->psResult = SubstituteOperationMany(psLemma->psResult, apsFind, apsSub, uVarCount);
+					psStep->psResult = SubstituteOperationMany(CopyRecursive(psLemma->psResult), apsFind, apsSub, uVarCount);
 
 					FreeExtract(psExtract);
 					psExtract = NULL;
@@ -179,7 +179,7 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 		apsRef = NULL;
 	}
 	else {
-		if (psLemma->uRefNum == 1) {
+		if (uParameters == 1) {
 			*pszError = "The command takes exactly one parameter.";
 		}
 		else {
@@ -194,6 +194,11 @@ Lemma* lemma_from_proof(Proof* psProof) {
 	Lemma* psLemma;
 	size_t uLength;
 	size_t uPos;
+	size_t uRefPos;
+	size_t uVarCount;
+	char const* szVar;
+	VariableNames* psRefVariables;
+	VariableNames* psResultVariables;
 
 	psLemma = lemma_new();
 
@@ -205,20 +210,47 @@ Lemma* lemma_from_proof(Proof* psProof) {
 	psLemma->szAnnotation = malloc(uLength + 1);
 	strncpy(psLemma->szAnnotation, psProof->szAnnotation, uLength + 1);
 
+	psRefVariables = CreateVariableNames();
+	psLemma->uRefNum = 0;
+	psLemma->uOpNum = 0;
 	uPos = 0;
-	while ((uPos < psProof->uStepCount) && (psProof->apsStep[uPos]->eCommand == STEP_PREMISE)) {
+	while (uPos < psProof->uStepCount) {
+		if (psProof->apsStep[uPos]->eCommand == STEP_PREMISE) {
+			psLemma->uRefNum += 1;
+			VariableNamesExtract(psRefVariables, psProof->apsStep[uPos]->psResult);
+		}
 		uPos += 1;
-	}
-
-	psLemma->uRefNum = uPos;
-	psLemma->apsPattern = calloc(uPos, sizeof(Operation*));
-
-	for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
-		psLemma->apsPattern[uPos] = CopyRecursive(psProof->apsStep[uPos]->psResult);
 	}
 
 	if ((psProof->uStepCount > 2) && (psProof->uStepCount > psLemma->uRefNum) && (psProof->apsStep[(psProof->uStepCount - 1)]->eCommand == STEP_QED)) {
 		psLemma->psResult = CopyRecursive(psProof->apsStep[(psProof->uStepCount - 2)]->psResult);
+	}
+
+	psResultVariables = CreateVariableNames();
+	VariableNamesExtract(psResultVariables, psLemma->psResult);
+
+	uVarCount = VariableNamesCount(psRefVariables);
+	for (uPos = 0; uPos < uVarCount; ++uPos) {
+		szVar = VariableNamesGet(psRefVariables, uPos);
+		VariableNamesRemove(psResultVariables, szVar);
+	}
+
+	psLemma->uOpNum = VariableNamesCount(psResultVariables);
+	psLemma->apsPattern = calloc((psLemma->uRefNum + psLemma->uOpNum), sizeof(Operation*));
+
+	uPos = 0;
+	uRefPos = 0;
+	while (uPos < psProof->uStepCount) {
+		if (psProof->apsStep[uPos]->eCommand == STEP_PREMISE) {
+			psLemma->apsPattern[uRefPos] = CopyRecursive(psProof->apsStep[uPos]->psResult);
+			uRefPos += 1;
+		}
+		uPos += 1;
+	}
+
+	for (uPos = 0; uPos < psLemma->uOpNum; ++uPos) {
+		szVar = VariableNamesGet(psResultVariables, uPos);
+		psLemma->apsPattern[psLemma->uRefNum + uPos] = CreateVariable(szVar);
 	}
 
 	return psLemma;

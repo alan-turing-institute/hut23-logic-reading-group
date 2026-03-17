@@ -154,6 +154,9 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 	boContinue = TRUE;
 	boStep = TRUE;
 
+	psProof->boError = FALSE;
+	psProof->szError = NULL;
+
 	uPos = 0;
 	while ((psCommand->eCommand == STEP_INVALID) && (uPos < STEP_NUM)) {
 		if (strcmp(aszCommand[uPos], psCommand->szCommand) == 0) {
