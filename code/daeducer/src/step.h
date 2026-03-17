@@ -39,8 +39,9 @@ struct _Step {
 	char* szName;
 	STEP eCommand;
 	size_t uRefCount;
-	Step** psRef;
-	Operation* psInput;
+	Step** apsRef;
+	size_t uInputCount;
+	Operation** apsInput;
 	Operation* psResult;
 	size_t uIndent;
 };

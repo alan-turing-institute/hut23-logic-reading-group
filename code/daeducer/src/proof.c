@@ -201,7 +201,13 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 			// Intentional fallthrough
 		case STEP_IMPLICATION_ELIM:
 			// Intentional fallthrough
-		case STEP_NEGATION_ELIM: {
+		case STEP_DISJUNCTION_INTRO_LEFT:
+			// Intentional fallthrough
+		case STEP_DISJUNCTION_INTRO_RIGHT:
+			// Intentional fallthrough
+		case STEP_NEGATION_ELIM:
+			// Intentional fallthrough
+		case STEP_EXPLOSION: {
 			psLemma = ruleset_get_lemma(psProof->psRuleset, psCommand->eCommand);
 			boError = !lemma_apply_compiled(psLemma, psProof, psCommand, psStep, &szError);
 		}
@@ -219,10 +225,10 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 					if (apsRef[0] && apsRef[1]) {
 						if (proof_scoped_subproof(psProof, auRef[0] - 1, auRef[1] - 1)) {
 							psStep->uRefCount = 2;
-							psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-							psStep->psRef[0] = apsRef[0];
-							psStep->psRef[1] = apsRef[1];
-							psStep->psResult = CreateBinary(OPBINARY_LIMP, CopyRecursive(psStep->psRef[0]->psResult), CopyRecursive(psStep->psRef[1]->psResult));
+							psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+							psStep->apsRef[0] = apsRef[0];
+							psStep->apsRef[1] = apsRef[1];
+							psStep->psResult = CreateBinary(OPBINARY_LIMP, CopyRecursive(psStep->apsRef[0]->psResult), CopyRecursive(psStep->apsRef[1]->psResult));
 							boError = FALSE;
 						}
 						else {
@@ -236,68 +242,6 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 			}
 			else {
 				szError = "The imp_intro command takes two back references as parameters.";
-			}
-		}
-		break;
-		case STEP_DISJUNCTION_INTRO_LEFT: {
-			if (psCommand->uCount == 2) {
-				size_t uRef;
-				size_t uReadCount;
-				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &uRef);
-				if (uReadCount == 1) {
-					psStep->psInput = StringToOperation(psCommand->aszParameter[1]);
-					if (proof_step_scoped(psProof, uRef - 1)) {
-						Step* psRef;
-						psRef = proof_get_step(psProof, uRef - 1);
-						if (psRef) {
-							psStep->uRefCount = 1;
-							psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-							psStep->psRef[0] = psRef;
-							psStep->psResult = CreateBinary(OPBINARY_LOR, CopyRecursive(psStep->psRef[0]->psResult), CopyRecursive(psStep->psInput));
-							boError = FALSE;
-						}
-					}
-					else {
-						szError = "Back reference is out of scope.";
-					}
-				}
-				else {
-					szError = "The first parameter of or_intro_left must be a back reference.";
-				}
-			}
-			else {
-				szError = "The or_intro_left command takes one back reference and an expression as parameters.";
-			}
-		}
-		break;
-		case STEP_DISJUNCTION_INTRO_RIGHT: {
-			if (psCommand->uCount == 2) {
-				size_t uRef;
-				size_t uReadCount;
-				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &uRef);
-				if (uReadCount == 1) {
-					psStep->psInput = StringToOperation(psCommand->aszParameter[1]);
-					if (proof_step_scoped(psProof, uRef - 1)) {
-						Step* psRef;
-						psRef = proof_get_step(psProof, uRef - 1);
-						if (psRef) {
-							psStep->uRefCount = 1;
-							psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-							psStep->psRef[0] = psRef;
-							psStep->psResult = CreateBinary(OPBINARY_LOR, CopyRecursive(psStep->psInput), CopyRecursive(psStep->psRef[0]->psResult));
-							boError = FALSE;
-						}
-					}
-					else {
-						szError = "Back reference is out of scope.";
-					}
-				}
-				else {
-					szError = "The first parameter of or_intro_right must be a back reference.";
-				}
-			}
-			else {
-				szError = "The or_intro_right command takes one back reference and an expression as parameters.";
 			}
 		}
 		break;
@@ -329,12 +273,12 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 											if (CompareOperations(apsRef[2]->psResult, apsRef[4]->psResult)) {
 
 												psStep->uRefCount = 5;
-												psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-												psStep->psRef[0] = apsRef[0];
-												psStep->psRef[1] = apsRef[1];
-												psStep->psRef[2] = apsRef[2];
-												psStep->psRef[3] = apsRef[3];
-												psStep->psRef[4] = apsRef[4];
+												psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+												psStep->apsRef[0] = apsRef[0];
+												psStep->apsRef[1] = apsRef[1];
+												psStep->apsRef[2] = apsRef[2];
+												psStep->apsRef[3] = apsRef[3];
+												psStep->apsRef[4] = apsRef[4];
 
 												psStep->psResult = CopyRecursive(apsRef[2]->psResult);
 												boError = FALSE;
@@ -395,9 +339,9 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 							Operation* psOp = CreateTruthValue(FALSE);
 							if (CompareOperations(apsRef[1]->psResult, psOp)) {
 								psStep->uRefCount = 2;
-								psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-								psStep->psRef[0] = apsRef[0];
-								psStep->psRef[1] = apsRef[1];
+								psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+								psStep->apsRef[0] = apsRef[0];
+								psStep->apsRef[1] = apsRef[1];
 								psStep->psResult = CreateUnary(OPUNARY_NOT, CopyRecursive(apsRef[0]->psResult));
 								boError = FALSE;
 							}
@@ -439,9 +383,9 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 								psExtract = ExtractPattern(psPattern, apsRef[0]->psResult);
 								if (psExtract) {
 									psStep->uRefCount = 2;
-									psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-									psStep->psRef[0] = apsRef[0];
-									psStep->psRef[1] = apsRef[1];
+									psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+									psStep->apsRef[0] = apsRef[0];
+									psStep->apsRef[1] = apsRef[1];
 									psStep->psResult = CopyRecursive(ExtractValue(psExtract, "A"));
 									boError = FALSE;
 									FreeExtract(psExtract);
@@ -470,45 +414,6 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 			}
 			else {
 				szError = "The indirect command takes two back references as parameters.";
-			}
-		}
-		break;
-		case STEP_EXPLOSION: {
-			if (psCommand->uCount == 2) {
-				size_t uRef;
-				size_t uReadCount;
-				uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &uRef);
-				if (uReadCount == 1) {
-					psStep->psInput = StringToOperation(psCommand->aszParameter[1]);
-					if (proof_step_scoped(psProof, uRef - 1)) {
-						Step* psRef;
-						psRef = proof_get_step(psProof, uRef - 1);
-						if (psRef) {
-							Operation* psOp = CreateTruthValue(FALSE);
-							if (CompareOperations(psRef->psResult, psOp)) {
-								psStep->uRefCount = 1;
-								psStep->psRef = calloc(psStep->uRefCount, sizeof(Step*));
-								psStep->psRef[0] = psRef;
-								psStep->psResult = CopyRecursive(psStep->psInput);
-								boError = FALSE;
-							}
-							else {
-								szError = "The explosion command requires a subproof that ends in a contradiction.";
-							}
-							FreeRecursive(psOp);
-							psOp = NULL;
-						}
-					}
-					else {
-						szError = "Back reference is out of scope.";
-					}
-				}
-				else {
-					szError = "The first parameter of explosion must be a back reference.";
-				}
-			}
-			else {
-				szError = "The explosion command takes one back reference and an expression as parameters.";
 			}
 		}
 		break;

@@ -23,11 +23,26 @@ Step* step_new() {
 }
 
 void step_delete(Step* psStep) {
-	if (psStep->szName) {
-		free(psStep->szName);
-	}
+	size_t uPos;
 
-	free(psStep);
+	if (psStep) {
+		if (psStep->szName) {
+			free(psStep->szName);
+		}
+
+		if (psStep->apsInput) {
+			for (uPos = 0; uPos < psStep->uInputCount; ++uPos) {
+				if (psStep->apsInput[uPos]) {
+					FreeRecursive(psStep->apsInput[uPos]);
+					psStep->apsInput = NULL;
+				}
+			}
+			free(psStep->apsInput);
+			psStep->apsInput = NULL;
+		}
+
+		free(psStep);
+	}
 }
 
 void step_print(Step* psStep) {
@@ -58,81 +73,81 @@ void step_print(Step* psStep) {
 		}
 		break;
 		case STEP_REITERATION: {
-			uCommandLength = snprintf(NULL, 0, "RE, %s", psStep->psRef[0]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "RE, %s", psStep->apsRef[0]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "RE, %s", psStep->psRef[0]->szName);
+			snprintf(szCommand, uCommandLength, "RE, %s", psStep->apsRef[0]->szName);
 		}
 		break;
 		case STEP_CONJUNCTION_INTRO: {
-			uCommandLength = snprintf(NULL, 0, "^I, %s, %s", psStep->psRef[0]->szName, psStep->psRef[1]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "^I, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "^I, %s, %s", psStep->psRef[0]->szName, psStep->psRef[1]->szName);
+			snprintf(szCommand, uCommandLength, "^I, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 		}
 		break;
 		case STEP_CONJUNCTION_ELIM_LEFT: {
-			uCommandLength = snprintf(NULL, 0, "^E, %s", psStep->psRef[0]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "^E, %s", psStep->apsRef[0]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "^E, %s", psStep->psRef[0]->szName);
+			snprintf(szCommand, uCommandLength, "^E, %s", psStep->apsRef[0]->szName);
 		}
 		break;
 		case STEP_CONJUNCTION_ELIM_RIGHT: {
-			uCommandLength = snprintf(NULL, 0, "^E, %s", psStep->psRef[0]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "^E, %s", psStep->apsRef[0]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "^E, %s", psStep->psRef[0]->szName);
+			snprintf(szCommand, uCommandLength, "^E, %s", psStep->apsRef[0]->szName);
 		}
 		break;
 		case STEP_IMPLICATION_ELIM: {
-			uCommandLength = snprintf(NULL, 0, "->E, %s, %s", psStep->psRef[0]->szName, psStep->psRef[1]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "->E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "->E, %s, %s", psStep->psRef[0]->szName, psStep->psRef[1]->szName);
+			snprintf(szCommand, uCommandLength, "->E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 		}
 		break;
 		case STEP_IMPLICATION_INTRO: {
-			uCommandLength = snprintf(NULL, 0, "->I, %s, %s", psStep->psRef[0]->szName, psStep->psRef[1]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "->I, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "->I, %s, %s", psStep->psRef[0]->szName, psStep->psRef[1]->szName);
+			snprintf(szCommand, uCommandLength, "->I, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 		}
 		break;
 		case STEP_DISJUNCTION_INTRO_LEFT: {
-			uCommandLength = snprintf(NULL, 0, "vI, %s", psStep->psRef[0]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "vI, %s", psStep->apsRef[0]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "vI, %s", psStep->psRef[0]->szName);
+			snprintf(szCommand, uCommandLength, "vI, %s", psStep->apsRef[0]->szName);
 		}
 		break;
 		case STEP_DISJUNCTION_INTRO_RIGHT: {
-			uCommandLength = snprintf(NULL, 0, "vI, %s", psStep->psRef[0]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "vI, %s", psStep->apsRef[0]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "vI, %s", psStep->psRef[0]->szName);
+			snprintf(szCommand, uCommandLength, "vI, %s", psStep->apsRef[0]->szName);
 		}
 		break;
 		case STEP_DISJUNCTION_ELIM: {
-			uCommandLength = snprintf(NULL, 0, "vE, %s, %s-%s, %s-%s", psStep->psRef[0]->szName, psStep->psRef[1]->szName, psStep->psRef[2]->szName, psStep->psRef[3]->szName, psStep->psRef[4]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "vE, %s, %s-%s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName, psStep->apsRef[4]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "vE, %s, %s-%s, %s-%s", psStep->psRef[0]->szName, psStep->psRef[1]->szName, psStep->psRef[2]->szName, psStep->psRef[3]->szName, psStep->psRef[4]->szName);
+			snprintf(szCommand, uCommandLength, "vE, %s, %s-%s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName, psStep->apsRef[4]->szName);
 		}
 		break;
 		case STEP_NEGATION_ELIM: {
-			uCommandLength = snprintf(NULL, 0, "!E, %s, %s", psStep->psRef[0]->szName, psStep->psRef[1]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "!E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "!E, %s, %s", psStep->psRef[0]->szName, psStep->psRef[1]->szName);
+			snprintf(szCommand, uCommandLength, "!E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 		}
 		break;
 		case STEP_NEGATION_INTRO: {
-			uCommandLength = snprintf(NULL, 0, "!I, %s-%s", psStep->psRef[0]->szName, psStep->psRef[1]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "!I, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "!I, %s-%s", psStep->psRef[0]->szName, psStep->psRef[1]->szName);
+			snprintf(szCommand, uCommandLength, "!I, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 		}
 		break;
 		case STEP_INDIRECT_PROOF: {
-			uCommandLength = snprintf(NULL, 0, "IP, %s-%s", psStep->psRef[0]->szName, psStep->psRef[1]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "IP, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "IP, %s-%s", psStep->psRef[0]->szName, psStep->psRef[1]->szName);
+			snprintf(szCommand, uCommandLength, "IP, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 		}
 		break;
 		case STEP_EXPLOSION: {
-			uCommandLength = snprintf(NULL, 0, "X, %s", psStep->psRef[0]->szName) + 1;
+			uCommandLength = snprintf(NULL, 0, "X, %s", psStep->apsRef[0]->szName) + 1;
 			szCommand = calloc(uCommandLength, sizeof(char));
-			snprintf(szCommand, uCommandLength, "X, %s", psStep->psRef[0]->szName);
+			snprintf(szCommand, uCommandLength, "X, %s", psStep->apsRef[0]->szName);
 		}
 		break;
 		case STEP_ASSUMPTION: {

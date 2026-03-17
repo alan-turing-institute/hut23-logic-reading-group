@@ -61,12 +61,15 @@ void ruleset_initialise(Ruleset* psRuleset) {
 	psRuleset->uLemmaNum = (size_t)STEP_CONTROL;
 	psRuleset->apsLemma = calloc(psRuleset->uLemmaNum, sizeof(Lemma*));
 
-	psRuleset->apsLemma[STEP_REITERATION] = lemma_compile("reiteration", "RE", 1, (char const*[]) {"A"}, "A");
-	psRuleset->apsLemma[STEP_CONJUNCTION_INTRO] = lemma_compile("and_intro", "^I", 2, (char const*[]) {"A", "B"}, "(A ^ B)");
-	psRuleset->apsLemma[STEP_CONJUNCTION_ELIM_LEFT] = lemma_compile("and_elim_left", "^E", 1, (char const*[]) {"(A ^ B)"}, "A");
-	psRuleset->apsLemma[STEP_CONJUNCTION_ELIM_RIGHT] = lemma_compile("and_elim_right", "^E", 1, (char const*[]) {"(A ^ B)"}, "B");
-	psRuleset->apsLemma[STEP_IMPLICATION_ELIM] = lemma_compile("imp_elim", "->E", 2, (char const*[]) {"(A -> B)", "A"}, "B");
-	psRuleset->apsLemma[STEP_NEGATION_ELIM] = lemma_compile("not_intro", "!I", 2, (char const*[]) {"!A", "A"}, "FALSE");
+	psRuleset->apsLemma[STEP_REITERATION] = lemma_compile("reiteration", "RE", 1, 0, (char const*[]) {"A"}, "A");
+	psRuleset->apsLemma[STEP_CONJUNCTION_INTRO] = lemma_compile("and_intro", "^I", 2, 0, (char const*[]) {"A", "B"}, "(A ^ B)");
+	psRuleset->apsLemma[STEP_CONJUNCTION_ELIM_LEFT] = lemma_compile("and_elim_left", "^E", 1, 0, (char const*[]) {"(A ^ B)"}, "A");
+	psRuleset->apsLemma[STEP_CONJUNCTION_ELIM_RIGHT] = lemma_compile("and_elim_right", "^E", 1, 0, (char const*[]) {"(A ^ B)"}, "B");
+	psRuleset->apsLemma[STEP_IMPLICATION_ELIM] = lemma_compile("imp_elim", "->E", 2, 0, (char const*[]) {"(A -> B)", "A"}, "B");
+	psRuleset->apsLemma[STEP_DISJUNCTION_INTRO_LEFT] = lemma_compile("or_intro_left", "vI", 1, 1, (char const*[]) {"A", "B"}, "(A v B)");
+	psRuleset->apsLemma[STEP_DISJUNCTION_INTRO_RIGHT] = lemma_compile("or_intro_left", "vI", 1, 1, (char const*[]) {"A", "B"}, "(B v A)");
+	psRuleset->apsLemma[STEP_EXPLOSION] = lemma_compile("explosion", "X", 1, 1, (char const*[]) {"FALSE", "A"}, "A");
+	psRuleset->apsLemma[STEP_NEGATION_ELIM] = lemma_compile("not_elim", "!I", 2, 0, (char const*[]) {"!A", "A"}, "FALSE");
 }
 
 Ruleset* ruleset_load(char const* szDirectory) {

@@ -24,6 +24,8 @@ Lemma* lemma_new() {
 }
 
 void lemma_delete(Lemma* psLemma) {
+	size_t uPos;
+
 	if (psLemma) {
 		if (psLemma->szCommand) {
 			free(psLemma->szCommand);
@@ -33,12 +35,21 @@ void lemma_delete(Lemma* psLemma) {
 			free(psLemma->szAnnotation);
 			psLemma->szAnnotation = NULL;
 		}
-
+		if (psLemma->apsPattern) {
+			for (uPos = 0; uPos < (psLemma->uRefNum + psLemma->uOpNum); ++uPos) {
+				if (psLemma->apsPattern[uPos]) {
+					FreeRecursive(psLemma->apsPattern[uPos]);
+					psLemma->apsPattern[uPos] = NULL;
+				}
+			}
+			free(psLemma->apsPattern);
+			psLemma->apsPattern = NULL;
+		}
 		free(psLemma);
 	}
 }
 
-Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRefNum, char const** aszPattern, char const* szResult) {
+Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRefNum, size_t uOpNum, char const** aszPattern, char const* szResult) {
 	Lemma* psLemma;
 	size_t uPos;
 
@@ -48,22 +59,23 @@ Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRe
 
 	psLemma->szAnnotation = strdup(szAnnotation);
 
-	psLemma->apsPattern = calloc(uRefNum, sizeof(Operation*));
-
-	for (uPos = 0; uPos < uRefNum; ++uPos) {
+	psLemma->apsPattern = calloc(uRefNum + uOpNum, sizeof(Operation*));
+	for (uPos = 0; uPos < (uRefNum + uOpNum); ++uPos) {
 		psLemma->apsPattern[uPos] = StringToOperation(aszPattern[uPos]);
 	}
 	psLemma->uRefNum = uRefNum;
+	psLemma->uOpNum = uOpNum;
+
 	psLemma->psResult = StringToOperation(szResult);
 
 	return psLemma;
 }
 
-bool lemma_apply(Proof *psProof, Command* psCommand, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** pszError) {
+bool lemma_apply(Proof *psProof, Command* psCommand, size_t uRefNum, size_t uOpNum, char const** aszPattern, char const* szResult, Step* psStep, char** pszError) {
 	bool boSuccess = FALSE;
 	Lemma* psLemma;
 
-	psLemma = lemma_compile(psCommand->szCommand, "", uRefNum, aszPattern, szResult);
+	psLemma = lemma_compile(psCommand->szCommand, "", uRefNum, uOpNum, aszPattern, szResult);
 	boSuccess = lemma_apply_compiled(psLemma, psProof, psCommand, psStep, pszError);
 	lemma_delete(psLemma);
 
@@ -81,8 +93,11 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 	Operation** apsFind;
 	Operation** apsSub;
 	size_t uVarCount;
+	size_t uParameters;
 
-	if (psCommand->uCount == psLemma->uRefNum) {
+	uParameters = psLemma->uRefNum + psLemma->uOpNum;
+
+	if (psCommand->uCount == uParameters) {
 		auRef = calloc(psLemma->uRefNum, sizeof(size_t));
 		apsRef = calloc(psLemma->uRefNum, sizeof(Operation*));
 		uReadCount = 1;
@@ -95,13 +110,18 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 				boSuccess = proof_step_scoped(psProof, auRef[uPos] - 1);
 			}
 			if (boSuccess) {
-				apsScrutinee = calloc(psLemma->uRefNum, sizeof(Operation*));
+				apsScrutinee = calloc(uParameters, sizeof(Operation*));
 
 				for (uPos = 0; (uPos < psLemma->uRefNum) && boSuccess; ++uPos) {
 					apsRef[uPos] = proof_get_step(psProof, auRef[uPos] - 1);
 					apsScrutinee[uPos] = apsRef[uPos]->psResult;
 				}
-				psExtract = ExtractPatternMany(psLemma->apsPattern, apsScrutinee, psLemma->uRefNum);
+
+				for (uPos = psLemma->uRefNum; (uPos < uParameters) && boSuccess; ++uPos) {
+					apsScrutinee[uPos] = StringToOperation(psCommand->aszParameter[uPos]);
+				}
+
+				psExtract = ExtractPatternMany(psLemma->apsPattern, apsScrutinee, uParameters);
 				boSuccess = (psExtract != NULL);
 
 				if (boSuccess) {
@@ -116,11 +136,19 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 					}
 
 					psStep->uRefCount = psLemma->uRefNum;
-					psStep->psRef = calloc(psLemma->uRefNum, sizeof(Step*));
+					psStep->apsRef = calloc(psLemma->uRefNum, sizeof(Step*));
 
 					for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
-						psStep->psRef[uPos] = apsRef[uPos];
+						psStep->apsRef[uPos] = apsRef[uPos];
 					}
+
+					psStep->uInputCount = psLemma->uOpNum;
+					psStep->apsInput = calloc(psLemma->uOpNum, sizeof(Step*));
+
+					for (uPos = 0; uPos < psLemma->uOpNum; ++uPos) {
+						psStep->apsInput[uPos] = apsScrutinee[(psLemma->uRefNum + uPos)];
+					}
+
 					psStep->psResult = SubstituteOperationMany(psLemma->psResult, apsFind, apsSub, uVarCount);
 
 					FreeExtract(psExtract);
@@ -152,12 +180,11 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 	}
 	else {
 		if (psLemma->uRefNum == 1) {
-			*pszError = "The command takes exactly one back reference as a parameter.";
+			*pszError = "The command takes exactly one parameter.";
 		}
 		else {
-			*pszError = "Incorrect number of back references passed to the command as parameters.";
+			*pszError = "Incorrect number of parameters.";
 		}
-		printf("Was %lu, should have been %lu\n", psCommand->uCount, psLemma->uRefNum);
 	}
 
 	return boSuccess;
