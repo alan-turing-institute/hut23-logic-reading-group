@@ -496,7 +496,7 @@ void VariableNamesAdd(VariableNames * psVariableNames, char const * szVar) {
 	if (psVariableNames) {
 		boExists = FALSE;
 		for (nPos = 0; (nPos < psVariableNames->nCount) && (!boExists); ++nPos) {
-			if (strcmp(szVar, psVariableNames->aszVar[nPos]) == 0) {
+			if (strcmp (szVar, psVariableNames->aszVar[nPos]) == 0) {
 				boExists = TRUE;
 			}
 		}
@@ -512,6 +512,38 @@ void VariableNamesAdd(VariableNames * psVariableNames, char const * szVar) {
 			psVariableNames->aszVar[(psVariableNames->nCount - 1)] = (char *)PropMalloc (nSize + 1);
 			strncpy(psVariableNames->aszVar[(psVariableNames->nCount - 1)], szVar, nSize);
 			psVariableNames->aszVar[(psVariableNames->nCount - 1)][nSize] = 0;
+		}
+	}
+}
+
+void VariableNamesRemove(VariableNames * psVariableNames, char const * szVar) {
+	int nSize;
+	int nPos;
+	int nRemoved;
+
+	if (psVariableNames) {
+		nRemoved = 0;
+		for (nPos = 0; nPos < psVariableNames->nCount; ++nPos) {
+			if (strcmp (szVar, psVariableNames->aszVar[nPos]) == 0) {
+				PropFree (psVariableNames->aszVar[nPos]);
+				psVariableNames->aszVar[nPos] = NULL;
+				nRemoved += 1;
+			}
+			else {
+				if (nRemoved > 0) {
+					psVariableNames->aszVar[nPos - nRemoved] = psVariableNames->aszVar[nPos];
+					psVariableNames->aszVar[nPos] = NULL;
+				}
+			}
+		}
+
+		if (nRemoved > 0) {
+			psVariableNames->nCount -= nRemoved;
+			nSize = ((psVariableNames->nCount / VARIABLENAMES_CHUNK) + 1) * VARIABLENAMES_CHUNK;
+			if (nSize != psVariableNames->nAllocated) {
+				psVariableNames->aszVar = (char **)PropRealloc (psVariableNames->aszVar, nSize * VARIABLENAMES_CHUNK * sizeof (char *));
+				psVariableNames->nAllocated = nSize;
+			}
 		}
 	}
 }

@@ -202,6 +202,7 @@ void FreeExtract(Extract * psExtract);
 VariableNames * CreateVariableNames ();
 VariableNames * FreeVariableNames (VariableNames * psVariableNames);
 void VariableNamesAdd(VariableNames * psVariableNames, char const * szVar);
+void VariableNamesRemove(VariableNames * psVariableNames, char const * szVar);
 int VariableNamesCount(VariableNames * psVariableNames);
 char * VariableNamesGet(VariableNames * psVariableNames, int nPos);
 void VariableNamesExtract(VariableNames * psVariableNames, Operation * psOp);
