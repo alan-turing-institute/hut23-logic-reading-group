@@ -43,5 +43,7 @@ bool proof_step_scoped(Proof* psProof, size_t uStep);
 bool proof_complete(Proof* psProof);
 bool proof_error(Proof* psProof, char** pszError);
 void proof_print(Proof* psProof);
+bool proof_save(Proof* psProof, char const* szFilenzme, char const* szCommand, char const* szAnnotation);
+void proof_reset(Proof* psProof);
 
 #endif // _PROOF_H

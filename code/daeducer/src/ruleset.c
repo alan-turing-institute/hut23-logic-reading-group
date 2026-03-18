@@ -164,7 +164,6 @@ bool ruleset_get_command_index_start(Ruleset* psRuleset, char const* szCommand, 
 	return boFound;
 }
 
-
 Lemma* ruleset_get_lemma(Ruleset* psRuleset, size_t uIndex) {
 	Lemma* psLemma;
 
@@ -176,5 +175,48 @@ Lemma* ruleset_get_lemma(Ruleset* psRuleset, size_t uIndex) {
 	}
 
 	return psLemma;
+}
+
+void ruleset_print_help_line(Ruleset* psRuleset, size_t uIndex) {
+	Lemma* psLemma;
+	size_t uParameters;
+	size_t uPos;
+
+	if (uIndex < psRuleset->uLemmaNum) {
+		psLemma = psRuleset->apsLemma[uIndex];
+		if (psLemma) {
+			printf("    %-20s", psLemma->szCommand);
+			uParameters = psLemma->uRefNum + psLemma->uOpNum;
+			if (uParameters > 0) {
+				printf(" ");
+			}
+			for (uPos = 0; uPos < uParameters; ++uPos) {
+				if (uPos < psLemma->uRefNum) {
+					printf("<ref>");
+				}
+				else {
+					printf("<exp>");
+				}
+				uPos += 1;
+				if (uPos < uParameters) {
+					printf(", ");
+				}
+			}
+			printf("\n");
+		}
+	}
+}
+
+size_t ruleset_get_lemma_num(Ruleset* psRuleset) {
+	size_t uLemmaNum;
+
+	if (psRuleset) {
+		uLemmaNum = psRuleset->uLemmaNum;
+	}
+	else {
+		uLemmaNum = 0;
+	}
+
+	return uLemmaNum;
 }
 

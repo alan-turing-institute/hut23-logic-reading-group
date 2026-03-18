@@ -29,7 +29,9 @@ typedef enum _STEP {
 	STEP_DISCHARGE,
 	STEP_QED,
 	STEP_CONTROL,
-	STEP_PRINT = STEP_CONTROL,
+	STEP_RESET = STEP_CONTROL,
+	STEP_PRINT,
+	STEP_SAVE,
 	STEP_HELP,
 
 	STEP_NUM
@@ -64,34 +66,39 @@ static char const aszCommand[STEP_NUM][16] = {
 	"assumption",
 	"discharge",
 	"qed",
+	"reset",
 	"print",
+	"save",
 	"help",
 };
 
-static char const aszHelp[STEP_NUM][48] = {
-	"premise        <expression>",
-	"reiteration    <ref>",
-	"and_intro      <ref> <ref>",
-	"and_elim_left  <ref>",
-	"and_elim_right <ref>",
-	"imp_elim       <ref> <ref>",
-	"imp_intro      <ref> <ref>",
-	"or_intro_left  <ref> <expression>",
-	"or_intro_right <ref> <expression>",
-	"or_elim        <ref> <ref> <ref> <ref> <ref>",
-	"not_elim       <ref> <ref>",
-	"not_intro      <ref> <ref>",
-	"indirect       <ref> <ref>",
-	"explosion      <ref> <expression>",
-	"assumption     <expression>",
+static char const aszHelp[STEP_NUM][64] = {
+	"premise             <exp>",
+	"reiteration         <ref>",
+	"and_intro           <ref>, <ref>",
+	"and_elim_left       <ref>",
+	"and_elim_right      <ref>",
+	"imp_elim            <ref>, <ref>",
+	"imp_intro           <ref>, <ref>",
+	"or_intro_left       <ref>, <exp>",
+	"or_intro_right      <ref>, <exp>",
+	"or_elim             <ref>, <ref>, <ref>, <ref>, <ref>",
+	"not_elim            <ref>, <ref>",
+	"not_intro           <ref>, <ref>",
+	"indirect            <ref>, <ref>",
+	"explosion           <ref>, <exp>",
+	"assumption          <exp>",
 	"discharge",
 	"qed",
+	"reset",
 	"print",
+	"save                <filename>, <command>, <annotation>",
 	"help",
 };
 
 Step* step_new();
 void step_delete(Step* psStep);
-void step_print(Step* psStep);
+void step_print(Step* psStep, Ruleset* psRuleset);
+void step_command_output(Step* psStep, Ruleset* psRuleset, FILE* fhFile);
 
 #endif // _STEP_H

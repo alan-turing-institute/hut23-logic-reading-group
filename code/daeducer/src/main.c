@@ -34,33 +34,35 @@ int main() {
 
 	psRuleset = ruleset_load("lemmas");
 
-/*	psProof = proof_load("lemmas/and_or_intro.txt");*/
-/*	proof_delete(psProof);*/
-/*	psProof = NULL;*/
-
 	psProof = proof_new();
 	proof_attach_ruleset(psProof, psRuleset);
 
 	while (boContinue) {
-		uIndent = proof_indent(psProof);
-		printf(COL_RESET COL_RED "     | ");
-		for (uCount = 0; uCount < uIndent; ++uCount) {
-			printf("| ");
+		if (proof_complete(psProof)) {
+			printf(COL_RESET COL_RED "     ");
 		}
+		else {
+			uIndent = proof_indent(psProof);
+			printf(COL_RESET COL_RED "     | ");
+			for (uCount = 0; uCount < uIndent; ++uCount) {
+				printf("| ");
+			}
+		}
+
 		printf(COL_GREEN "> ");
 		char* szResult = fgets(szString, 1024, stdin);
 		printf(COL_RESET);
 		if (szResult) {
 			boResult = command_parse(psCommand, szResult);
 			if (boResult) {
-				//command_print(psCommand);
-
 				proof_process_step(psProof, psCommand);
 
 				boResult = !proof_error(psProof, &szError);
 				if (boResult) {
-					proof_print_last_step(psProof);
-					printf("\n");
+					if (!proof_complete(psProof)) {
+						proof_print_last_step(psProof);
+						printf("\n");
+					}
 				}
 				else {
 					printf("Error: %s\n", szError);
@@ -70,15 +72,12 @@ int main() {
 			else {
 				printf("Error parsing command\n");
 			}
-
-			boContinue = !proof_complete(psProof);
 			command_reset(psCommand);
 		}
 		else {
 			boContinue = FALSE;
 		}
 	}
-	proof_print(psProof);
 
 	printf(COL_RESET "\n");
 
