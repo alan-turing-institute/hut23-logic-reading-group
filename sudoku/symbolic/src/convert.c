@@ -52,7 +52,7 @@
 // Function prototypes
 
 Operation * RecurseToOperation (char const * szString, int nStrLen);
-inline bool StringCheckBinary (char const * szString, int const nStrLen, char const * szOperator);
+bool StringCheckBinary (char const * szString, int const nStrLen, char const * szOperator);
 bool TryStringToDouble (char const * const szString, int const nStrLen, double * pfDecimal);
 bool TryStringToTruth (char const * const szString, int const nStrLen, bool * pboTruth);
 bool TryUndefinedUnary (char const * szString, int nStrLen, int * pnNameEnd);
@@ -336,7 +336,7 @@ Operation * StringToOperation (char const * szString) {
  * @return TRUE if the operator and string match, FALSE otherwise.
  *
  */
-inline bool StringCheckBinary (char const * szString, int const nStrLen, char const * szOperator) {
+bool StringCheckBinary (char const * szString, int const nStrLen, char const * szOperator) {
 	bool boMatch = FALSE;
 	int nOperatorLen;
 
