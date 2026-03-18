@@ -190,7 +190,8 @@ void ruleset_print_help_line(Ruleset* psRuleset, size_t uIndex) {
 			if (uParameters > 0) {
 				printf(" ");
 			}
-			for (uPos = 0; uPos < uParameters; ++uPos) {
+			uPos = 0;
+			while (uPos < uParameters) {
 				if (uPos < psLemma->uRefNum) {
 					printf("<ref>");
 				}
