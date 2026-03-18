@@ -109,10 +109,10 @@ void step_print(Step* psStep, Ruleset* psRuleset) {
 				snprintf(szCommand, uCommandLength, "vE, %s, %s-%s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName, psStep->apsRef[4]->szName);
 			}
 			break;
-			case STEP_NEGATION_ELIM: {
-				uCommandLength = snprintf(NULL, 0, "!E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+			case STEP_NEGATION_INTRO: {
+				uCommandLength = snprintf(NULL, 0, "!I, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
 				szCommand = calloc(uCommandLength, sizeof(char));
-				snprintf(szCommand, uCommandLength, "!E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+				snprintf(szCommand, uCommandLength, "!I, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 			}
 			break;
 			case STEP_INDIRECT_PROOF: {
@@ -147,7 +147,7 @@ void step_print(Step* psStep, Ruleset* psRuleset) {
 			case STEP_DISJUNCTION_INTRO_LEFT:
 			case STEP_DISJUNCTION_INTRO_RIGHT:
 			case STEP_EXPLOSION:
-			case STEP_NEGATION_INTRO:
+			case STEP_NEGATION_ELIM:
 			default: {
 				uCommandLength = 3;
 				szCommand = calloc(uCommandLength, sizeof(char));

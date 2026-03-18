@@ -56,6 +56,34 @@ void proof_reset(Proof* psProof) {
 	}
 }
 
+void proof_transfer(Proof* psProof, Proof* psFrom) {
+	proof_reset(psProof);
+
+	psProof->szCommand = psFrom->szCommand;
+	psFrom->szCommand = NULL;
+
+	psProof->szAnnotation = psFrom->szAnnotation;
+	psFrom->szAnnotation = NULL;
+
+	psProof->uStepCount = psFrom->uStepCount;
+	psFrom->uStepCount = 0;
+
+	psProof->apsStep = psFrom->apsStep;
+	psFrom->apsStep = NULL;
+
+	psProof->boError = psFrom->boError;
+	psFrom->boError = FALSE;
+
+	psProof->boComplete = psFrom->boComplete;
+	psFrom->boComplete = FALSE;
+
+	psProof->szError = psFrom->szError;
+	psFrom->szError = NULL;
+
+	psProof->psRuleset = psFrom->psRuleset;
+	psFrom->psRuleset = NULL;
+}
+
 void proof_attach_ruleset(Proof* psProof, Ruleset* psRuleset) {
 	psProof->psRuleset = psRuleset;
 }
@@ -186,6 +214,7 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 	size_t uIndex;
 	Lemma* psLemma;
 	Ruleset* psRuleset;
+	Proof* psLoad;
 
 	boContinue = TRUE;
 	boStep = TRUE;
@@ -530,6 +559,23 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 				}
 			}
 			break;
+			case STEP_LOAD: {
+				if (psCommand->uCount == 1) {
+					psLoad = proof_load(psProof->psRuleset, psCommand->aszParameter[0]);
+					if (psLoad) {
+						boError = FALSE;
+						proof_reset(psProof);
+						proof_transfer(psProof, psLoad);
+						proof_delete(psLoad);
+						printf("Proof loaded\n");
+					}
+					boStep = FALSE;
+				}
+				else {
+					szError = "The reset command takes no parameters.";
+				}
+			}
+			break;
 			case STEP_SAVE: {
 				if (psCommand->uCount == 3) {
 					boError = FALSE;
@@ -715,6 +761,9 @@ bool proof_save(Proof* psProof, char const* szFilename, char const* szCommand, c
 	FILE* fhFile = fopen(szFilename, "w");
 
 	if (fhFile) {
+		fprintf(fhFile, "%s\n", szCommand);
+		fprintf(fhFile, "%s\n", szAnnotation);
+
 		for (uPos = 0; uPos < psProof->uStepCount; ++uPos) {
 			step_command_output(psProof->apsStep[uPos], psProof->psRuleset, fhFile);
 		}

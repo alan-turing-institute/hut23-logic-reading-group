@@ -31,6 +31,7 @@ typedef enum _STEP {
 	STEP_CONTROL,
 	STEP_RESET = STEP_CONTROL,
 	STEP_PRINT,
+	STEP_LOAD,
 	STEP_SAVE,
 	STEP_HELP,
 
@@ -68,6 +69,7 @@ static char const aszCommand[STEP_NUM][16] = {
 	"qed",
 	"reset",
 	"print",
+	"load",
 	"save",
 	"help",
 };
@@ -92,6 +94,7 @@ static char const aszHelp[STEP_NUM][64] = {
 	"qed",
 	"reset",
 	"print",
+	"load                <filename>",
 	"save                <filename>, <command>, <annotation>",
 	"help",
 };
