@@ -693,6 +693,7 @@ Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
 	fhFile = fopen(szFilename, "r");
 	psCommand = command_new();
 
+	boSuccess = FALSE;
 	if (fhFile) {
 		uLength = 64;
 		szLine = calloc(uLength, sizeof(char));
