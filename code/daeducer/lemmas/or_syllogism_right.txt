@@ -1,0 +1,13 @@
+or_syllogism_right
+DS
+premise A v B
+premise !B
+assumption B
+not_elim 2, 3
+explosion 4, A
+discharge
+assumption A
+reiteration 7
+discharge
+or_elim 1, 7, 8, 3, 5
+qed

@@ -39,6 +39,8 @@
 //////////////////////////////////////////////////////////////////
 // Defines
 
+#define VARIABLENAMES_CHUNK	(16)
+
 //////////////////////////////////////////////////////////////////
 // Structures
 
@@ -62,6 +64,12 @@ struct _Variable {
 	Variable * psVarPrev;
 };
 
+struct _VariableNames {
+	char ** aszVar;
+	int nCount;
+	int nAllocated;
+};
+
 //////////////////////////////////////////////////////////////////
 // Global variables
 
@@ -69,6 +77,7 @@ struct _Variable {
 // Function prototypes
 
 Variable * AddNewVariable (Variable * psVariables, char const * const szVar);
+void VariableNamesExtractRecursive(VariableNames * psVariableNames, Operation * psOp);
 
 //////////////////////////////////////////////////////////////////
 // Main application
@@ -453,4 +462,142 @@ char const * VariableName (Variable const * const psVariable) {
 	
 	return szName;
 }
+
+VariableNames * CreateVariableNames () {
+	VariableNames * psVariableNames;
+
+	psVariableNames = PropCalloc(1, sizeof(VariableNames));
+
+	return psVariableNames;
+}
+
+VariableNames * FreeVariableNames (VariableNames * psVariableNames) {
+	int nPos;
+
+	if (psVariableNames) {
+		if (psVariableNames->aszVar) {
+			for (nPos = 0; nPos < psVariableNames->nCount; ++nPos) {
+				PropFree ((void *)psVariableNames->aszVar[nPos]);
+			}
+			PropFree ((void *)psVariableNames->aszVar);
+			psVariableNames->nCount = 0;
+			psVariableNames->nAllocated = 0;
+		}
+	}
+
+	return NULL;
+}
+
+void VariableNamesAdd(VariableNames * psVariableNames, char const * szVar) {
+	int nSize;
+	int nPos;
+	bool boExists;
+
+	if (psVariableNames) {
+		boExists = FALSE;
+		for (nPos = 0; (nPos < psVariableNames->nCount) && (!boExists); ++nPos) {
+			if (strcmp (szVar, psVariableNames->aszVar[nPos]) == 0) {
+				boExists = TRUE;
+			}
+		}
+
+		if (!boExists) {
+			psVariableNames->nCount += 1;
+			nSize = ((psVariableNames->nCount / VARIABLENAMES_CHUNK) + 1) * VARIABLENAMES_CHUNK;
+			if (psVariableNames->nCount > psVariableNames->nAllocated) {
+				psVariableNames->aszVar = (char **)PropRealloc (psVariableNames->aszVar, nSize * VARIABLENAMES_CHUNK * sizeof (char *));
+				psVariableNames->nAllocated = nSize;
+			}
+			nSize = strlen(szVar);
+			psVariableNames->aszVar[(psVariableNames->nCount - 1)] = (char *)PropMalloc (nSize + 1);
+			strncpy(psVariableNames->aszVar[(psVariableNames->nCount - 1)], szVar, nSize);
+			psVariableNames->aszVar[(psVariableNames->nCount - 1)][nSize] = 0;
+		}
+	}
+}
+
+void VariableNamesRemove(VariableNames * psVariableNames, char const * szVar) {
+	int nSize;
+	int nPos;
+	int nRemoved;
+
+	if (psVariableNames) {
+		nRemoved = 0;
+		for (nPos = 0; nPos < psVariableNames->nCount; ++nPos) {
+			if (strcmp (szVar, psVariableNames->aszVar[nPos]) == 0) {
+				PropFree (psVariableNames->aszVar[nPos]);
+				psVariableNames->aszVar[nPos] = NULL;
+				nRemoved += 1;
+			}
+			else {
+				if (nRemoved > 0) {
+					psVariableNames->aszVar[nPos - nRemoved] = psVariableNames->aszVar[nPos];
+					psVariableNames->aszVar[nPos] = NULL;
+				}
+			}
+		}
+
+		if (nRemoved > 0) {
+			psVariableNames->nCount -= nRemoved;
+			nSize = ((psVariableNames->nCount / VARIABLENAMES_CHUNK) + 1) * VARIABLENAMES_CHUNK;
+			if (nSize != psVariableNames->nAllocated) {
+				psVariableNames->aszVar = (char **)PropRealloc (psVariableNames->aszVar, nSize * VARIABLENAMES_CHUNK * sizeof (char *));
+				psVariableNames->nAllocated = nSize;
+			}
+		}
+	}
+}
+
+int VariableNamesCount(VariableNames * psVariableNames) {
+	return psVariableNames->nCount;
+}
+
+char * VariableNamesGet(VariableNames * psVariableNames, int nPos) {
+	char * szVar;
+
+	if ((nPos >= 0) && (nPos < psVariableNames->nCount)) {
+		szVar = psVariableNames->aszVar[nPos];
+	}
+	else {
+		szVar = 0;
+	}
+	return szVar;
+}
+
+void VariableNamesExtract(VariableNames * psVariableNames, Operation * psOp) {
+	VariableNamesExtractRecursive(psVariableNames, psOp);
+}
+
+void VariableNamesExtractRecursive(VariableNames * psVariableNames, Operation * psOp) {
+	if (psOp) {
+		switch (psOp->eOpType) {
+			case OPTYPE_TRUTHVALUE:
+				// Nothing else to do - backtrack
+				break;
+			case OPTYPE_VARIABLE:
+				// Add the variable name to the list
+				VariableNamesAdd(psVariableNames, psOp->Vars.psVar->szVar);
+				break;
+			case OPTYPE_UNARY:
+				// Check any operations further down the tree
+				if (psOp->Vars.psUnary) {
+					VariableNamesExtractRecursive (psVariableNames, psOp->Vars.psUnary->psVar1);
+				}
+				// Then backtrack
+				break;
+			case OPTYPE_BINARY:
+				// Check any operations further down the tree
+				if (psOp->Vars.psBinary) {
+					VariableNamesExtractRecursive (psVariableNames, psOp->Vars.psBinary->psVar1);
+					VariableNamesExtractRecursive (psVariableNames, psOp->Vars.psBinary->psVar2);
+				}
+				// Then backtrack
+				break;
+			default:
+				printf("Invalid operation type\n");
+				break;
+		}
+	}
+}
+
 

@@ -6,7 +6,10 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
+#include "daeducer.h"
+
 size_t split_command(char* szCommand, size_t* uPlace, size_t* uLength);
+bool lemma(Proof *psProof, char const* szCommand, size_t* uPiece, size_t uCount, size_t uRefNum, char const** aszPattern, char const* szResult, Step* psStep, char** szError);
 
 #endif // _UTILS_H
 

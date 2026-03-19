@@ -85,6 +85,8 @@ typedef struct _Variable Variable;
 typedef struct _UserFunc UserFunc;
 // Operation mapping for pattern extraction
 typedef struct _Extract Extract;
+// List of variable names
+typedef struct _VariableNames VariableNames;
 
 // User operation callbacks
 typedef double (*UserApproximate)(double fVar1, void * psContext);
@@ -143,6 +145,7 @@ void PropMemReset (void);
 void PropMemOutput (void);
 void * PropMemMalloc (size_t size);
 void * PropMemCalloc (size_t n, size_t size);
+void * PropMemRealloc (void * ptr, size_t size);
 void PropMemFree (void * ptr);
 
 // Creation operations
@@ -164,6 +167,7 @@ Operation * FindOperation (Operation * psMain, Operation * psFind);
 // Manipulating operations mathematically
 Operation * SubstituteOperation (Operation * psMain, Operation * psFind, Operation * psSub);
 Operation * SubstituteOperationPair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2);
+Operation * SubstituteOperationMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount);
 Operation * SimplifyOperation (Operation * psOp);
 bool CompareOperations (Operation * psOp1, Operation * psOp2);
 double ApproximateOperation (Operation * psOp);
@@ -187,10 +191,20 @@ char const * VariableName (Variable const * const psVariable);
 
 // Pattern extraction
 Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee);
+Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee, int nCount);
 int ExtractCount(Extract * psExtract);
 char * ExtractName(Extract * psExtract, int nPosition);
 Operation * ExtractValue(Extract * psExtract, char const * const szName);
+Operation * ExtractValueFromPos(Extract * psExtract, int nPosition);
 void FreeExtract(Extract * psExtract);
 
+// Simple listing of variable names
+VariableNames * CreateVariableNames ();
+VariableNames * FreeVariableNames (VariableNames * psVariableNames);
+void VariableNamesAdd(VariableNames * psVariableNames, char const * szVar);
+void VariableNamesRemove(VariableNames * psVariableNames, char const * szVar);
+int VariableNamesCount(VariableNames * psVariableNames);
+char * VariableNamesGet(VariableNames * psVariableNames, int nPos);
+void VariableNamesExtract(VariableNames * psVariableNames, Operation * psOp);
 
 #endif // if !defined _H_SYMBOLIC

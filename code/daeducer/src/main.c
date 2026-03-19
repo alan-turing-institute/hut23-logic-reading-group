@@ -7,10 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "symbolic.h"
 #include "utils.h"
 #include "step.h"
 #include "proof.h"
-#include "symbolic.h"
+#include "ruleset.h"
+#include "command.h"
 
 int main() {
 	char szString[1024];
@@ -18,31 +20,70 @@ int main() {
 	Proof* psProof;
 	size_t uIndent;
 	size_t uCount;
+	Ruleset* psRuleset;
+	char* szError;
+	Command* psCommand;
+	bool boResult;
 
 	printf("Welcome to Daeducer, a simple TFL proof constructor that follows the approach in Chapter 17 of the Forall x: Calgary book on formal logic.\n");
 	printf("Enter help to list the available commands.\n");
 	printf("Enter <ctrl>-d to exit.\n");
 	printf("\n");
 
+	psCommand = command_new();
+
+	psRuleset = ruleset_load("lemmas");
+
 	psProof = proof_new();
+	proof_attach_ruleset(psProof, psRuleset);
 
 	while (boContinue) {
-		uIndent = proof_indent(psProof);
-		printf(COL_RESET COL_RED "     | ");
-		for (uCount = 0; uCount < uIndent; ++uCount) {
-			printf("| ");
+		if (proof_complete(psProof)) {
+			printf(COL_RESET COL_RED "     ");
 		}
+		else {
+			uIndent = proof_indent(psProof);
+			printf(COL_RESET COL_RED "     | ");
+			for (uCount = 0; uCount < uIndent; ++uCount) {
+				printf("| ");
+			}
+		}
+
 		printf(COL_GREEN "> ");
 		char* szResult = fgets(szString, 1024, stdin);
 		printf(COL_RESET);
 		if (szResult) {
-			boContinue = proof_process_step(psProof, szResult);
+			boResult = command_parse(psCommand, szResult);
+			if (boResult) {
+				proof_process_step(psProof, psCommand);
+
+				boResult = !proof_error(psProof, &szError);
+				if (boResult) {
+					if (!proof_complete(psProof)) {
+						proof_print_last_step(psProof);
+						printf("\n");
+					}
+				}
+				else {
+					printf("Error: %s\n", szError);
+				}
+
+			}
+			else {
+				printf("Error parsing command\n");
+			}
+			command_reset(psCommand);
 		}
 		else {
 			boContinue = FALSE;
 		}
 	}
+
 	printf(COL_RESET "\n");
+
+	proof_delete(psProof);
+	ruleset_delete(psRuleset);
+	command_delete(psCommand);
 
 	return 0;
 }
