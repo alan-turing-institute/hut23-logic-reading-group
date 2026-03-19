@@ -1,0 +1,10 @@
+modus_tollens
+MT
+premise A -> B
+premise !B
+assumption A
+imp_elim 1, 3
+not_elim 2, 4
+discharge
+not_intro 3, 5
+qed

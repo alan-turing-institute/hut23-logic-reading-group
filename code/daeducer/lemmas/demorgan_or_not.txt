@@ -1,0 +1,16 @@
+demorgan_or_not
+DeM
+premise !A v !B
+assumption A ^ B
+and_elim_left 2
+and_elim_right 2
+assumption !A
+not_elim 5, 3
+discharge
+assumption !B
+not_elim 8, 4
+discharge
+or_elim 1, 5, 6, 8, 9
+discharge
+not_intro 2, 11
+qed

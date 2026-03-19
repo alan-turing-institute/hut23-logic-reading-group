@@ -61,10 +61,12 @@ void ReportVar (char * szFormat, int nVariable);
 #if defined _MEM_PROFILE
 #define PropMalloc PropMemMalloc
 #define PropCalloc PropMemCalloc
+#define PropRealloc PropMemRealloc
 #define PropFree PropMemFree
 #else
 #define PropMalloc malloc
 #define PropCalloc calloc
+#define Proprealloc realloc
 #define PropFree free
 #endif // if defined _MEM_PROFILE
 

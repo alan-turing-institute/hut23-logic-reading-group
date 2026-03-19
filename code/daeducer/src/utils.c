@@ -5,8 +5,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
 
 #include "symbolic.h"
+
+#include "proof.h"
 
 size_t split_command(char* szCommand, size_t* uPlace, size_t* uLength) {
 	size_t uCount;
@@ -51,3 +55,20 @@ size_t split_command(char* szCommand, size_t* uPlace, size_t* uLength) {
 	return uCount;
 }
 
+char* allocate_error(char const* szFormat, ...) {
+  va_list args;
+	int nLength;
+	char* szResult;
+
+  va_start (args, szFormat);
+	nLength = vsnprintf(NULL, 0, szFormat, args);
+  va_end (args);
+
+	szResult = malloc(nLength + 2);
+
+  va_start (args, szFormat);
+	vsnprintf(szResult, nLength + 1, szFormat, args);
+  va_end (args);
+
+	return szResult;
+}
