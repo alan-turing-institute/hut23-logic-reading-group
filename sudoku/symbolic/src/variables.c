@@ -483,6 +483,7 @@ VariableNames * FreeVariableNames (VariableNames * psVariableNames) {
 			psVariableNames->nCount = 0;
 			psVariableNames->nAllocated = 0;
 		}
+		PropFree((void *)psVariableNames);
 	}
 
 	return NULL;
