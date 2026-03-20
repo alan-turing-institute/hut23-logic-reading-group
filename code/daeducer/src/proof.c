@@ -33,6 +33,8 @@ void proof_delete(Proof* psProof) {
 }
 
 void proof_reset(Proof* psProof) {
+	size_t uPos = 0;
+
 	if (psProof) {
 		if (psProof->szCommand) {
 			free(psProof->szCommand);
@@ -43,6 +45,10 @@ void proof_reset(Proof* psProof) {
 			psProof->szAnnotation = NULL;
 		}
 		if (psProof->apsStep) {
+			for (uPos = 0; uPos < psProof->uStepCount; ++uPos) {
+				step_delete(psProof->apsStep[uPos]);
+				psProof->apsStep[uPos] = NULL;
+			}
 			free(psProof->apsStep);
 			psProof->apsStep = NULL;
 		}
@@ -730,6 +736,8 @@ Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
 				uLine += 1;
 			}
 		}
+		free(szLine);
+		fclose(fhFile);
 	}
 
 	command_delete(psCommand);

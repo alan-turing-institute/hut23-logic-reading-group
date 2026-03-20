@@ -42,8 +42,14 @@ void lemma_delete(Lemma* psLemma) {
 					psLemma->apsPattern[uPos] = NULL;
 				}
 			}
+			psLemma->uRefNum = 0;
+			psLemma->uOpNum = 0;
 			free(psLemma->apsPattern);
 			psLemma->apsPattern = NULL;
+		}
+		if (psLemma->psResult) {
+			FreeRecursive(psLemma->psResult);
+			psLemma->psResult = NULL;
 		}
 		free(psLemma);
 	}
@@ -252,6 +258,9 @@ Lemma* lemma_from_proof(Proof* psProof) {
 		szVar = VariableNamesGet(psResultVariables, uPos);
 		psLemma->apsPattern[psLemma->uRefNum + uPos] = CreateVariable(szVar);
 	}
+
+	FreeVariableNames(psResultVariables);
+	FreeVariableNames(psRefVariables);
 
 	return psLemma;
 }

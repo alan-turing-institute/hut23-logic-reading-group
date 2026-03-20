@@ -48,9 +48,9 @@ void command_reset(Command* psCommand) {
 		}
 		if (psCommand->aszParameter) {
 			for (uPos = 0; uPos < psCommand->uCount; ++uPos) {
-				if (psCommand->aszParameter) {
-					free(psCommand->aszParameter);
-					psCommand->aszParameter = NULL;
+				if (psCommand->aszParameter[uPos]) {
+					free(psCommand->aszParameter[uPos]);
+					psCommand->aszParameter[uPos] = NULL;
 				}
 			}
 			free(psCommand->aszParameter);

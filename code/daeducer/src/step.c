@@ -36,11 +36,19 @@ void step_delete(Step* psStep) {
 			for (uPos = 0; uPos < psStep->uInputCount; ++uPos) {
 				if (psStep->apsInput[uPos]) {
 					FreeRecursive(psStep->apsInput[uPos]);
-					psStep->apsInput = NULL;
+					psStep->apsInput[uPos] = NULL;
 				}
 			}
 			free(psStep->apsInput);
 			psStep->apsInput = NULL;
+		}
+		if (psStep->psResult) {
+			FreeRecursive(psStep->psResult);
+			psStep->psResult = NULL;
+		}
+		if (psStep->apsRef) {
+			free(psStep->apsRef);
+			psStep->apsRef = NULL;
 		}
 
 		free(psStep);
