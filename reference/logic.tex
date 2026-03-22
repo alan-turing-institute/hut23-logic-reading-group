@@ -630,7 +630,7 @@ since $\var{x}$ is a variable, not identified with any particular thing
 that $P$ might be predicated of, $P(\var{x})$ is not a sentence. On the
 other hand $\exists\var{x}\,P(\var{x})$ \emph{is} a sentence. We need a notion of when a variable has been ``left free'' in the formula or whether it is ``captured'' by a quantifier. 
 
-For each formula, $\phi$, the set, $\fv[\phi]$, of \defn{free variables} of~$\phi$ is defines as follows: The free variables of a term are just the variables occuring in that term. The free variables of a formula are, roughly, all the free variables occuring in its sub-formul\ae\ except for those that are part of a quantifier:
+For any formula, $\phi$, the set, $\fv[\phi]$, of \defn{free variables} of~$\phi$ is defined as follows: The free variables of a term are just the variables occuring in that term. The free variables of a formula are, roughly, all the free variables occuring in its sub-formul\ae\ except for those that are part of a quantifier:
 \begin{align*}
   \fv[P(\term{t}_1,\dotsc,\term{t}_n)]
   &= \fv[\term{t}_1] \cup\dotsb\cup\fv[\term{t}_n] \\
@@ -645,6 +645,13 @@ For each formula, $\phi$, the set, $\fv[\phi]$, of \defn{free variables} of~$\ph
   \fv[\exists \var{x}\,\phi]
   &= \fv[\phi] \setminus \{\var{x}\}
 \end{align*}
+
+A variable that is not free is said to be \defn{bound}. A \defn{sentence} (of first-order logic) is a formula having no free variables.
+
+\subsection{Semantics}
+
+\subsection{Natural deduction}
+
 
 
 \newpage
