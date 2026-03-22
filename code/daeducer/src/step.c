@@ -170,7 +170,7 @@ void step_print(Step* psStep, Ruleset* psRuleset) {
 		strcpy(szIndent + uIndent * 2, "| ");
 	}
 
-	printf(COL_RESET "%4s" COL_RED " | %s" COL_CYAN COL_BOLD "%*s" COL_RESET COL_YELLOW " %s" COL_RESET, psStep->szName, szIndent, ((int)psStep->uIndent * 2) - 32, szResult, szCommand);
+	printf(COL_RESET "%7s" COL_RED " | %s" COL_CYAN COL_BOLD "%*s" COL_RESET COL_YELLOW " %s" COL_RESET, psStep->szName, szIndent, ((int)psStep->uIndent * 2) - 32, szResult, szCommand);
 	free(szIndent);
 
 	if (szCommand) {

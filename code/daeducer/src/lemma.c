@@ -91,7 +91,6 @@ bool lemma_apply(Proof *psProof, Command* psCommand, size_t uRefNum, size_t uOpN
 bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, Step* psStep, char** pszError) {
 	bool boSuccess = FALSE;
 	size_t* auRef;
-	size_t uReadCount;
 	size_t uPos;
 	Step** apsRef;
 	Extract* psExtract;
@@ -106,78 +105,83 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 	if (psCommand->uCount == uParameters) {
 		auRef = calloc(psLemma->uRefNum, sizeof(size_t));
 		apsRef = calloc(psLemma->uRefNum, sizeof(Operation*));
-		uReadCount = 1;
-		for (uPos = 0; (uPos < psLemma->uRefNum) && (uReadCount == 1); ++uPos) {
-			uReadCount = sscanf(psCommand->aszParameter[uPos], "%lu", &auRef[uPos]);
-		}
-		if ((uPos == psLemma->uRefNum) && (uReadCount == 1)) {
-			boSuccess = TRUE;
+		boSuccess = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, psLemma->uRefNum);
+
+		if (boSuccess) {
 			for (uPos = 0; (uPos < psLemma->uRefNum) && boSuccess; ++uPos) {
-				boSuccess = proof_step_scoped(psProof, auRef[uPos] - 1);
+				boSuccess = proof_step_scoped(psProof, auRef[uPos]);
 			}
 			if (boSuccess) {
-				apsScrutinee = calloc(uParameters, sizeof(Operation*));
-
-				for (uPos = 0; (uPos < psLemma->uRefNum) && boSuccess; ++uPos) {
-					apsRef[uPos] = proof_get_step(psProof, auRef[uPos] - 1);
-					apsScrutinee[uPos] = apsRef[uPos]->psResult;
-				}
-
-				for (uPos = psLemma->uRefNum; (uPos < uParameters) && boSuccess; ++uPos) {
-					apsScrutinee[uPos] = StringToOperation(psCommand->aszParameter[uPos]);
-				}
-
-				psExtract = ExtractPatternMany(psLemma->apsPattern, apsScrutinee, uParameters);
-				boSuccess = (psExtract != NULL);
-
+				boSuccess = proof_get_steps(psProof, auRef, apsRef, psLemma->uRefNum);
 				if (boSuccess) {
-					uVarCount = ExtractCount(psExtract);
-
-					apsFind = calloc(uVarCount, sizeof(Operation*));
-					apsSub = calloc(uVarCount, sizeof(Operation*));
-
-					for (uPos = 0; uPos < uVarCount; ++uPos) {
-						apsFind[uPos] = CreateVariable(ExtractName(psExtract, uPos));
-						apsSub[uPos] = ExtractValueFromPos(psExtract, uPos);
-					}
-
-					psStep->uRefCount = psLemma->uRefNum;
-					psStep->apsRef = calloc(psLemma->uRefNum, sizeof(Step*));
+					apsScrutinee = calloc(uParameters, sizeof(Operation*));
 
 					for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
-						psStep->apsRef[uPos] = apsRef[uPos];
+						apsScrutinee[uPos] = apsRef[uPos]->psResult;
 					}
 
-					psStep->uInputCount = psLemma->uOpNum;
-					psStep->apsInput = calloc(psLemma->uOpNum, sizeof(Step*));
-
-					for (uPos = 0; uPos < psLemma->uOpNum; ++uPos) {
-						psStep->apsInput[uPos] = apsScrutinee[(psLemma->uRefNum + uPos)];
+					for (uPos = psLemma->uRefNum; uPos < uParameters; ++uPos) {
+						apsScrutinee[uPos] = StringToOperation(psCommand->aszParameter[uPos]);
 					}
 
-					psStep->psResult = SubstituteOperationMany(CopyRecursive(psLemma->psResult), apsFind, apsSub, uVarCount);
+					psExtract = ExtractPatternMany(psLemma->apsPattern, apsScrutinee, uParameters);
+					boSuccess = (psExtract != NULL);
 
-					FreeExtract(psExtract);
-					psExtract = NULL;
+					if (boSuccess) {
+						uVarCount = ExtractCount(psExtract);
 
-					for (uPos = 0; uPos < uVarCount; ++uPos) {
-						FreeRecursive(apsFind[uPos]);
+						apsFind = calloc(uVarCount, sizeof(Operation*));
+						apsSub = calloc(uVarCount, sizeof(Operation*));
+
+						for (uPos = 0; uPos < uVarCount; ++uPos) {
+							apsFind[uPos] = CreateVariable(ExtractName(psExtract, uPos));
+							apsSub[uPos] = ExtractValueFromPos(psExtract, uPos);
+						}
+
+						psStep->uRefCount = psLemma->uRefNum;
+						psStep->apsRef = calloc(psLemma->uRefNum, sizeof(Step*));
+
+						for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
+							psStep->apsRef[uPos] = apsRef[uPos];
+						}
+
+						psStep->uInputCount = psLemma->uOpNum;
+						psStep->apsInput = calloc(psLemma->uOpNum, sizeof(Step*));
+
+						for (uPos = 0; uPos < psLemma->uOpNum; ++uPos) {
+							psStep->apsInput[uPos] = apsScrutinee[(psLemma->uRefNum + uPos)];
+						}
+
+						psStep->psResult = SubstituteOperationMany(CopyRecursive(psLemma->psResult), apsFind, apsSub, uVarCount);
+
+						FreeExtract(psExtract);
+						psExtract = NULL;
+
+						for (uPos = 0; uPos < uVarCount; ++uPos) {
+							FreeRecursive(apsFind[uPos]);
+						}
+						free(apsFind);
+						apsFind = NULL;
+						free(apsSub);
+						apsSub = NULL;
 					}
-					free(apsFind);
-					apsFind = NULL;
-					free(apsSub);
-					apsSub = NULL;
+					else {
+						*pszError = "The referenced expressions must match the rule structure.";
+					}
+
+					free(apsScrutinee);
+					apsScrutinee = NULL;
 				}
 				else {
-					*pszError = "The referenced expressions must match the rule structure.";
+					*pszError = "Back references are missing.";
 				}
-
-				free(apsScrutinee);
-				apsScrutinee = NULL;
 			}
 			else {
 				*pszError = "At least one of the back references is out of scope.";
 			}
+		}
+		else {
+			*pszError = "Back references could not be found.";
 		}
 		free(auRef);
 		auRef = NULL;

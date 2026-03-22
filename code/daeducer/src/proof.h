@@ -34,7 +34,11 @@ void proof_delete(Proof* psProof);
 Proof* proof_load(Ruleset* psRuleset, char const* szFilename);
 void proof_attach_ruleset(Proof* psProof, Ruleset* psRuleset);
 Ruleset* proof_detach_ruleset(Proof* psProof);
+bool proof_find_step_index(Proof* psProof, char const* szName, size_t* puStep);
 Step* proof_get_step(Proof* psProof, size_t uPos);
+bool proof_find_step_indices(Proof* psProof, char** aszName, size_t* auIndex, size_t uCount);
+bool proof_get_steps(Proof* psProof, size_t auIndex[], Step* apsStep[], size_t uCount);
+
 void proof_process_step(Proof* psProof, Command* psCommand);
 void proof_print_step(Proof* psProof, size_t uStep);
 void proof_print_last_step(Proof* psProof);

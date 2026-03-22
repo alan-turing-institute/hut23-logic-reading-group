@@ -108,6 +108,50 @@ Step* proof_get_step(Proof* psProof, size_t uPos) {
 	return psResult;
 }
 
+bool proof_find_step_index(Proof* psProof, char const* szName, size_t* puStep) {
+	bool boFound;
+	size_t uPos;
+
+	// TODO: Use a hash table to map names to indices
+	boFound = FALSE;
+	for (uPos = 0; (uPos < psProof->uStepCount) && (!boFound); ++uPos) {
+		if (strcmp(psProof->apsStep[uPos]->szName, szName) == 0) {
+			boFound = TRUE;
+			if (puStep) {
+				*puStep = uPos;
+			}
+		}
+	}
+	return boFound;
+}
+
+bool proof_find_step_indices(Proof* psProof, char** aszName, size_t* auIndex, size_t uCount) {
+	size_t uPos;
+	bool boResult = TRUE;
+
+	for (uPos = 0; (uPos < uCount) && boResult; ++uPos) {
+		boResult &= proof_find_step_index(psProof, aszName[uPos], &auIndex[uPos]);
+	}
+
+	return boResult;
+}
+
+bool proof_get_steps(Proof* psProof, size_t auIndex[], Step* apsStep[], size_t uCount) {
+	size_t uPos;
+	bool boResult = TRUE;
+	Step* psStep;
+
+	for (uPos = 0; (uPos < uCount) && boResult; ++uPos) {
+		psStep = proof_get_step(psProof, auIndex[uPos]);
+		apsStep[uPos] = psStep;
+		if (!psStep) {
+			boResult = FALSE;
+		}
+	}
+
+	return boResult;
+}
+
 bool proof_step_scoped(Proof* psProof, size_t uStep) {
 	bool boScoped = FALSE;
 	size_t uPos;
@@ -201,6 +245,7 @@ void proof_print_help(Ruleset* psRuleset) {
 	printf("  <ref>: A reference back to a previous step (a number or label).\n");
 	printf("  <exp>: A well-formed logical expression.\n");
 	printf("         Use ^, v, ->, ! for conjunction, disjunction, conditional and negation respectively.\n");
+	printf("  Optionally prefix a command with <label>: to assign a label to the step.\n");
 
 	printf("\n");
 	printf("Enter help to show this output. Enter <ctrl>-d to exit.\n");
@@ -221,12 +266,16 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 	Lemma* psLemma;
 	Ruleset* psRuleset;
 	Proof* psLoad;
+	size_t uNameSize;
+	size_t uReadCount;
+	size_t uLabel;
 
 	boContinue = TRUE;
 	boStep = TRUE;
 
 	psProof->boError = FALSE;
 	psProof->szError = NULL;
+	boError = FALSE;
 
 	uPos = 0;
 	while ((psCommand->eCommand == STEP_INVALID) && (uPos < STEP_NUM)) {
@@ -244,13 +293,36 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 	else {
 		psStep->uIndent = 0;
 	}
-	size_t uNameSize = snprintf(NULL, 0, "%lu", psProof->uStepCount + 1) + 1;
-	psStep->szName = calloc(uNameSize, sizeof(char));
-	snprintf(psStep->szName, uNameSize, "%lu", psProof->uStepCount + 1);
+	if (psCommand->szLabel) {
+		uReadCount = sscanf(psCommand->szLabel, "%lu", &uLabel);
+		if (uReadCount == 1) {
+			szError = "Labels cannot be integers.";
+			boError = TRUE;
+		}
+		if (!boError) {
+			boFound = proof_find_step_index(psProof, psCommand->szLabel, NULL);
+			if (boFound) {
+				szError = "Label already used.";
+				boError = TRUE;
+			}
+		}
+		if (!boError) {
+			psStep->szName = strdup(psCommand->szLabel);
+		}
+	}
+	else {
+		uNameSize = snprintf(NULL, 0, "%lu", psProof->uStepCount + 1) + 1;
+		psStep->szName = calloc(uNameSize, sizeof(char));
+		snprintf(psStep->szName, uNameSize, "%lu", psProof->uStepCount + 1);
+	}
 
-	boError = TRUE;
+	if ((!boError) && psProof->boComplete && (psCommand->eCommand < STEP_CONTROL)) {
+		szError = "Proof rules can only be applied within active proofs. Use reset to start a new proof.";
+		boError = TRUE;
+	}
 
-	if (!psProof->boComplete || (psCommand->eCommand >= STEP_CONTROL)) {
+	if (!boError) {
+		boError = TRUE;
 		switch (psCommand->eCommand) {
 			case STEP_PREMISE: {
 				if (psCommand->uCount == 1) {
@@ -295,15 +367,13 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 			case STEP_IMPLICATION_INTRO: {
 				if (psCommand->uCount == 2) {
 					size_t auRef[2];
-					size_t uReadCount;
-					uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &auRef[0]);
-					uReadCount += sscanf(psCommand->aszParameter[1], "%lu", &auRef[1]);
-					if (uReadCount == 2) {
+					bool boFound;
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 2);
+					if (boFound) {
 						Step* apsRef[2];
-						apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
-						apsRef[1] = proof_get_step(psProof, auRef[1] - 1);
-						if (apsRef[0] && apsRef[1]) {
-							if (proof_scoped_subproof(psProof, auRef[0] - 1, auRef[1] - 1)) {
+						boFound = proof_get_steps(psProof, auRef, apsRef, 2);
+						if (boFound) {
+							if (proof_scoped_subproof(psProof, auRef[0], auRef[1])) {
 								psStep->uRefCount = 2;
 								psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
 								psStep->apsRef[0] = apsRef[0];
@@ -315,9 +385,12 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 								szError = "The subproof is out of scope.";
 							}
 						}
+						else {
+							szError = "Back references are missing.";
+						}
 					}
 					else {
-						szError = "Back reference is out of scope.";
+						szError = "Back references could not be found.";
 					}
 				}
 				else {
@@ -328,60 +401,56 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 			case STEP_DISJUNCTION_ELIM: {
 				if (psCommand->uCount == 5) {
 					size_t auRef[5];
-					size_t uReadCount;
-					uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &auRef[0]);
-					uReadCount += sscanf(psCommand->aszParameter[1], "%lu", &auRef[1]);
-					uReadCount += sscanf(psCommand->aszParameter[2], "%lu", &auRef[2]);
-					uReadCount += sscanf(psCommand->aszParameter[3], "%lu", &auRef[3]);
-					uReadCount += sscanf(psCommand->aszParameter[4], "%lu", &auRef[4]);
-					if (uReadCount == 5) {
-						if (proof_step_scoped(psProof, auRef[0] - 1)) {
-							if (proof_scoped_subproof(psProof, auRef[1] - 1, auRef[2] - 1)) {
-								if (proof_scoped_subproof(psProof, auRef[3] - 1, auRef[4] - 1)) {
+					bool boFound;
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 5);
+					if (boFound) {
+						if (proof_step_scoped(psProof, auRef[0])) {
+							if (proof_scoped_subproof(psProof, auRef[1], auRef[2])) {
+								if (proof_scoped_subproof(psProof, auRef[3], auRef[4])) {
 									Step* apsRef[5];
-									apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
-									apsRef[1] = proof_get_step(psProof, auRef[1] - 1);
-									apsRef[2] = proof_get_step(psProof, auRef[2] - 1);
-									apsRef[3] = proof_get_step(psProof, auRef[3] - 1);
-									apsRef[4] = proof_get_step(psProof, auRef[4] - 1);
+									boFound = proof_get_steps(psProof, auRef, apsRef, 5);
+									if (boFound) {
+										psPattern = CreateBinary(OPBINARY_LOR, CreateVariable("A"), CreateVariable("B"));
+										psExtract = ExtractPattern(psPattern, apsRef[0]->psResult);
+										if (psExtract) {
+											if (CompareOperations(ExtractValue(psExtract, "A"), apsRef[1]->psResult)) {
+												if (CompareOperations(ExtractValue(psExtract, "B"), apsRef[3]->psResult)) {
+													if (CompareOperations(apsRef[2]->psResult, apsRef[4]->psResult)) {
 
-									psPattern = CreateBinary(OPBINARY_LOR, CreateVariable("A"), CreateVariable("B"));
-									psExtract = ExtractPattern(psPattern, apsRef[0]->psResult);
-									if (psExtract) {
-										if (CompareOperations(ExtractValue(psExtract, "A"), apsRef[1]->psResult)) {
-											if (CompareOperations(ExtractValue(psExtract, "B"), apsRef[3]->psResult)) {
-												if (CompareOperations(apsRef[2]->psResult, apsRef[4]->psResult)) {
+														psStep->uRefCount = 5;
+														psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+														psStep->apsRef[0] = apsRef[0];
+														psStep->apsRef[1] = apsRef[1];
+														psStep->apsRef[2] = apsRef[2];
+														psStep->apsRef[3] = apsRef[3];
+														psStep->apsRef[4] = apsRef[4];
 
-													psStep->uRefCount = 5;
-													psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
-													psStep->apsRef[0] = apsRef[0];
-													psStep->apsRef[1] = apsRef[1];
-													psStep->apsRef[2] = apsRef[2];
-													psStep->apsRef[3] = apsRef[3];
-													psStep->apsRef[4] = apsRef[4];
-
-													psStep->psResult = CopyRecursive(apsRef[2]->psResult);
-													boError = FALSE;
+														psStep->psResult = CopyRecursive(apsRef[2]->psResult);
+														boError = FALSE;
+													}
+													else {
+														szError = "Both subproofs must conclude the same result.";
+													}
 												}
 												else {
-													szError = "Both subproofs must conclude the same result.";
+													szError = "The right hand side of the disjunction in the first reference must match the assumption of the second subproof.";
 												}
 											}
 											else {
-												szError = "The right hand side of the disjunction in the first reference must match the assumption of the second subproof.";
+												szError = "The left hand side of the disjunction in the first reference must match the assumption of the first subproof.";
 											}
+											FreeExtract(psExtract);
+											psExtract = NULL;
 										}
 										else {
-											szError = "The left hand side of the disjunction in the first reference must match the assumption of the first subproof.";
+											szError = "First backreference must be in the form (A v B).";
 										}
-										FreeExtract(psExtract);
-										psExtract = NULL;
+										FreeRecursive(psPattern);
+										psPattern = NULL;
 									}
 									else {
-										szError = "First backreference must be in the form (A v B).";
+										szError = "Back references are missing.";
 									}
-									FreeRecursive(psPattern);
-									psPattern = NULL;
 								}
 								else {
 									szError = "The second subproof is out of scope";
@@ -396,7 +465,7 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 						}
 					}
 					else {
-						szError = "The or_elim command takes five back references as parameters.";
+						szError = "Back references could not be found.";
 					}
 				}
 				else {
@@ -407,15 +476,13 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 			case STEP_NEGATION_INTRO: {
 				if (psCommand->uCount == 2) {
 					size_t auRef[2];
-					size_t uReadCount;
-					uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &auRef[0]);
-					uReadCount += sscanf(psCommand->aszParameter[1], "%lu", &auRef[1]);
-					if (uReadCount == 2) {
+					bool boFound;
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 2);
+					if (boFound) {
 						Step* apsRef[2];
-						apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
-						apsRef[1] = proof_get_step(psProof, auRef[1] - 1);
-						if (apsRef[0] && apsRef[1]) {
-							if (proof_scoped_subproof(psProof, auRef[0] - 1, auRef[1] - 1)) {
+						boFound = proof_get_steps(psProof, auRef, apsRef, 2);
+						if (boFound) {
+							if (proof_scoped_subproof(psProof, auRef[0], auRef[1])) {
 								Operation* psOp = CreateTruthValue(FALSE);
 								if (CompareOperations(apsRef[1]->psResult, psOp)) {
 									psStep->uRefCount = 2;
@@ -435,9 +502,12 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 								szError = "The subproof is out of scope.";
 							}
 						}
+						else {
+							szError = "Back references are missing.";
+						}
 					}
 					else {
-						szError = "Back reference is out of scope.";
+						szError = "Back references could not be found.";
 					}
 				}
 				else {
@@ -448,15 +518,13 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 			case STEP_INDIRECT_PROOF: {
 				if (psCommand->uCount == 2) {
 					size_t auRef[2];
-					size_t uReadCount;
-					uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &auRef[0]);
-					uReadCount += sscanf(psCommand->aszParameter[1], "%lu", &auRef[1]);
-					if (uReadCount == 2) {
+					bool boFound;
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 2);
+					if (boFound) {
 						Step* apsRef[2];
-						apsRef[0] = proof_get_step(psProof, auRef[0] - 1);
-						apsRef[1] = proof_get_step(psProof, auRef[1] - 1);
-						if (apsRef[0] && apsRef[1]) {
-							if (proof_scoped_subproof(psProof, auRef[0] - 1, auRef[1] - 1)) {
+						boFound = proof_get_steps(psProof, auRef, apsRef, 2);
+						if (boFound) {
+							if (proof_scoped_subproof(psProof, auRef[0], auRef[1])) {
 								Operation* psOp = CreateTruthValue(FALSE);
 								if (CompareOperations(apsRef[1]->psResult, psOp)) {
 									psPattern = CreateUnary(OPUNARY_NOT, CreateVariable("A"));
@@ -487,9 +555,12 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 								szError = "The subproof is out of scope.";
 							}
 						}
+						else {
+							szError = "Back references are missing.";
+						}
 					}
 					else {
-						szError = "Back reference is out of scope.";
+						szError = "Back references could not be found.";
 					}
 				}
 				else {
@@ -620,9 +691,6 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 			}
 			break;
 		};
-	}
-	else {
-		szError = "Proof rules can only be applied within active proofs. Use reset to start a new proof.";
 	}
 
 	if (!boContinue) {
