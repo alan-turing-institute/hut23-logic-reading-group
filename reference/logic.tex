@@ -7,7 +7,7 @@
 \usepackage{simplebnf}
 %
 \newcommand{\myrules}{
-\ndrules % include standard rules
+\ndrules% include standard rules
 \renewcommand{\ii}{\by{$\to$I}}
 \renewcommand{\ie}{\by{$\to$E}}
 \def\x{\by{X}}
@@ -29,9 +29,13 @@
 %\newcommand{\defn}[2][#2]{\textit{#2}\sidenote*{#1}}
 \newcommand{\isdef}{\stackrel{\text{def}}{=}}
 % Relies on euler-math.sty, loaded by ttn.sty
-\newcommand{\wff}[1]{\ensuremath{\symscr{#1}}}
-\newcommand{\tr}{\ensuremath{\mathbb{t}}}
-\newcommand{\fa}{\textcolor{.!50}{\ensuremath{\mathbb{f}}}}
+\newcommand{\wff}[1]{\ensuremath{\symscr{#1}}} % A well-formed formula
+\newcommand{\tr}{\ensuremath{\mathbb{t}}} % True
+\newcommand{\fa}{\textcolor{.!50}{\ensuremath{\mathbb{f}}}} % False
+\newcommand{\nm}[1]{\mathrm{#1}} % A name
+\newcommand{\var}[1]{\mathit{#1}} % A variable
+\newcommand{\term}[1]{\mathfrak{#1}} % A term
+\newcommand{\fv}{\mathfrak{F}}
 %% 
 \title{All we know about logic}
 \author{James Geddes}
@@ -82,7 +86,7 @@ are \defn*{jointly impossible}.
   what I shall do.}
 \section{Propositional logic}
 
-\subsection{Syntax}
+\subsection{Syntax}\label{sec:prop-syntax}
 We assume the existence of a countable set of \defn[sentence
 letter]{sentence letters}: $A$, $B$, \ldots, $A_1$, $A_2$, \ldots,
 $C_{42}$, \ldots.  The symbols $\wedge$, $\vee$, $\to$,
@@ -547,14 +551,109 @@ I \emph{believe} that $\wff{A}_1, \dots,\wff{A}_n \vDash C$ is also a kind of
 judgement; namely, the judgement that $\wff{C}$ is entailed by the~$\wff{A}_i$. 
 
 
+\section{Predicate (``first-order'') logic}
+
+\subsection{Syntax}
+\sidenote*{There are some differences between the following and the
+  story in the book. The book includes only function symbols of arity
+  zero; that is, names. It does not make as clear a distinction between
+  the logical and non-logical symbols and it's a little unclear to me
+  whether it treats equality as a logical symbol, or a predicate, or is
+  leaving its status open.}  The connectives ($\wedge$, $\vee$, $\to$,
+$\leftrightarrow$, and $\neg$), together with the constants $\top$
+and~$\bot$, are as in propositional logic,
+section~\ref{sec:prop-syntax}. In addition, there are two new logical
+symbols known as \defn[quantifers ($\forall$ and
+$\exists$)]{quantifiers}, $\forall$ (``for all'') and~$\exists$ (``there exists''), as
+well as an \defn{equality symbol},~$=$. We also assume the existence of
+a countable set of \defn{variables}, $\var{x}$, $\var{y}$, $\var{z}$,
+\dots.
+
+First-order logic also contains other, so-called ``non-logical''
+symbols. Whilst the interpretation of the logical symbols is fixed by
+the fact that one is ``doing logic,'' the meaning of the non-logical
+symbols depends on the subject one is ``doing logic about.'' The
+non-logical symbols include:
+\begin{itemize}
+\item \defn[name (\emph{a.k.a.}, constant symbol)]{Names}: $\nm{a}$, $\nm{b}$, $\nm{c}$,\dots;
+\item \defn[function symbol]{Function symbols}: $f$, $g$, $h$, \dots; and
+\item \defn[predicate symbol]{Predicate symbols}: $P$, $Q$, $R$, \dots.
+\end{itemize}
+Function symbols and predicate symbols come equipped with a natural
+number known as their \defn{arity}. The arity is the number of arguments
+to a function or the number of things predicated by a predicate.
+
+The grammar of first-order logic is constructed in stages: first terms, then formul\ae, then sentences.
+
+A \defn{term} is either a name, a variable, or a function symbol applied
+to the same number of terms as its arity:
+\begin{figure}[ht]
+  \sidecaption{Definition of a term.}
+  \centering
+  \begin{bnf}
+    $\term{t}$ : Term ::=
+    | $\nm{a}$  : (name)
+    | $\var{x}$ : (variable)
+    | $f(\term{t}_1, \term{t}_2, \dotsc, \term{t}_n)$ : (function application)
+  \end{bnf}
+\end{figure}
+Roughly speaking, terms refer to objects in the domain of discourse,
+either a specific object, in the case of a name, or a general object, in
+the case of a variable, or objects determined by other objects, in the
+case of function symbols.
+
+A function symbol of arity zero is the same thing as a name. A predicate
+of arity zero is a propositional variable, just as in propositional
+logic.
+
+A \defn{formula}\sidenote{Sometimes called a \emph{well-formed formula}.} is either a predicate applied to terms, or something constructed from other formul\ae\ with the logical operators.
+\begin{figure}[ht]
+  \sidecaption{Definition of a formula. The first two alternatives are sometimes called \emph{atomic formul\ae}. The constructions with the propositional connectives should really be parenthesised as in figure~\ref{fig:bnf-prop}.\label{fig:bnf-formula}}
+  \centering
+  \begin{bnf}
+    $\phi, \psi$ : Formula ::=
+    | $P(\term{t}_1,\dotsc,\term{t}_n)$ 
+    | $\term{t}_1 = \term{t}_2$ 
+    | $\phi\vee\psi$ // $\phi\wedge\psi$ // $\phi\rightarrow\psi$ // $\phi\leftrightarrow\psi$ // $\neg\phi$
+    | $\forall \var{x}\,\phi$
+    | $\exists \var{x}\,\phi$ 
+  \end{bnf}
+\end{figure}
+To read a formula from which parentheses have been removed, the
+quantifiers should bind more tightly than implication or equivalence,
+but less tightly than any other connective.
+
+A sentence is something that could in principle be true or false. On
+this view, some formul\ae\ are sentences but some are not. For example,
+if $P$ is a one-place predicate then $P(\var{x})$ is a formula. But
+since $\var{x}$ is a variable, not identified with any particular thing
+that $P$ might be predicated of, $P(\var{x})$ is not a sentence. On the
+other hand $\exists\var{x}\,P(\var{x})$ \emph{is} a sentence. We need a notion of when a variable has been ``left free'' in the formula or whether it is ``captured'' by a quantifier. 
+
+For each formula, $\phi$, the set, $\fv[\phi]$, of \defn{free variables} of~$\phi$ is defines as follows: The free variables of a term are just the variables occuring in that term. The free variables of a formula are, roughly, all the free variables occuring in its sub-formul\ae\ except for those that are part of a quantifier:
+\begin{align*}
+  \fv[P(\term{t}_1,\dotsc,\term{t}_n)]
+  &= \fv[\term{t}_1] \cup\dotsb\cup\fv[\term{t}_n] \\
+  \fv[\term{t}_1 = \term{t}_2] 
+  &= \fv[\term{t}_1] \cup \fv[\term{t}_2] \\
+  \fv[\phi \bigtriangleup \psi] 
+  &= \fv[\phi] \cup \fv[\psi]\qquad\text{(where $\bigtriangleup$ is $\wedge$, $\vee$, $\rightarrow$, or $\leftrightarrow$)}  \\
+  \fv[\neg\psi]
+  &= \fv[\phi] \\
+  \fv[\forall \var{x}\,\phi]
+  &= \fv[\phi] \setminus \{\var{x}\}\\
+  \fv[\exists \var{x}\,\phi]
+  &= \fv[\phi] \setminus \{\var{x}\}
+\end{align*}
+
+
+\newpage
 \appendix
 \section{The sequent calculus}
 
 This appendix gives an alternative set of deduction rules known as the \defn{sequent calculus}.
 
 
-
-=======
 
 
 \end{document}
