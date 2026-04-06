@@ -67,12 +67,12 @@ Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRe
 
 	psLemma->apsPattern = calloc(uRefNum + uOpNum, sizeof(Operation*));
 	for (uPos = 0; uPos < (uRefNum + uOpNum); ++uPos) {
-		psLemma->apsPattern[uPos] = StringToOperation(aszPattern[uPos]);
+		psLemma->apsPattern[uPos] = StringToOperationCheck(aszPattern[uPos]);
 	}
 	psLemma->uRefNum = uRefNum;
 	psLemma->uOpNum = uOpNum;
 
-	psLemma->psResult = StringToOperation(szResult);
+	psLemma->psResult = StringToOperationCheck(szResult);
 
 	return psLemma;
 }
@@ -121,7 +121,7 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 					}
 
 					for (uPos = psLemma->uRefNum; uPos < uParameters; ++uPos) {
-						apsScrutinee[uPos] = StringToOperation(psCommand->aszParameter[uPos]);
+						apsScrutinee[uPos] = StringToOperationCheck(psCommand->aszParameter[uPos]);
 					}
 
 					psExtract = ExtractPatternMany(psLemma->apsPattern, apsScrutinee, uParameters);
@@ -267,5 +267,19 @@ Lemma* lemma_from_proof(Proof* psProof) {
 	FreeVariableNames(psRefVariables);
 
 	return psLemma;
+}
+
+Operation * StringToOperationCheck(char const * szString) {
+	Operation* psOp = NULL;
+	if (szString) {
+		if (szString[0] == '$') {
+			psOp = StringToOperationLatex(szString);
+		}
+		else {
+			psOp = StringToOperation(szString);
+		}
+	}
+
+	return psOp;
 }
 

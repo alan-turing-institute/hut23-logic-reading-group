@@ -1,0 +1,78 @@
+Starting with <PREPREMISES><PREMISES>, prove the result <CLAIM>. The resulting proof should be given as a sequence of steps where a single rule is applied at each step.
+
+Each step should conform to the following format:
+
+<step>: <rule> <refs>, <exps>
+
+Here <step> represents an integer starting from 1 and increasing by 1 each line.
+
+The <refs> term represents a sequence of zero or more <ref> references back to a previous step separated by commas. Each such <ref> takes an integer value which must be smaller than the current step.
+
+The <exps> term represents one or more <exp> expressions of propositional logic also separated by commans. These expressions are inputs to each step if needed, not outputs from the step. Most of the rules do not require an <exp> input at all.
+
+Each rule must be an instance of one of the following:
+
+<step>: premise <exp>
+<step>: reiteration <ref>
+<step>: and_intro <ref>, <ref>
+<step>: and_elim_left <ref>
+<step>: and_elim_right <ref>
+<step>: imp_elim <ref>, <ref>
+<step>: imp_intro <ref>, <ref>
+<step>: or_intro_left <ref>, <exp>
+<step>: or_intro_right <ref>, <exp>
+<step>: or_elim <ref>, <ref>, <ref>, <ref>, <ref>
+<step>: not_elim <ref>, <ref>
+<step>: not_intro <ref>, <ref>
+<step>: indirect <ref>, <ref>
+<step>: explosion <ref>, <exp>
+<step>: assumption <exp>
+<step>: discharge
+
+For example, a proof may start by introducting a premise as follows:
+
+1: premise $A$
+
+It may continue by intoducing a disunction as follows.
+
+2: or_intro_left 1, $B$
+
+The result of the second step would be $A \\lor B$, but this isn't shown anywhere in the proof, it's just implied.
+
+The following explains what each of the rules performs:
+
+premise: introduce a premise.
+reiteration: to repeat a previously derived expression.
+and_intro: conjunction introduction.
+and_elim_left: eliminate a conjunction and leave the expression on the left hand side of the conjunction remaining.
+and_elim_right: eliminate a conjunction and leave the expression on the right hand side of the conjunction remaining.
+imp_elim: eliminate a conditional, modus ponens.
+imp_intro: conditional introduction from a discharged subproof.
+or_intro_left: disjunction introduction with the previusly derived expression on the left hand side of the result.
+or_intro_right: disjunction introduction with the previusly derived expression on the right hand side of the result.
+or_elim: disjunction elimination from a disjunction and two subproofs.
+not_elim: introduce $\\bot$ from the negation of a statement and the statement. The negation must be listed first.
+not_intro: introduce the negation of a statement from a subproof that takes the statement as an assumption and concludes with $\\bot$.
+indirect: indirect proof. From a subproof that assumes the negation of a statement and concludes with $\\bot$, derives the statement.
+explosion: from $\\bot$ we can derive anything.
+assumption: start a subproof with the given assumption.
+discharge: discharge a subproof. This must be an explicit numbered step in the proof.
+
+As an example a proof starting from the premise $(M \\land (\\neg N \\to \\neg M))$ and proving that $(N \\land M) \\lor \\neg M$ might proceed as follows:
+
+1: premise $(M \\land (\\neg N \\to \\neg M))$
+2: and_elim_left 1
+3: and_elim_right 1
+4: assumption $\\neg M$
+5: not_elim 4, 2
+6: discharge
+7: not_intro 4, 5
+8: modus_tollens 3, 7
+9: double_not_elim 8
+10: and_intro 9, 2
+11: or_intro_left 10, $\\neg M$
+
+Provide only the proof as a series of steps in your final output without explanation and without printing the generated results at each step. The proof should start as follows.
+
+<PROOF>
+

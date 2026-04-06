@@ -13,19 +13,22 @@
 #include "proof.h"
 #include "ruleset.h"
 #include "command.h"
+#include "model.h"
 
 int main() {
 	char szString[1024];
 	bool boContinue = TRUE;
 	Proof* psProof;
-	size_t uIndent;
-	size_t uCount;
 	Ruleset* psRuleset;
 	char* szError;
 	Command* psCommand;
 	bool boResult;
+	Model* psModel;
 
 	printf("Welcome to Daeducer, a simple TFL proof constructor that follows the approach in Chapter 17 of the Forall x: Calgary book on formal logic.\n");
+	printf("Loading model...\n");
+	psModel = model_initialise();
+	printf("\n");
 	printf("Enter help to list the available commands.\n");
 	printf("Enter <ctrl>-d to exit.\n");
 	printf("\n");
@@ -38,24 +41,14 @@ int main() {
 	proof_attach_ruleset(psProof, psRuleset);
 
 	while (boContinue) {
-		if (proof_complete(psProof)) {
-			printf(COL_RESET COL_RED "        ");
-		}
-		else {
-			uIndent = proof_indent(psProof);
-			printf(COL_RESET COL_RED "        | ");
-			for (uCount = 0; uCount < uIndent; ++uCount) {
-				printf("| ");
-			}
-		}
+		proof_print_prompt(psProof);
 
-		printf(COL_GREEN "> ");
 		char* szResult = fgets(szString, 1024, stdin);
 		printf(COL_RESET);
 		if (szResult) {
 			boResult = command_parse(psCommand, szResult);
 			if (boResult) {
-				proof_process_step(psProof, psCommand);
+				proof_process_step(psProof, psModel, psCommand);
 
 				boResult = !proof_error(psProof, &szError);
 				if (boResult) {
@@ -82,8 +75,13 @@ int main() {
 	printf(COL_RESET "\n");
 
 	proof_delete(psProof);
+	psProof = NULL;
 	ruleset_delete(psRuleset);
+	psRuleset = NULL;
 	command_delete(psCommand);
+	psCommand = NULL;
+	model_delete(psModel);
+	psModel = NULL;
 
 	return 0;
 }

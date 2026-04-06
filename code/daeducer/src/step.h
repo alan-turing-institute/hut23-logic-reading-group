@@ -6,6 +6,8 @@
 #ifndef _STEP_H
 #define _STEP_H
 
+#include "vector.h"
+
 #include "symbolic.h"
 
 typedef enum _STEP {
@@ -34,6 +36,8 @@ typedef enum _STEP {
 	STEP_LOAD,
 	STEP_SAVE,
 	STEP_HELP,
+	STEP_PROVE,
+	STEP_NEURALIZE,
 
 	STEP_NUM
 } STEP;
@@ -72,6 +76,8 @@ static char const aszCommand[STEP_NUM][16] = {
 	"load",
 	"save",
 	"help",
+	"prove",
+	"neuralize",
 };
 
 static char const aszHelp[STEP_NUM][64] = {
@@ -97,11 +103,16 @@ static char const aszHelp[STEP_NUM][64] = {
 	"load                <filename>",
 	"save                <filename>, <command>, <annotation>",
 	"help",
+	"prove               <exp>",
+	"neuralize",
 };
 
 Step* step_new();
 void step_delete(Step* psStep);
 void step_print(Step* psStep, Ruleset* psRuleset);
 void step_command_output(Step* psStep, Ruleset* psRuleset, FILE* fhFile);
+void step_command_string(Step* psStep, Ruleset* psRuleset, String* psString);
+void step_command_string_latex(Step* psStep, Ruleset* psRuleset, String* psString);
+bool step_compare_equals(Step* psStep, Step* psCompare);
 
 #endif // _STEP_H

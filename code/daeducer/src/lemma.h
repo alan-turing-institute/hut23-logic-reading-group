@@ -23,6 +23,7 @@ bool lemma_apply(Proof *psProof, Command* psCommand, size_t uRefNum, size_t uOpN
 Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRefNum, size_t uOpNum, char const** aszPattern, char const* szResult);
 bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, Step* psStep, char** pszError);
 Lemma* lemma_from_proof(Proof* psProof);
+Operation * StringToOperationCheck (char const * szString);
 
 #endif // _LEMMA_H
 

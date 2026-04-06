@@ -14,6 +14,7 @@ typedef struct _Lemma Lemma;
 typedef struct _Step Step;
 typedef struct _Proof Proof;
 typedef struct _Command Command;
+typedef struct _Model Model;
 
 #endif // _DAEDUCER_H
 
