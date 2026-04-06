@@ -39,11 +39,11 @@ int main() {
 
 	while (boContinue) {
 		if (proof_complete(psProof)) {
-			printf(COL_RESET COL_RED "     ");
+			printf(COL_RESET COL_RED "        ");
 		}
 		else {
 			uIndent = proof_indent(psProof);
-			printf(COL_RESET COL_RED "     | ");
+			printf(COL_RESET COL_RED "        | ");
 			for (uCount = 0; uCount < uIndent; ++uCount) {
 				printf("| ");
 			}

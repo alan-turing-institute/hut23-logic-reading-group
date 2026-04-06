@@ -135,6 +135,7 @@ void ruleset_load_recursive(Ruleset* psRuleset, char const* szDirectory) {
 
 			psEntry = readdir(psDirectory);
 		}
+		closedir(psDirectory);
 	}
 	else {
 		printf("Couldn't open directory: %s\n", szDirectory);

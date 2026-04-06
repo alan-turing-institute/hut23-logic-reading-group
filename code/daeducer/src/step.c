@@ -36,11 +36,19 @@ void step_delete(Step* psStep) {
 			for (uPos = 0; uPos < psStep->uInputCount; ++uPos) {
 				if (psStep->apsInput[uPos]) {
 					FreeRecursive(psStep->apsInput[uPos]);
-					psStep->apsInput = NULL;
+					psStep->apsInput[uPos] = NULL;
 				}
 			}
 			free(psStep->apsInput);
 			psStep->apsInput = NULL;
+		}
+		if (psStep->psResult) {
+			FreeRecursive(psStep->psResult);
+			psStep->psResult = NULL;
+		}
+		if (psStep->apsRef) {
+			free(psStep->apsRef);
+			psStep->apsRef = NULL;
 		}
 
 		free(psStep);
@@ -162,7 +170,7 @@ void step_print(Step* psStep, Ruleset* psRuleset) {
 		strcpy(szIndent + uIndent * 2, "| ");
 	}
 
-	printf(COL_RESET "%4s" COL_RED " | %s" COL_CYAN COL_BOLD "%*s" COL_RESET COL_YELLOW " %s" COL_RESET, psStep->szName, szIndent, ((int)psStep->uIndent * 2) - 32, szResult, szCommand);
+	printf(COL_RESET "%7s" COL_RED " | %s" COL_CYAN COL_BOLD "%*s" COL_RESET COL_YELLOW " %s" COL_RESET, psStep->szName, szIndent, ((int)psStep->uIndent * 2) - 32, szResult, szCommand);
 	free(szIndent);
 
 	if (szCommand) {
