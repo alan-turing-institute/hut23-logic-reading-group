@@ -19,7 +19,8 @@
  * 5/8/2003
  * http://www.flypig.co.uk/symbolic
  *
- * Implements a main function for simple testing of the library.
+ * Implements functionality for converting to and from LaTeX
+ * strings.
  *
  */
 
@@ -39,7 +40,6 @@
 // Once the continued fraction approximation is within this epsilon
 // of the actual value of the fraction the approximation operation
 // will finish
-#define CONTINUED_FRACTION_ERROR (1.0e-10)
 #define VARIABLE_CHARS "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 
 //////////////////////////////////////////////////////////////////
@@ -48,35 +48,46 @@
 //////////////////////////////////////////////////////////////////
 // Global variables
 
+// Textual equivalents of the unary operations
+static char const aszOpUnaryLatex[OPUNARY_NUM][7] = {
+	"\\\\neg",
+};
+
+// Textual equivalents of the binary operations
+static char const aszOpBinaryLatex[OPBINARY_NUM][17] = {
+	"\\\\land",
+	"\\\\lor",
+	"\\\\to",
+	"\\\\nleftrightarrow",
+};
+
 //////////////////////////////////////////////////////////////////
 // Function prototypes
 
-Operation * RecurseToOperation (char const * szString, int nStrLen);
-bool StringCheckBinary (char const * szString, int const nStrLen, char const * szOperator);
-bool TryStringToDouble (char const * const szString, int const nStrLen, double * pfDecimal);
-bool TryStringToTruth (char const * const szString, int const nStrLen, bool * pboTruth);
-bool TryUndefinedUnary (char const * szString, int nStrLen, int * pnNameEnd);
-bool CheckBracketsMatch (char const * szString, int nStrLen);
+Operation * RecurseToOperationLatex (char const * szString, int nStrLen);
+bool StringCheckBinaryLatex (char const * szString, int const nStrLen, char const * szOperator);
+bool TryStringToTruthLatex (char const * const szString, int const nStrLen, bool * pboTruth);
 
 //////////////////////////////////////////////////////////////////
 // Main application
 
 /**
- * Turn a formula into a string.
+ * Turn a formula into a LaTeX string.
  *
  * @param psOp the operaton to convert.
  * @param szString pre-allocated buffer to store the result.
  * @param nStrLen the length of the buffer. Use OperationToStringLength to find out how much is needed.
  * @return pointer to the resulting string (which will be the start of the buffer).
  */
-char * OperationToString (Operation * psOp, char * szString, int nStrLen) {
+char * OperationToStringLatex (Operation * psOp, char * szString, int nStrLen) {
 	char * szRecurse;
 
 	// Recursively convert the operation to a string
 	// Memory is dynamically allocated for this
-	szRecurse = RecurseToString (psOp, nStrLen);
+	szRecurse = RecurseToStringLatex (psOp, nStrLen);
 	// Store the result in the user's buffer
-	strncpy (szString, szRecurse, nStrLen);
+	snprintf(szString, nStrLen, "$%s$", szRecurse);
+
 	// Ensure the string is correctly terminated no matter what
 	szString[nStrLen - 1] = 0;
 	// Free up the temporary buffer
@@ -86,8 +97,8 @@ char * OperationToString (Operation * psOp, char * szString, int nStrLen) {
 }
 
 /**
- * Recursively turn a formula into a string.
- * Internal method. Directly allocates memory for the result, 
+ * Recursively turn a formula into a LaTeX string.
+ * Internal method. Directly allocates memory for the result,
  * which must be freed manually once it's no longer needed
  * using PropFree.
  *
@@ -96,7 +107,7 @@ char * OperationToString (Operation * psOp, char * szString, int nStrLen) {
  * @return the resulting string in allocated memory.
  *
  */
-char * RecurseToString (Operation * psOp, int nStrLen) {
+char * RecurseToStringLatex (Operation * psOp, int nStrLen) {
 	char * szReturn;
 	char * szVar1;
 	char * szVar2;
@@ -111,11 +122,11 @@ char * RecurseToString (Operation * psOp, int nStrLen) {
 			case OPTYPE_TRUTHVALUE:
 				// Truth values
 				if (psOp->Vars.boTruth) {
-					snprintf (szReturn, nStrLen, "TRUE");
+					snprintf (szReturn, nStrLen, "\\\\top");
 					szReturn[nStrLen - 1] = 0;
 				}
 				else {
-					snprintf (szReturn, nStrLen, "FALSE");
+					snprintf (szReturn, nStrLen, "\\\\bot");
 					szReturn[nStrLen - 1] = 0;
 				}
 				break;
@@ -127,12 +138,12 @@ char * RecurseToString (Operation * psOp, int nStrLen) {
 			case OPTYPE_UNARY:
 				// Unary operations must be handled recursively
 				// First convert the result the unary operation is applieed to
-				szVar1 = RecurseToString (psOp->Vars.psUnary->psVar1, nStrLen);
+				szVar1 = RecurseToStringLatex (psOp->Vars.psUnary->psVar1, nStrLen);
 				// We use a couple of arrays representing the operations
 				switch (psOp->Vars.psUnary->eOpType) {
 					case OPUNARY_NOT:
 						// These operations are of the form *a (operation * applied to a)
-						snprintf (szReturn, nStrLen, "%s%s", aszOpUnary[psOp->Vars.psUnary->eOpType], szVar1);
+						snprintf (szReturn, nStrLen, "%s %s", aszOpUnaryLatex[psOp->Vars.psUnary->eOpType], szVar1);
 						szReturn[nStrLen - 1] = 0;
 						break;
 					default:
@@ -146,8 +157,8 @@ char * RecurseToString (Operation * psOp, int nStrLen) {
 			case OPTYPE_BINARY:
 				// Binary operations must be applied recursively to their parameters
 				// First convert the result for both parameters
-				szVar1 = RecurseToString (psOp->Vars.psBinary->psVar1, nStrLen);
-				szVar2 = RecurseToString (psOp->Vars.psBinary->psVar2, nStrLen);
+				szVar1 = RecurseToStringLatex (psOp->Vars.psBinary->psVar1, nStrLen);
+				szVar2 = RecurseToStringLatex (psOp->Vars.psBinary->psVar2, nStrLen);
 				// We can use an array of strings for most of these
 				switch (psOp->Vars.psBinary->eOpType) {
 					case OPBINARY_LAND:
@@ -155,7 +166,7 @@ char * RecurseToString (Operation * psOp, int nStrLen) {
 					case OPBINARY_LIMP:
 					case OPBINARY_LEOR:
 						// Of the form (a * b) where * is the operation
-						snprintf (szReturn, nStrLen, "(%s %s %s)", szVar1, aszOpBinary[psOp->Vars.psBinary->eOpType], szVar2);
+						snprintf (szReturn, nStrLen, "(%s %s %s)", szVar1, aszOpBinaryLatex[psOp->Vars.psBinary->eOpType], szVar2);
 						szReturn[nStrLen - 1] = 0;
 						break;
 					default:
@@ -182,30 +193,31 @@ char * RecurseToString (Operation * psOp, int nStrLen) {
 }
 
 /**
- * Return length of a formula turned into a string.
+ * Return length of a formula turned into a LaTeX string.
  *
  * @param psOp the operation to check.
  * @return the length.
  *
  */
-int OperationToStringLength (Operation * psOp) {
+int OperationToStringLengthLatex (Operation * psOp) {
 	int nLength;
 
 	// This method is just a wrapper around the internal version
 	// This is done for function naming consistency
-	nLength = RecurseToStringLength (psOp);
+	// We include two extra characters for the surrounding $ symbols
+	nLength = RecurseToStringLengthLatex (psOp) + 2;
 
 	return nLength;
 }
 
 /**
- * Recursively return the length of a formula turned into a string.
+ * Recursively return the length of a formula turned into a LaTeX string.
  *
  * @param psOp the operation to check.
  * @return the length.
  *
  */
-int RecurseToStringLength (Operation * psOp) {
+int RecurseToStringLengthLatex (Operation * psOp) {
 	int nReturn;
 	int nVar1;
 	int nVar2;
@@ -220,11 +232,11 @@ int RecurseToStringLength (Operation * psOp) {
 			case OPTYPE_TRUTHVALUE:
 				// TRUE or FALSE
 				if (psOp->Vars.boTruth) {
-					//snprintf (NULL, 0, "TRUE");
-					nReturn = 4;
+					//snprintf (NULL, 0, "\\\\top");
+					nReturn = 5;
 				}
 				else {
-					//snprintf (NULL, 0, "FALSE");
+					//snprintf (NULL, 0, "\\\\bot");
 					nReturn = 5;
 				}
 				break;
@@ -235,11 +247,11 @@ int RecurseToStringLength (Operation * psOp) {
 			case OPTYPE_UNARY:
 				// The length of the function combined with the parameter
 				// Calculate the length of the parameter first
-				nVar1 = RecurseToStringLength (psOp->Vars.psUnary->psVar1);
+				nVar1 = RecurseToStringLengthLatex (psOp->Vars.psUnary->psVar1);
 				switch (psOp->Vars.psUnary->eOpType) {
 					case OPUNARY_NOT:
-						//nReturn = snprintf (NULL, 0, "%s%s", aszOpUnary[psOp->Vars.psUnary->eOpType], szVar1);
-						nReturn = strlen (aszOpUnary[psOp->Vars.psUnary->eOpType]) + nVar1;
+						//nReturn = snprintf (NULL, 0, "%s %s", aszOpUnaryLatex[psOp->Vars.psUnary->eOpType], szVar1);
+						nReturn = strlen (aszOpUnaryLatex[psOp->Vars.psUnary->eOpType]) + 1 + nVar1;
 						break;
 					default:
 						// Not something we know about (shouldn't happen)
@@ -250,15 +262,15 @@ int RecurseToStringLength (Operation * psOp) {
 			case OPTYPE_BINARY:
 				// The length of the function combined with the parameters
 				// Calculate the lengths of the parameters first
-				nVar1 = RecurseToStringLength (psOp->Vars.psBinary->psVar1);
-				nVar2 = RecurseToStringLength (psOp->Vars.psBinary->psVar2);
+				nVar1 = RecurseToStringLengthLatex (psOp->Vars.psBinary->psVar1);
+				nVar2 = RecurseToStringLengthLatex (psOp->Vars.psBinary->psVar2);
 				switch (psOp->Vars.psBinary->eOpType) {
 					case OPBINARY_LAND:
 					case OPBINARY_LOR:
 					case OPBINARY_LIMP:
 					case OPBINARY_LEOR:
-						//nReturn = snprintf (NULL, 0, "(%s %s %s)", szVar1, aszOpBinary[psOp->Vars.psBinary->eOpType], szVar2);
-						nReturn = nVar1 + strlen (aszOpBinary[psOp->Vars.psBinary->eOpType]) + nVar2 + 4;
+						//nReturn = snprintf (NULL, 0, "(%s %s %s)", szVar1, aszOpBinaryLatex[psOp->Vars.psBinary->eOpType], szVar2);
+						nReturn = nVar1 + strlen (aszOpBinaryLatex[psOp->Vars.psBinary->eOpType]) + nVar2 + 4;
 						break;
 					default:
 						// Not something we know about (shouldn't happen)
@@ -281,7 +293,7 @@ int RecurseToStringLength (Operation * psOp) {
 }
 
 /**
- * Turn a string into a formula.
+ * Turn a LaTeX string into a formula.
  * The string has to be well-formed for this to work
  * This will allocate memory for the operations structures
  * on the heap. The result is guaranteed to be acyclyc and
@@ -293,7 +305,7 @@ int RecurseToStringLength (Operation * psOp) {
  * @return the resulting nested operation structure.
  *
  */
-Operation * StringToOperation (char const * szString) {
+Operation * StringToOperationLatex (char const * szString) {
 	int nStrLen;
 	Operation * psOperation;
 	char * szNoSpaces;
@@ -303,12 +315,12 @@ Operation * StringToOperation (char const * szString) {
 	// Establish the length of the string
 	nStrLen = (int)strlen (szString);
 
-	// Remove all spaces and newlines
+	// Remove all spaces, newlines and dollar symbols
 	szNoSpaces = (char *)PropMalloc (nStrLen + 1);
 	nNoSpacePos = 0;
 	for (nStrPos = 0; nStrPos < nStrLen; nStrPos++) {
 		// Check whether this is a character to skip
-		if (strchr (" \n\r\t", szString[nStrPos]) == NULL) {
+		if (strchr (" \n\r\t$", szString[nStrPos]) == NULL) {
 			// If not, shift characters down in memory
 			szNoSpaces[nNoSpacePos] = szString[nStrPos];
 			// Move the copy-to position onwards if we write a character
@@ -319,7 +331,7 @@ Operation * StringToOperation (char const * szString) {
 	szNoSpaces[nNoSpacePos] = '\0';
 
 	// Now turn it in to an operation recursively
-	psOperation = RecurseToOperation (szNoSpaces, nNoSpacePos);
+	psOperation = RecurseToOperationLatex (szNoSpaces, nNoSpacePos);
 
 	// Free up our copy of the string with no spaces
 	PropFree (szNoSpaces);
@@ -328,7 +340,7 @@ Operation * StringToOperation (char const * szString) {
 }
 
 /**
- * Check a string fragment to see if it's a binary operator
+ * Check a LaTeX string fragment to see if it's a binary operator
  * Internal method.
  *
  * @param szString the string to check.
@@ -336,7 +348,7 @@ Operation * StringToOperation (char const * szString) {
  * @return TRUE if the operator and string match, FALSE otherwise.
  *
  */
-bool StringCheckBinary (char const * szString, int const nStrLen, char const * szOperator) {
+bool StringCheckBinaryLatex (char const * szString, int const nStrLen, char const * szOperator) {
 	bool boMatch = FALSE;
 	int nOperatorLen;
 
@@ -352,7 +364,7 @@ bool StringCheckBinary (char const * szString, int const nStrLen, char const * s
 }
 
 /**
- * Recursively turn a string into a formula
+ * Recursively turn a LaTeX string into a formula
  * Internal method; use StringToOperation instead
  * The string has to be well-formed for this to work
  * This will allocate memory for the operations structures
@@ -368,7 +380,7 @@ bool StringCheckBinary (char const * szString, int const nStrLen, char const * s
  * @return the resulting nested operation structure.
  *
  */
-Operation * RecurseToOperation (char const * szString, int nStrLen) {
+Operation * RecurseToOperationLatex (char const * szString, int nStrLen) {
 	int nBrackets;
 	int nPos = 0;
 	bool boMatch;
@@ -433,7 +445,7 @@ Operation * RecurseToOperation (char const * szString, int nStrLen) {
 			if ((nBrackets == 0) && (nPos > 0)) {
 				// We're at the lowest level, right in the bowels of the formula
 				// So we should check whether this is the binary operation we need
-				boMatch = StringCheckBinary (szString + nPos, nStrLen - nPos, aszOpBinary[eBinary]);
+				boMatch = StringCheckBinaryLatex (szString + nPos, nStrLen - nPos, aszOpBinaryLatex[eBinary]);
 			}
 		}
 		// Move on to check the next operation
@@ -443,18 +455,18 @@ Operation * RecurseToOperation (char const * szString, int nStrLen) {
 	if (boMatch) {
 		// Split into two pieces and recurse
 		eBinary = (OPBINARY)((int)eBinary - 1);
-		nRightStart = nPos + (int)strlen(aszOpBinary[eBinary]) - 1;
+		nRightStart = nPos + (int)strlen(aszOpBinaryLatex[eBinary]) - 1;
 
-		psReturnOp = CreateBinary (eBinary, RecurseToOperation (szString, nPos - 1), RecurseToOperation (szString + nRightStart, nStrLen - nRightStart));
+		psReturnOp = CreateBinary (eBinary, RecurseToOperationLatex (szString, nPos - 1), RecurseToOperationLatex (szString + nRightStart, nStrLen - nRightStart));
 	}
 	else {
 		// Check if it's a unary operation
 		boMatch = FALSE;
 		eUnary = (OPUNARY)((int)OPUNARY_INVALID + 1);
 		while ((!boMatch) && (eUnary < OPUNARY_NUM)) {
-			if (nStrLen > (int)strlen (aszOpUnary[eUnary])) {
+			if (nStrLen > (int)strlen (aszOpUnaryLatex[eUnary])) {
 				// String compare with the possible unary operations
-				if (strncmp (aszOpUnary[eUnary], szString, strlen (aszOpUnary[eUnary])) == 0) {
+				if (strncmp (aszOpUnaryLatex[eUnary], szString, strlen (aszOpUnaryLatex[eUnary])) == 0) {
 					boMatch = TRUE;
 				}
 			}
@@ -466,11 +478,11 @@ Operation * RecurseToOperation (char const * szString, int nStrLen) {
 		if (boMatch) {
 			// Recurse on whatever is left
 			eUnary = (OPUNARY)((int)eUnary - 1);
-			nRightStart = (int)strlen(aszOpUnary[eUnary]);
-			psReturnOp = CreateUnary (eUnary, RecurseToOperation (szString + nRightStart, nStrLen - nRightStart));
+			nRightStart = (int)strlen(aszOpUnaryLatex[eUnary]);
+			psReturnOp = CreateUnary (eUnary, RecurseToOperationLatex (szString + nRightStart, nStrLen - nRightStart));
 		}
 		else {
-			boMatch = TryStringToTruth (szString, nStrLen, &boTruth);
+			boMatch = TryStringToTruthLatex (szString, nStrLen, &boTruth);
 			if (boMatch) {
 				psReturnOp = CreateTruthValue (boTruth);
 			}
@@ -491,39 +503,6 @@ Operation * RecurseToOperation (char const * szString, int nStrLen) {
 }
 
 /**
- * Try to convert a string to a double.
- * Internal method.
- *
- * @param szString the string to convert (may not be zero terminated).
- * @param nStrLen the length of the string.
- * @param pfDeciimal return value of the decimal value if it could be converted (unchanged o/w).
- * @return TRUE if the conversion was successful, FALSE o/w.
- *
- */
-bool TryStringToDouble (char const * const szString, int const nStrLen, double * pfDecimal) {
-	int nScanned = 0;
-	char * szCopied;
-
-	// Allocate some memory to make a zero-terminated copy of the string
-	szCopied = (char *)PropMalloc (nStrLen + 1);
-	if (szCopied) {
-		// Copy the string
-		strncpy (szCopied, szString, nStrLen);
-		// Zero terminate it
-		szCopied[nStrLen] = '\0';
-
-		// Let sscanf do the hard work of conversion
-		nScanned = sscanf (szCopied, "%lf", pfDecimal);
-
-		// Free up the copied version
-		// 'cos we don't need it anymore
-		PropFree (szCopied);
-	}
-
-	return (nScanned == 1);
-}
-
-/**
  * Try to convert a string to a boolean.
  * Internal method.
  *
@@ -533,12 +512,12 @@ bool TryStringToDouble (char const * const szString, int const nStrLen, double *
  * @return TRUE if the conversion was successful, FALSE o/w.
  *
  */
-bool TryStringToTruth (char const * const szString, int const nStrLen, bool * pboTruth) {
+bool TryStringToTruthLatex (char const * const szString, int const nStrLen, bool * pboTruth) {
 	bool boResult = FALSE;
 	int nMin;
 
-	nMin = nStrLen < 4 ? nStrLen : 4;
-	if ((nStrLen >= 4) && (strncmp ("TRUE", szString, nMin) == 0)) {
+	nMin = nStrLen < 5 ? nStrLen : 5;
+	if ((nStrLen >= 5) && (strncmp ("\\\\top", szString, nMin) == 0)) {
 		if (pboTruth) {
 			*pboTruth = TRUE;
 		}
@@ -546,7 +525,7 @@ bool TryStringToTruth (char const * const szString, int const nStrLen, bool * pb
 	}
 	else {
 		nMin = nStrLen < 5 ? nStrLen : 5;
-		if ((nStrLen >= 5) && (strncmp ("FALSE", szString, nMin) == 0)) {
+		if ((nStrLen >= 5) && (strncmp ("\\\\bot", szString, nMin) == 0)) {
 			if (pboTruth) {
 				*pboTruth = FALSE;
 			}
@@ -557,83 +536,3 @@ bool TryStringToTruth (char const * const szString, int const nStrLen, bool * pb
 	return boResult;
 }
 
-/**
- * Try to convert a string into a user unary.
- * Internal method.
- *
- * @param szString the string to convert (may not be zero terminated).
- * @param nStrLen the length of the string.
- * @param pnNameEnd return the character index of the last character of the
- *        unary name. Unchanged if NULL on entry or conversion fails.
- * @return TRUE if the conversion was successful, FALSE o/w.
- *
- */
-bool TryUndefinedUnary (char const * szString, int nStrLen, int * pnNameEnd) {
-	bool boMatch;
-	int nPos;
-
-	// Let's assume this isn't an undefined unary
-	boMatch = FALSE;
-
-	// Read until we reach a non variable-name character
-	nPos = 0;
-	while ((nPos < nStrLen) && (strchr(VARIABLE_CHARS, szString[nPos]) != NULL)) {
-		nPos++;
-	}
-	// Check what character we've reached
-	if (szString[nPos] == '(') {
-		// This might just work
-		boMatch = CheckBracketsMatch (szString + nPos, nStrLen - nPos);
-	}
-
-	if ((pnNameEnd) && (boMatch)) {
-		*pnNameEnd = nPos;
-	}
-
-	return boMatch;
-}
-
-/**
- * Test whether the brackets in the given string expression match up.
- * Internal method.
- *
- * @param szString the string to check (may not be zero terminated).
- * @param nStrLen the length of the string.
- * @return TRUE if the brackets match, FALSE o/w.
- *
- */
-bool CheckBracketsMatch (char const * szString, int nStrLen) {
-	bool boMatch;
-	int nBrackets;
-	int nPos;
-
-	// Remove the edge brackets
-	boMatch = TRUE;
-	while ((nStrLen > 1) && boMatch && (szString[0] == '(') && (szString[(nStrLen - 1)] == ')')) {
-		// Check whether these brackets match
-		nBrackets = 0;
-		for (nPos = 0; ((nPos < (nStrLen - 1)) && (boMatch)); nPos++) {
-			if (szString[nPos] == '(') {
-				// Opening bracket (increase bracket count)
-				nBrackets++;
-			}
-			if (szString[nPos] == ')') {
-				// Closing bracket (decrease bracket count)
-				nBrackets--;
-			}
-			if (nBrackets == 0) {
-				// We ran out of brackts, which we shouldn't have
-				// so there's no way the brackets can be fixed
-				// later in the string
-				boMatch = FALSE;
-			}
-		}
-		if (boMatch) {
-			// We dealt with two characters at either end of the string
-			szString++;
-			nStrLen -= 2;
-		}
-	}
-
-	return boMatch;
-}

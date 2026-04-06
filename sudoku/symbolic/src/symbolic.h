@@ -159,6 +159,11 @@ char * OperationToString (Operation * psOp, char * szString, int nStrLen);
 int OperationToStringLength (Operation * psOp);
 Operation * StringToOperation (char const * szString);
 
+// Conversion to and from LaTeX strings
+char * OperationToStringLatex (Operation * psOp, char * szString, int nStrLen);
+int OperationToStringLengthLatex (Operation * psOp);
+Operation * StringToOperationLatex (char const * szString);
+
 // Managing operations
 void FreeRecursive (Operation * psOp);
 Operation * CopyRecursive (Operation * psOp);

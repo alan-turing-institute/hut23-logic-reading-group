@@ -151,6 +151,10 @@ int RecurseToStringLength (Operation * psOp);
 char * RecurseToStringC (Operation * psOp, int nStrLen);
 int RecurseToStringCLength (Operation * psOp);
 
+// LaTeX string conversion
+char * RecurseToStringLatex (Operation * psOp, int nStrLen);
+int RecurseToStringLengthLatex (Operation * psOp);
+
 // User Func operations
 void IncrementUserFuncRef (UserFunc * psUserFunc);
 void DecrementUserFuncRef (UserFunc * psUserFunc);
