@@ -58,7 +58,7 @@ OperationMap * ExtractOperationMap(Extract * psExtract, char const * const szNam
 Extract * CreateExtract() {
     Extract * psExtract = NULL;
 
-    psExtract = calloc(1, sizeof(Extract));
+    psExtract = PropCalloc(1, sizeof(Extract));
 
     return psExtract;
 }
@@ -79,12 +79,12 @@ Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee) {
     psExtract->nCount = nVariableCount;
 
     if (nVariableCount > 0) {
-        psExtract->apsOps = calloc(nVariableCount, sizeof(OperationMap));
+        psExtract->apsOps = PropCalloc(nVariableCount, sizeof(OperationMap));
 
         for (nPos = 0; nPos < nVariableCount; ++nPos) {
             szVar = VariableNamesGet (psVariableNames, nPos);
 
-            psExtract->apsOps[nPos].szVar = calloc(strlen(szVar) + 1, sizeof(char));
+            psExtract->apsOps[nPos].szVar = PropCalloc(strlen(szVar) + 1, sizeof(char));
             strcpy(psExtract->apsOps[nPos].szVar, szVar);
         }
     }
@@ -164,12 +164,12 @@ Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee
     psExtract->nCount = nVariableCount;
 
     if (nVariableCount > 0) {
-        psExtract->apsOps = calloc(nVariableCount, sizeof(OperationMap));
+        psExtract->apsOps = PropCalloc(nVariableCount, sizeof(OperationMap));
 
         for (nPos = 0; nPos < nVariableCount; ++nPos) {
             szVar = VariableNamesGet (psVariableNames, nPos);
 
-            psExtract->apsOps[nPos].szVar = calloc(strlen(szVar) + 1, sizeof(char));
+            psExtract->apsOps[nPos].szVar = PropCalloc(strlen(szVar) + 1, sizeof(char));
             strcpy(psExtract->apsOps[nPos].szVar, szVar);
         }
     }
@@ -251,17 +251,17 @@ void FreeExtract(Extract * psExtract) {
         if (psExtract->apsOps) {
             for (nPos = 0; nPos < psExtract->nCount; ++nPos) {
                 if (psExtract->apsOps[nPos].szVar) {
-                    free (psExtract->apsOps[nPos].szVar);
+                    PropFree (psExtract->apsOps[nPos].szVar);
                     psExtract->apsOps[nPos].szVar = NULL;
                     psExtract->apsOps[nPos].psOp = NULL;
                 }
             }
 
-            free (psExtract->apsOps);
+            PropFree (psExtract->apsOps);
             psExtract->apsOps = NULL;
         }
 
-        free (psExtract);
+        PropFree (psExtract);
     }
 }
 
