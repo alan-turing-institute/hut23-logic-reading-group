@@ -27,7 +27,7 @@ We meet on Thursdays at noon, usually in Marian Rejewski.
 Discussions occur on Slack in the `hut23-logic-reading-group` channel (formerly known as the linear algebra reading group).
 
 | Date        | Topic                                                                    | Suggested exercises                                         |
-|-------------|-------------------------------------------------------------------------- |------------------------------------------------------------- |
+|-------------+--------------------------------------------------------------------------+-------------------------------------------------------------|
 | 22 January  | Introduction to logic (in Marian Rejewski)                               |                                                             |
 | 29 January  | ∀x: II. Truth-functional logic, §§ **4**, **5**, and **6**               | **§5**: D.8, G.1, H.2, and I;<br /> **§6**: A.1, A.3, and B |
 | 5 February  | ∀x: **7** and **8** (from II); and **9**, **10**, and **11** (from III). | **§11**: A.2, A.5, B.1, C.3                                 |
@@ -37,5 +37,5 @@ Discussions occur on Slack in the `hut23-logic-reading-group` channel (formerly 
 | 12 March    | Proof-theoretic concepts ∀x: **20**, **21**, **22**                      | **20**: A.1, A.2, A.3, A.4                                  |
 | 19 March    | Same reading as 12 March                                                 | **20**: A.4                                                 |
 | 26 March    | Chapters **23** and **24**.                                              | **24**: A.1, A.3, A.7; C.1, C.5, C.6, C.8; D.4              |
-
+| 16 April    | Chapterns **25**, **26**, and **27**                                     | **25**: E2, E4, E7, E11; **26**: A; **27**: A1, A3, A5.     |
 
