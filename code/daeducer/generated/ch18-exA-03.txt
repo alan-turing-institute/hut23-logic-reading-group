@@ -1,0 +1,13 @@
+ch18-exA-03
+CH18EXA
+premise (A -> (B -> C))
+assumption (A -> B)
+assumption A
+imp_elim 1, 3
+imp_elim 2, 3
+imp_elim 4, 5
+discharge
+imp_intro 3, 6
+discharge
+imp_intro 2, 8
+qed

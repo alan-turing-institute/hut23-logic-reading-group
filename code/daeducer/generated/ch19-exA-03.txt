@@ -1,0 +1,27 @@
+ch19-exA-03
+CH19EXA
+premise (Z -> (C ^ !N))
+premise (!Z -> (N ^ !C))
+assumption !(N v C)
+assumption N
+or_intro_left 4, C
+not_elim 3, 5
+discharge
+not_intro 4, 6
+assumption C
+or_intro_right 9, N
+not_elim 3, 10
+discharge
+not_intro 9, 11
+assumption Z
+imp_elim 1, 14
+and_elim_left 15
+not_elim 13, 16
+discharge
+not_intro 14, 17
+imp_elim 2, 19
+and_elim_left 20
+not_elim 8, 21
+discharge
+indirect 3, 22
+qed

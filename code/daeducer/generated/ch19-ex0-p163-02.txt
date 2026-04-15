@@ -1,0 +1,13 @@
+ch19-ex0-p163-02
+DS
+premise (A v B)
+premise !B
+assumption A
+reiteration 3
+discharge
+assumption B
+not_elim 2, 6
+explosion 7, A
+discharge
+or_elim 1, 3, 4, 6, 8
+qed

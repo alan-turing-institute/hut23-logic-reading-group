@@ -1,0 +1,14 @@
+ch18-ex0-p153
+CH18EX0
+assumption (A -> B)
+assumption !B
+assumption A
+imp_elim 1, 3
+not_elim 2, 4
+discharge
+not_intro 3, 5
+discharge
+imp_intro 2, 7
+discharge
+imp_intro 1, 9
+qed

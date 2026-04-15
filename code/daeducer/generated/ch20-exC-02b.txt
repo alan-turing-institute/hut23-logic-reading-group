@@ -1,0 +1,12 @@
+ch20-exC-02b
+CH20EXC
+premise !!!!G
+assumption !!!G
+not_elim 1, 2
+discharge
+indirect 2, 3
+assumption !G
+not_elim 5, 6
+discharge
+indirect 6, 7
+qed

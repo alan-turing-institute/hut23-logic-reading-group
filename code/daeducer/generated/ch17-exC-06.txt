@@ -1,0 +1,20 @@
+ch17-exC-06
+CH17EXC
+premise ((A -> B) ^ (B -> A))
+premise ((B -> C) ^ (C -> B))
+and_elim_left 1
+and_elim_left 2
+assumption A
+imp_elim 3, 5
+imp_elim 4, 6
+discharge
+imp_intro 5, 7
+and_elim_right 1
+and_elim_right 2
+assumption C
+imp_elim 11, 12
+imp_elim 10, 13
+discharge
+imp_intro 12, 14
+and_intro 9, 16
+qed

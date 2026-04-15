@@ -1,0 +1,11 @@
+ch22-exA-08
+CH22EXA
+premise X
+premise O
+assumption ((X ^ O) ^ !(X v O))
+and_elim_right 3
+or_intro_left 1, O
+not_elim 4, 5
+discharge
+not_intro 3, 6
+qed

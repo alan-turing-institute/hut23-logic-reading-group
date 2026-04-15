@@ -1,0 +1,8 @@
+ch19-ex0-p164-02
+DNE
+premise !!A
+assumption !A
+not_elim 1, 2
+discharge
+indirect 2, 3
+qed

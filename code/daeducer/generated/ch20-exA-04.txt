@@ -1,0 +1,16 @@
+ch20-exA-04
+CH20EXA
+assumption ((A -> B) -> A)
+assumption !A
+assumption A
+not_elim 2, 3
+explosion 4, B
+discharge
+imp_intro 3, 5
+imp_elim 1, 7
+not_elim 2, 8
+discharge
+indirect 2, 9
+discharge
+imp_intro 1, 11
+qed

@@ -1,0 +1,13 @@
+ch22-exA-06
+CH22EXA
+assumption !(!(X v (Y v Z)) v (X v (Y v Z)))
+assumption (X v (Y v Z))
+or_intro_right 2, !(X v (Y v Z))
+not_elim 1, 3
+discharge
+not_intro 2, 4
+or_intro_left 6, (X v (Y v Z))
+not_elim 1, 7
+discharge
+indirect 1, 8
+qed

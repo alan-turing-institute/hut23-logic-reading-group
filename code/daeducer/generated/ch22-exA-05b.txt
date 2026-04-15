@@ -1,0 +1,13 @@
+ch22-exA-05b
+CH22EXA
+premise W
+premise J
+assumption !(W -> (J v J))
+assumption W
+or_intro_left 2, J
+discharge
+imp_intro 4, 5
+not_elim 3, 7
+discharge
+not_intro 3, 8
+qed

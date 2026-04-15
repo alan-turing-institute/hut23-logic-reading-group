@@ -1,0 +1,13 @@
+ch20-exB-02
+CH20EXB
+premise (M ^ (!N -> !M))
+and_elim_left 1
+and_elim_right 1
+assumption !N
+imp_elim 3, 4
+not_elim 5, 2
+discharge
+indirect 4, 6
+and_intro 8, 2
+or_intro_left 9, !M
+qed

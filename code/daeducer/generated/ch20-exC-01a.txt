@@ -1,0 +1,7 @@
+ch20-exC-01a
+CH20EXC
+premise ((R -> E) ^ (E -> R))
+and_elim_left 1
+and_elim_right 1
+and_intro 3, 2
+qed

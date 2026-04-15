@@ -1,0 +1,9 @@
+ch17-exA-01
+CH7EXA
+premise (A ^ (B ^ C))
+premise ((B v C) -> D)
+and_elim_right 1
+and_elim_left 3
+or_intro_left 4, C
+imp_elim 2, 5
+qed

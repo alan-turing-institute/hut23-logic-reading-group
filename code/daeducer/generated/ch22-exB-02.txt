@@ -1,0 +1,10 @@
+ch22-exB-02
+CH22EXB
+premise N
+premise Q
+assumption !((((N -> Q) ^ (Q -> N)) v Q) v N)
+or_intro_right 1, (((N -> Q) ^ (Q -> N)) v Q)
+not_elim 3, 4
+discharge
+not_intro 3, 5
+qed

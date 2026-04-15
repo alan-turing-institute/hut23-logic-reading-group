@@ -1,0 +1,13 @@
+ch22-exA-04
+CH22EXA
+premise ((A -> !A) ^ (!A -> A))
+and_elim_left 1
+and_elim_right 1
+assumption !A
+imp_elim 3, 4
+not_elim 4, 5
+discharge
+indirect 4, 6
+imp_elim 2, 8
+not_elim 9, 8
+qed

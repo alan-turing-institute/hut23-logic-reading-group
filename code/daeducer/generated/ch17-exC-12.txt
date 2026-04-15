@@ -1,0 +1,13 @@
+ch17-exC-12
+CH17EXC
+premise !(P -> Q)
+assumption !P
+assumption P
+not_elim 2, 3
+explosion 4, Q
+discharge
+imp_intro 3, 5
+not_elim 1, 7
+discharge
+indirect 2, 8
+qed

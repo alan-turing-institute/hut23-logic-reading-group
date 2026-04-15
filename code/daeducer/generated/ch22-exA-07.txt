@@ -1,0 +1,26 @@
+ch22-exA-07
+CH22EXA
+assumption (B -> !S)
+assumption !!B
+assumption !B
+not_elim 2, 3
+discharge
+indirect 3, 4
+imp_elim 1, 6
+discharge
+imp_intro 2, 7
+discharge
+imp_intro 1, 9
+assumption (!!B -> !S)
+assumption B
+assumption !B
+not_elim 14, 13
+discharge
+not_intro 14, 15
+imp_elim 12, 17
+discharge
+imp_intro 13, 18
+discharge
+imp_intro 12, 20
+and_intro 11, 22
+qed

@@ -1,0 +1,8 @@
+ch22-exA-03
+CH22EXA
+premise !A
+assumption A
+reiteration 1
+discharge
+imp_intro 2, 3
+qed

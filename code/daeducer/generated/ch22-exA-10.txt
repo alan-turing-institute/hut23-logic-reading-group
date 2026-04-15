@@ -1,0 +1,22 @@
+ch22-exA-10
+CH22EXA
+premise !A
+premise !B
+assumption (A v B)
+assumption A
+not_elim 1, 4
+discharge
+assumption B
+not_elim 2, 7
+discharge
+or_elim 3, 4, 5, 7, 8
+discharge
+not_intro 3, 10
+assumption B
+not_elim 2, 13
+explosion 14, A
+discharge
+imp_intro 13, 15
+and_intro 2, 17
+and_intro 12, 18
+qed

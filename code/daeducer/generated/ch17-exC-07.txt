@@ -1,0 +1,17 @@
+ch17-exC-07
+CH17EXC
+premise (!F -> G)
+premise (F -> H)
+assumption !(G v H)
+assumption F
+imp_elim 2, 4
+or_intro_right 5, G
+not_elim 3, 6
+discharge
+not_intro 4, 7
+imp_elim 1, 9
+or_intro_left 10, H
+not_elim 3, 11
+discharge
+indirect 3, 12
+qed

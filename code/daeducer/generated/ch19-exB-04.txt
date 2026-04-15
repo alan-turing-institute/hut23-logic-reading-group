@@ -1,0 +1,26 @@
+ch19-exB-04
+CH19EXB
+premise ((X ^ Y) v (X ^ Z))
+premise !(X ^ D)
+premise (D v M)
+assumption (X ^ Y)
+and_elim_left 4
+discharge
+assumption (X ^ Z)
+and_elim_left 7
+discharge
+or_elim 1, 4, 5, 7, 8
+assumption D
+and_intro 10, 11
+not_elim 2, 12
+discharge
+not_intro 11, 13
+assumption D
+not_elim 15, 16
+explosion 17, M
+discharge
+assumption M
+reiteration 20
+discharge
+or_elim 3, 16, 18, 20, 21
+qed

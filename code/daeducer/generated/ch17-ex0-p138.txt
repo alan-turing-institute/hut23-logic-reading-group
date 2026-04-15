@@ -1,0 +1,8 @@
+ch17-ex0-p138
+CH17EX0
+premise !!D
+assumption !D
+not_elim 1, 2
+discharge
+indirect 2, 3
+qed
