@@ -13,6 +13,7 @@
 #include "symbolic.h"
 #include "lemma.h"
 #include "command.h"
+#include "model.h"
 
 #include "proof.h"
 
@@ -26,9 +27,16 @@ Proof* proof_new() {
 
 void proof_delete(Proof* psProof) {
 	if (psProof) {
-		proof_reset(psProof);
+		proof_clear(psProof);
 
 		free(psProof);
+	}
+}
+
+void proof_clear(Proof* psProof) {
+	if (psProof) {
+		proof_reset(psProof);
+		psProof->psRuleset = NULL;
 	}
 }
 
@@ -58,12 +66,11 @@ void proof_reset(Proof* psProof) {
 			psProof->szError = NULL;
 		}
 		psProof->boComplete = FALSE;
-		psProof->psRuleset = NULL;
 	}
 }
 
 void proof_transfer(Proof* psProof, Proof* psFrom) {
-	proof_reset(psProof);
+	proof_clear(psProof);
 
 	psProof->szCommand = psFrom->szCommand;
 	psFrom->szCommand = NULL;
@@ -252,7 +259,7 @@ void proof_print_help(Ruleset* psRuleset) {
 	printf("\n");
 }
 
-void proof_process_step(Proof* psProof, Command* psCommand) {
+void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 	size_t uPos;
 	Step* psStep;
 	Operation* psPattern;
@@ -264,7 +271,6 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 	bool boFound;
 	size_t uIndex;
 	Lemma* psLemma;
-	Ruleset* psRuleset;
 	Proof* psLoad;
 	size_t uNameSize;
 	size_t uReadCount;
@@ -329,7 +335,7 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 					if ((psProof->uStepCount == 0) || (psProof->apsStep[(psProof->uStepCount - 1)]->eCommand == STEP_PREMISE)) {
 						psStep->uInputCount = 1;
 						psStep->apsInput = calloc(psStep->uInputCount, sizeof(Operation*));
-						psStep->apsInput[0] = StringToOperation(psCommand->aszParameter[0]);
+						psStep->apsInput[0] = StringToOperationCheck(psCommand->aszParameter[0]);
 
 						psStep->psResult = CopyRecursive(psStep->apsInput[0]);
 						boError = FALSE;
@@ -572,7 +578,7 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 				if (psCommand->uCount == 1) {
 					psStep->uInputCount = 1;
 					psStep->apsInput = calloc(psStep->uInputCount, sizeof(Operation*));
-					psStep->apsInput[0] = StringToOperation(psCommand->aszParameter[0]);
+					psStep->apsInput[0] = StringToOperationCheck(psCommand->aszParameter[0]);
 
 					psStep->psResult = CopyRecursive(psStep->apsInput[0]);
 					psStep->uIndent += 1;
@@ -641,7 +647,6 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 					psLoad = proof_load(psProof->psRuleset, psCommand->aszParameter[0]);
 					if (psLoad) {
 						boError = FALSE;
-						proof_reset(psProof);
 						proof_transfer(psProof, psLoad);
 						proof_delete(psLoad);
 						printf("Proof loaded\n");
@@ -668,13 +673,49 @@ void proof_process_step(Proof* psProof, Command* psCommand) {
 				if (psCommand->uCount == 0) {
 					boError = FALSE;
 					boStep = FALSE;
-					psRuleset = psProof->psRuleset;
 					proof_reset(psProof);
-					psProof->psRuleset = psRuleset;
 					printf("Proof reset\n");
 				}
 				else {
 					szError = "The reset command takes no parameters.";
+				}
+			}
+			break;
+			case STEP_PROVE: {
+				if (psCommand->uCount == 1) {
+					boError = TRUE;
+					boStep = FALSE;
+
+					if (psModel) {
+						Operation* psClaim = StringToOperationCheck(psCommand->aszParameter[0]);
+						size_t uLength;
+						char* szString;
+						uLength = OperationToStringLengthLatex(psClaim) + 1;
+						szString = malloc(uLength);
+						OperationToStringLatex(psClaim, szString, uLength);
+						free(szString);
+						boError = !model_prove(psModel, psProof, psClaim);
+						FreeRecursive(psClaim);
+						psClaim = NULL;
+						if (boError) {
+							szError = "The model failed to generate a valid proof; consider retrying after a neuralize.";
+						}
+					}
+					else {
+						szError = "No model loaded for generating a proof.";
+					}
+				}
+				else {
+					szError = "The prove command takes the logical expression to prove as a parameter.";
+				}
+			}
+			break;
+			case STEP_NEURALIZE: {
+				boError = FALSE;
+				boStep = FALSE;
+
+				if (psModel) {
+					model_neuralize(psModel);
 				}
 			}
 			break;
@@ -794,7 +835,7 @@ Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
 					default: {
 						boSuccess = command_parse(psCommand, szLine);
 						if (boSuccess) {
-							proof_process_step(psProof, psCommand);
+							proof_process_step(psProof, NULL, psCommand);
 							boSuccess = !proof_error(psProof, NULL);
 							command_reset(psCommand);
 						}
@@ -851,3 +892,21 @@ bool proof_save(Proof* psProof, char const* szFilename, char const* szCommand, c
 	return boSuccess;
 }
 
+void proof_print_prompt(Proof* psProof) {
+	size_t uIndent;
+	size_t uCount;
+
+	printf("\r");
+	if (proof_complete(psProof)) {
+		printf(COL_RESET COL_RED "        ");
+	}
+	else {
+		uIndent = proof_indent(psProof);
+		printf(COL_RESET COL_RED "        | ");
+		for (uCount = 0; uCount < uIndent; ++uCount) {
+			printf("| ");
+		}
+	}
+
+	printf(COL_GREEN "> ");
+}

@@ -23,6 +23,7 @@ void command_delete(Command* psCommand);
 void command_reset(Command* psCommand);
 bool command_parse(Command* psCommand, char const* szCommand);
 void command_print(Command * psCommand);
+void command_print_generated(Command * psCommand);
 
 #endif // _COMMAND_H
 

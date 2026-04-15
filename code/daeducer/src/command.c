@@ -10,10 +10,14 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include "symbolic.h"
 
 #include "command.h"
+
+#define PAUSE_MIN (100000)
+#define PAUSE_RANGE (50000)
 
 Command* command_new()
 {
@@ -44,8 +48,8 @@ void command_reset(Command* psCommand) {
 		if (psCommand->szCommand) {
 			free(psCommand->szCommand);
 			psCommand->szCommand = NULL;
-			psCommand->eCommand = STEP_INVALID;
 		}
+		psCommand->eCommand = STEP_INVALID;
 		if (psCommand->aszParameter) {
 			for (uPos = 0; uPos < psCommand->uCount; ++uPos) {
 				if (psCommand->aszParameter[uPos]) {
@@ -280,6 +284,50 @@ void command_print(Command * psCommand) {
 		}
 		if (uPos < psCommand->uCount) {
 			printf("%s", psCommand->aszParameter[uPos]);
+		}
+		printf("\n");
+	}
+}
+
+void command_pause() {
+	int nSleep;
+	fflush(stdout);
+	nSleep = PAUSE_MIN - (PAUSE_RANGE / 2) + (rand() % PAUSE_RANGE);
+	usleep(nSleep);
+}
+
+void command_print_generated_punctuation(char const* szString) {
+	size_t uPos;
+
+	uPos = 0;
+	while (szString[uPos]) {
+		if (strchr(" _,:()v^-<>!", szString[uPos]) != NULL) {
+			command_pause();
+		}
+		printf("%c", szString[uPos]);
+		uPos += 1;
+	}
+	command_pause();
+}
+
+void command_print_generated(Command * psCommand) {
+	size_t uPos;
+
+	if (psCommand) {
+		command_pause();
+		command_print_generated_punctuation(psCommand->szCommand);
+		command_pause();
+		printf(" ");
+		command_pause();
+		for (uPos = 0; (uPos + 1) < psCommand->uCount; ++uPos) {
+			command_print_generated_punctuation(psCommand->aszParameter[uPos]);
+			command_pause();
+			printf(", ");
+			command_pause();
+		}
+		if (uPos < psCommand->uCount) {
+			command_print_generated_punctuation(psCommand->aszParameter[uPos]);
+			command_pause();
 		}
 		printf("\n");
 	}

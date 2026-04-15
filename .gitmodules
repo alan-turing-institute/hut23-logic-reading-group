@@ -1,0 +1,3 @@
+[submodule "code/daeducer/llama.cpp"]
+	path = code/daeducer/llama.cpp
+	url = https://github.com/ggerganov/llama.cpp

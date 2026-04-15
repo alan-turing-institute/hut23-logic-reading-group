@@ -230,3 +230,128 @@ void step_command_output(Step* psStep, Ruleset* psRuleset, FILE* fhFile) {
 	}
 }
 
+void step_command_string(Step* psStep, Ruleset* psRuleset, String* psString) {
+	Lemma* psLemma;
+	size_t uParameters;
+	size_t uPos;
+	size_t uLength;
+	char* szOperation;
+	char const* szCommand;
+
+	if (psRuleset) {
+		szCommand = NULL;
+		psLemma = ruleset_get_lemma(psRuleset, psStep->eCommand);
+		if (psLemma) {
+			szCommand = psLemma->szCommand;
+		}
+		else {
+			if ((psStep->eCommand > STEP_INVALID) && (psStep->eCommand < STEP_CONTROL)) {
+				szCommand = aszCommand[psStep->eCommand];
+			}
+		}
+		if (szCommand) {
+			string_append_sprintf(psString, "%s", szCommand);
+
+			uParameters = psStep->uRefCount + psStep->uInputCount;
+			if (uParameters > 0) {
+				string_append(psString, " ");
+
+				uPos = 0;
+				while (uPos < uParameters) {
+					if (uPos < psStep->uRefCount) {
+						string_append_sprintf(psString, "%s", psStep->apsRef[uPos]->szName);
+					}
+					else {
+						uLength = OperationToStringLength(psStep->apsInput[(uPos - psStep->uRefCount)]) + 1;
+						szOperation = malloc(uLength);
+						OperationToString(psStep->apsInput[(uPos - psStep->uRefCount)], szOperation, uLength);
+						string_append_sprintf(psString, "%s", szOperation);
+						free(szOperation);
+					}
+					uPos += 1;
+					if (uPos < uParameters) {
+						string_append(psString, ", ");
+					}
+				}
+			}
+		}
+	}
+}
+
+void step_command_string_latex(Step* psStep, Ruleset* psRuleset, String* psString) {
+	Lemma* psLemma;
+	size_t uParameters;
+	size_t uPos;
+	size_t uLength;
+	char* szOperation;
+	char const* szCommand;
+
+	if (psRuleset) {
+		szCommand = NULL;
+		psLemma = ruleset_get_lemma(psRuleset, psStep->eCommand);
+		if (psLemma) {
+			szCommand = psLemma->szCommand;
+		}
+		else {
+			if ((psStep->eCommand > STEP_INVALID) && (psStep->eCommand < STEP_CONTROL)) {
+				szCommand = aszCommand[psStep->eCommand];
+			}
+		}
+		if (szCommand) {
+			string_append_sprintf(psString, "%s", szCommand);
+
+			uParameters = psStep->uRefCount + psStep->uInputCount;
+			if (uParameters > 0) {
+				string_append(psString, " ");
+
+				uPos = 0;
+				while (uPos < uParameters) {
+					if (uPos < psStep->uRefCount) {
+						string_append_sprintf(psString, "%s", psStep->apsRef[uPos]->szName);
+					}
+					else {
+						uLength = OperationToStringLengthLatex(psStep->apsInput[(uPos - psStep->uRefCount)]) + 1;
+						szOperation = malloc(uLength);
+						OperationToStringLatex(psStep->apsInput[(uPos - psStep->uRefCount)], szOperation, uLength);
+						string_append_sprintf(psString, "%s", szOperation);
+						free(szOperation);
+					}
+					uPos += 1;
+					if (uPos < uParameters) {
+						string_append(psString, ", ");
+					}
+				}
+			}
+		}
+	}
+}
+
+bool step_compare_equals(Step* psStep, Step* psCompare) {
+	bool boResult;
+	size_t uPos;
+
+	boResult = (psStep->eCommand == psCompare->eCommand);
+
+	if (boResult) {
+		boResult = (psStep->uRefCount == psCompare->uRefCount);
+	}
+
+	if (boResult) {
+		boResult = (psStep->uInputCount == psCompare->uInputCount);
+	}
+
+	for (uPos = 0; (uPos < psStep->uRefCount) && boResult; ++uPos) {
+		boResult = strcmp(psStep->apsRef[uPos]->szName, psCompare->apsRef[uPos]->szName);
+	}
+
+	for (uPos = 0; (uPos < psStep->uInputCount) && boResult; ++uPos) {
+		boResult = CompareOperations(psStep->apsInput[uPos], psCompare->apsInput[uPos]);
+	}
+
+	if (boResult) {
+		boResult = CompareOperations(psStep->psResult, psCompare->psResult);
+	}
+
+	return boResult;
+}
+
