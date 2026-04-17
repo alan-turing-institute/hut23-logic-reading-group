@@ -1,0 +1,16 @@
+ch22-exB-03b
+CH22EXB
+premise !Z
+assumption (Z v ((!Z -> Z) ^ (Z -> !Z)))
+assumption Z
+not_elim 1, 3
+discharge
+assumption ((!Z -> Z) ^ (Z -> !Z))
+and_elim_left 6
+imp_elim 7, 1
+not_elim 1, 8
+discharge
+or_elim 2, 3, 4, 6, 9
+discharge
+not_intro 2, 11
+qed

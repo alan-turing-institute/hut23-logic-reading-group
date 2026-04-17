@@ -1,0 +1,9 @@
+ch22-exA-09
+CH22EXA
+premise !(A v B)
+premise C
+premise (C -> A)
+imp_elim 3, 2
+or_intro_left 4, B
+not_elim 1, 5
+qed

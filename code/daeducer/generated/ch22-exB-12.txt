@@ -1,0 +1,19 @@
+ch22-exB-12
+CH22EXB
+premise C
+premise L
+assumption !L
+not_elim 3, 2
+discharge
+not_intro 3, 4
+assumption !C
+not_elim 7, 1
+discharge
+not_intro 7, 8
+assumption (C -> !L)
+reiteration 1
+discharge
+imp_intro 11, 12
+and_intro 14, 10
+and_intro 6, 15
+qed

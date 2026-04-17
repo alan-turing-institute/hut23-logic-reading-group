@@ -1,0 +1,19 @@
+ch21-ex0-p180-01
+DeM
+premise !(A ^ B)
+assumption !(!A v !B)
+assumption !A
+or_intro_left 3, !B
+not_elim 2, 4
+discharge
+indirect 3, 5
+assumption !B
+or_intro_right 8, !A
+not_elim 2, 9
+discharge
+indirect 8, 10
+and_intro 7, 12
+not_elim 1, 13
+discharge
+indirect 2, 14
+qed

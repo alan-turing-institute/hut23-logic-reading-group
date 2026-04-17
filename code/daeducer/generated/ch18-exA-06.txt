@@ -1,0 +1,15 @@
+ch18-exA-06
+CH18EXA
+premise (A v B)
+premise (A -> C)
+premise (B -> D)
+assumption A
+imp_elim 2, 4
+or_intro_left 5, D
+discharge
+assumption B
+imp_elim 3, 8
+or_intro_right 9, C
+discharge
+or_elim 1, 4, 6, 8, 10
+qed

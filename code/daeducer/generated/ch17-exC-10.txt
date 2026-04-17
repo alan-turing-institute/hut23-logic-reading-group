@@ -1,0 +1,21 @@
+ch17-exC-10
+CH17EXC
+premise ((S -> T) ^ (T -> S))
+and_elim_left 1
+and_elim_right 1
+assumption S
+or_intro_right 4, T
+discharge
+imp_intro 4, 5
+assumption (T v S)
+assumption T
+imp_elim 3, 9
+discharge
+assumption S
+reiteration 12
+discharge
+or_elim 8, 9, 10, 12, 13
+discharge
+imp_intro 8, 15
+and_intro 7, 17
+qed

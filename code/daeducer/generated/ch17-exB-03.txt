@@ -1,0 +1,14 @@
+ch17-exB-03
+CH17EXB
+premise (!L -> (J v L))
+premise !L
+imp_elim 1, 2
+assumption J
+reiteration 4
+discharge
+assumption L
+not_elim 2, 7
+explosion 8, J
+discharge
+or_elim 3, 4, 5, 7, 9
+qed

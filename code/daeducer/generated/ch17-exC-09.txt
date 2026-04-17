@@ -1,0 +1,16 @@
+ch17-exC-09
+CH17EXC
+premise (P ^ (Q v R))
+premise (P -> !R)
+and_elim_left 1
+and_elim_right 1
+imp_elim 2, 3
+assumption Q
+or_intro_left 6, E
+discharge
+assumption R
+not_elim 5, 9
+explosion 10, (Q v E)
+discharge
+or_elim 4, 6, 7, 9, 11
+qed

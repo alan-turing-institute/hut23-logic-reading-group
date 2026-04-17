@@ -1,0 +1,16 @@
+ch20-exB-01
+CH20EXB
+premise (C -> (E ^ G))
+premise (!C -> G)
+assumption !G
+assumption C
+imp_elim 1, 4
+and_elim_right 5
+not_elim 3, 6
+discharge
+not_intro 4, 7
+imp_elim 2, 9
+not_elim 3, 10
+discharge
+indirect 3, 11
+qed

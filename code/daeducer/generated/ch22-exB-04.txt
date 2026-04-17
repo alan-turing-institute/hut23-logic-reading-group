@@ -1,0 +1,21 @@
+ch22-exB-04
+CH22EXB
+assumption N
+reiteration 1
+discharge
+imp_intro 1, 2
+assumption L
+assumption (N -> N)
+reiteration 5
+discharge
+imp_intro 6, 7
+discharge
+imp_intro 5, 9
+assumption ((N -> N) -> L)
+reiteration 4
+imp_elim 12, 13
+discharge
+imp_intro 12, 14
+and_intro 11, 16
+or_intro_left 17, H
+qed

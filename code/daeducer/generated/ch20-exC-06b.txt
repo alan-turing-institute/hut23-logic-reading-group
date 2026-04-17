@@ -1,0 +1,39 @@
+ch20-exC-06b
+CH20EXC
+premise !((G -> H) ^ (H -> G))
+assumption !G
+assumption !H
+assumption G
+not_elim 2, 4
+explosion 5, H
+discharge
+imp_intro 4, 6
+assumption H
+not_elim 3, 9
+explosion 10, G
+discharge
+imp_intro 9, 11
+and_intro 8, 13
+not_elim 1, 14
+discharge
+indirect 3, 15
+discharge
+imp_intro 2, 17
+assumption H
+assumption G
+assumption G
+reiteration 20
+discharge
+imp_intro 22, 23
+assumption H
+reiteration 21
+discharge
+imp_intro 26, 27
+and_intro 25, 29
+not_elim 1, 30
+discharge
+not_intro 21, 31
+discharge
+imp_intro 20, 33
+and_intro 19, 35
+qed

@@ -1,0 +1,11 @@
+ch17-ex0-p134-01
+CH17EX0
+premise ((P ^ Q) v (P ^ R))
+assumption (P ^ Q)
+and_elim_left 2
+discharge
+assumption (P ^ R)
+and_elim_left 5
+discharge
+or_elim 1, 2, 3, 5, 6
+qed

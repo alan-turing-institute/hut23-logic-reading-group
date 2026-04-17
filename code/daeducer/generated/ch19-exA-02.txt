@@ -1,0 +1,14 @@
+ch19-exA-02
+CH19EXA
+premise ((L -> !O) ^ (!O -> L))
+premise (L v !O)
+and_elim_left 1
+and_elim_right 1
+assumption L
+reiteration 5
+discharge
+assumption !O
+imp_elim 4, 8
+discharge
+or_elim 2, 5, 6, 8, 9
+qed

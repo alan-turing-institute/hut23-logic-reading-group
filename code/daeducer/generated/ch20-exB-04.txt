@@ -1,0 +1,27 @@
+ch20-exB-04
+CH20EXB
+premise ((W v X) v (Y v Z))
+premise (X -> Y)
+premise !Z
+assumption (W v X)
+assumption W
+or_intro_left 5, Y
+discharge
+assumption X
+imp_elim 2, 8
+or_intro_right 9, W
+discharge
+or_elim 4, 5, 6, 8, 10
+discharge
+assumption (Y v Z)
+assumption Y
+or_intro_right 15, W
+discharge
+assumption Z
+not_elim 3, 18
+explosion 19, (W v Y)
+discharge
+or_elim 14, 15, 16, 18, 20
+discharge
+or_elim 1, 4, 12, 14, 22
+qed

@@ -1,0 +1,10 @@
+ch22-exA-01
+CH22EXA
+assumption A
+assumption ((B ^ C) v D)
+reiteration 1
+discharge
+imp_intro 2, 3
+discharge
+imp_intro 1, 5
+qed

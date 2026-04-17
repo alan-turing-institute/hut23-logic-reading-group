@@ -1,0 +1,23 @@
+ch22-exB-11
+CH22EXB
+premise !!((C -> !C) ^ (!C -> C))
+premise ((G v G) v G)
+assumption ((C -> !C) ^ (!C -> C))
+and_elim_left 3
+and_elim_right 3
+assumption C
+imp_elim 4, 6
+not_elim 7, 6
+discharge
+not_intro 6, 8
+assumption !C
+imp_elim 5, 11
+not_elim 11, 12
+discharge
+not_intro 11, 13
+not_elim 15, 10
+discharge
+not_intro 3, 16
+not_elim 1, 18
+explosion 19, ((G -> C) ^ G)
+qed

@@ -1,0 +1,30 @@
+ch19-exB-03
+CH19EXB
+premise ((M v N) ^ (O v P))
+premise (N -> P)
+premise !P
+and_elim_left 1
+and_elim_right 1
+assumption N
+imp_elim 2, 6
+not_elim 3, 7
+discharge
+not_intro 6, 8
+assumption M
+reiteration 11
+discharge
+assumption N
+not_elim 10, 14
+explosion 15, M
+discharge
+or_elim 4, 11, 12, 14, 16
+assumption O
+reiteration 19
+discharge
+assumption P
+not_elim 3, 22
+explosion 23, O
+discharge
+or_elim 5, 19, 20, 22, 24
+and_intro 18, 26
+qed
