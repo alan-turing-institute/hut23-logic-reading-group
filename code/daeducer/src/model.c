@@ -18,6 +18,7 @@
 
 #include "model.h"
 
+#define MODEL_FILE "Qwen3.5-35B-A3B-UD-Q8_K_XL.gguf"
 #define CONTEXT_WINDOW (2048 * 32)
 #define REASONING_BUDGET (1024 * 32)
 #define MAX_ERRORS (8)
@@ -406,8 +407,7 @@ void model_get_prompt(Model* psModel, String* psPrompt) {
 
 Model* model_initialise() {
 	Model* psModel;
-	char const* szModelPath = "./models/Qwen3.5-35B-A3B-UD-Q8_K_XL.gguf";
-	//char const* szModelPath = "./models/NVIDIA-Nemotron-3-Nano-4B-UD-Q2_K_XL.gguf";
+	char const* szModelPath = "./models/" MODEL_FILE;
 	char const* szGrammarPath = "inputs/tfl-grammar-precise.txt";
 
 	psModel = model_new();

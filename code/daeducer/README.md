@@ -9,6 +9,12 @@ The tool can check proofs you enter or use machine learning models to automatica
 
 ## Build
 
+There are essentially four steps needed to get a working executable:
+1. Build the Symoblic library.
+2. Build the llama.cpp libraries.
+3. Download the model weights.
+4. Build the Daeduce binary.
+
 These steps have been tested on Linux (Ubuntu 22.04) and macOS (Sequoia 15.7.4).
 You'll need to have some prerequisites (build-essentials, git) installed for this to work.
 
