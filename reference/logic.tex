@@ -573,7 +573,7 @@ First-order logic also contains other, so-called ``non-logical''
 symbols. Whilst the interpretation of the logical symbols is fixed by
 the fact that one is ``doing logic,'' the meaning of the non-logical
 symbols depends on the subject one is ``doing logic about.'' The
-non-logical symbols include:
+possible non-logical symbols include:
 \begin{itemize}
 \item \defn[name (\emph{a.k.a.}, constant symbol)]{Names}: $\nm{a}$, $\nm{b}$, $\nm{c}$,\dots;
 \item \defn[function symbol]{Function symbols}: $f$, $g$, $h$, \dots; and
@@ -608,13 +608,13 @@ logic.
 
 A \defn{formula}\sidenote{Sometimes called a \emph{well-formed formula}.} is either a predicate applied to terms, or something constructed from other formul\ae\ with the logical operators.
 \begin{figure}[ht]
-  \sidecaption{Definition of a formula. The first two alternatives are sometimes called \emph{atomic formul\ae}. The constructions with the propositional connectives should really be parenthesised as in figure~\ref{fig:bnf-prop}.\label{fig:bnf-formula}}
+  \sidecaption{Definition of a formula. The first two alternatives are sometimes called \emph{atomic formul\ae}.\label{fig:bnf-formula}}
   \centering
   \begin{bnf}
     $\phi, \psi$ : Formula ::=
     | $P(\term{t}_1,\dotsc,\term{t}_n)$ 
     | $\term{t}_1 = \term{t}_2$ 
-    | $\phi\vee\psi$ // $\phi\wedge\psi$ // $\phi\rightarrow\psi$ // $\phi\leftrightarrow\psi$ // $\neg\phi$
+    | $(\phi\vee\psi)$ // $(\phi\wedge\psi)$ // $(\phi\rightarrow\psi)$ // $(\phi\leftrightarrow\psi)$ // $\neg\phi$
     | $\forall \var{x}\,\phi$
     | $\exists \var{x}\,\phi$ 
   \end{bnf}
@@ -646,9 +646,54 @@ For any formula, $\phi$, the set, $\fv[\phi]$, of \defn{free variables} of~$\phi
   &= \fv[\phi] \setminus \{\var{x}\}
 \end{align*}
 
-A variable that is not free is said to be \defn{bound}. A \defn{sentence} (of first-order logic) is a formula having no free variables.
+A variable that is not free is said to be \defn{bound variable}. A \defn{sentence} (of first-order logic) is a formula having no free variables.
+
+Which non-logical symbols are available depends on the particular
+application one has in mind: the subject one is ``doing logic about.'' A
+\defn{signature} is a set of non-logical symbols---names, function
+symbols, and predicate symbols of given arity.\sidenote{The term
+  ``signature'' is not defined in the book, which glosses over this
+  issue.}
 
 \subsection{Semantics}
+
+Let there be given a signature,~$\mathcal{S}$. An interpretation identifies the
+non-logical symbols in $\mathcal{S}$ with particular set-theoretic
+objects. Specifically, an \defn{interpretation}, $I$, of $\mathcal{S}$ (also known
+as a \emph{structure}) is:
+\begin{enumerate}
+\item A non-empty set, $\mathcal{D}$, called the \emph{domain};
+\item For every name, $\nm{a}$, an element $\lBrack \nm{a}\rBrack_I\in \mathcal{D}$. 
+\item For every function symbol, $f$, of arity $n$, a map $\lBrack f \rBrack_I \colon \mathcal{D}^n\to\mathcal{D}$; and
+\item For every predicate symbol, $P$, of arity $m$, a relation $\lBrack P\rBrack_I\subset \mathcal{D}^m$. 
+\end{enumerate}
+Where it is unambiguous which interpretation is under consideration, it
+is common to write the interpretation of a symbol simply as
+$\lBrack\cdot\rBrack$, omitting the~$I$. 
+
+If $f$ is a function symbol and $\nm{a}$, $\nm{b}$, $\dotsc$ are names, we
+may write $\lBrack f(a, b, \dots)\rBrack$ rather than
+$\lBrack f\rBrack(\lBrack a\rBrack, \lBrack b \rBrack, \dots)\rBrack$.
+
+In this definition, $\mathcal{D}^n$ is the Cartesian product
+$\mathcal{D}\times\dots\times\mathcal{D}$. Note that $\mathcal{D}^0$ is not the empty
+set,~$\emptyset$: it is the set containing the empty
+set,~$\{\emptyset\}$. Thus, if $f$ is a function symbol of arity zero, then
+$\lBrack f\rBrack_I$ is a map from a singleton set and so picks out a
+single element of~$\mathcal{D}$. In other words, the interpretation of a function
+symbol of arity zero is equivalent to that of a name.
+
+Under an interpretation, each sentence has a truth value. A sentence is
+a formula with no free variables and a formula must have one of the forms shown in figure~\ref{fig:bnf-formula}; so the truth value is determined recursively by the nature of the formula.
+\begin{enumerate}
+\item For $P$ a predicate symbol of arity $n$, and
+  $\nm{a}_1, \nm{a}_2, \dots, \nm{a}_n$ names, the formula $P(\nm{a}_1, \nm{a}_2, \dots, \nm{a}_n)$ has value $\tr$ just in case
+
+\end{enumerate}
+
+
+
+
 
 \subsection{Natural deduction}
 
