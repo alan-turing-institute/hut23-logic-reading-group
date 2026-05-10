@@ -36,6 +36,7 @@
 \newcommand{\var}[1]{\mathit{#1}} % A variable
 \newcommand{\term}[1]{\mathfrak{#1}} % A term
 \newcommand{\fv}{\mathfrak{F}}
+\newcommand{\interp}[1]{\lBrack#1\rBrack}
 %% 
 \title{All we know about logic}
 \author{James Geddes}
@@ -657,6 +658,7 @@ symbols, and predicate symbols of given arity.\sidenote{The term
 
 \subsection{Semantics}
 
+\subsubsection{Interpretations}
 Let there be given a signature,~$\mathcal{S}$. An interpretation identifies the
 non-logical symbols in $\mathcal{S}$ with particular set-theoretic
 objects. Specifically, an \defn{interpretation}, $I$, of $\mathcal{S}$ (also known
@@ -669,11 +671,14 @@ as a \emph{structure}) is:
 \end{enumerate}
 Where it is unambiguous which interpretation is under consideration, it
 is common to write the interpretation of a symbol simply as
-$\lBrack\cdot\rBrack$, omitting the~$I$. 
+$\lBrack\cdot\rBrack$, omitting the~`$I$.' 
 
-If $f$ is a function symbol and $\nm{a}$, $\nm{b}$, $\dotsc$ are names, we
-may write $\lBrack f(a, b, \dots)\rBrack$ rather than
-$\lBrack f\rBrack(\lBrack a\rBrack, \lBrack b \rBrack, \dots)\rBrack$.
+An interpretation extends to terms having no free variables. Such a term
+is either a name, whose interpretation is already defined, or a function
+symbol applied to terms, $f(\term{t}_1,\term{t}_2,\dots)$. In the latter
+case we have
+$\interp{f(\term{t}_1, \term{t}_2,
+  \dots)}=\interp{f}(\interp{\term{t}_1}, \interp{\term{t}_2},\dots)$.
 
 In this definition, $\mathcal{D}^n$ is the Cartesian product
 $\mathcal{D}\times\dots\times\mathcal{D}$. Note that $\mathcal{D}^0$ is not the empty
@@ -681,19 +686,62 @@ set,~$\emptyset$: it is the set containing the empty
 set,~$\{\emptyset\}$. Thus, if $f$ is a function symbol of arity zero, then
 $\lBrack f\rBrack_I$ is a map from a singleton set and so picks out a
 single element of~$\mathcal{D}$. In other words, the interpretation of a function
-symbol of arity zero is equivalent to that of a name.
+symbol of arity zero is equivalent to that of a name.  Likewise, the
+interpretation of a predicate of arity zero is always either $\emptyset$
+or~$\{\emptyset\}$.
 
-Under an interpretation, each sentence has a truth value. A sentence is
-a formula with no free variables and a formula must have one of the forms shown in figure~\ref{fig:bnf-formula}; so the truth value is determined recursively by the nature of the formula.
+Under an interpretation, each sentence has a truth value, determined
+recursively according to the structure of the sentence (as in
+figure~\ref{fig:bnf-formula}).  Most of the rules are straightforward
+but the rules for the quantifiers require a little extra machinery.
+
+The issue is that we'd like to be able to say something like the
+following: ``$\exists\var{x}\,\phi(\dots x\dots)$ is true if and only if there is
+some object $o\in\mathcal{D}$, and name $\nm{n}$ whose referent
+$\interp{\nm{n}}$ is~$o$, such that $\phi(\dots n\dots)$'' is true.  But
+even if an appropriate object exists, we do not necessarily have a name
+for it.
+
+Thus, an \defn{extension}, $I' = I[o/\nm{n}]$ of an interpretation~$I$,
+is an interpretation just like~$I$ except that, in addition, it also
+assigns the name~$\nm{n}$ to the object~$o$. Here $\nm{n}$ must be a new
+name that does not already occur in~$I$. We say that the object $o$ \defn{satisfies} a formula $\phi(\dots x\dots)$ if and only if $\phi(\dots \nm{n}\dots)$ is true under the interpration~$I[o/\nm{n}]$. 
+
+\subsubsection{Valuations}
+Now we can evaluate the truth value of sentences under some interpretation.
 \begin{enumerate}
 \item For $P$ a predicate symbol of arity $n$, and
-  $\nm{a}_1, \nm{a}_2, \dots, \nm{a}_n$ names, the formula $P(\nm{a}_1, \nm{a}_2, \dots, \nm{a}_n)$ has value $\tr$ just in case
+  $\nm{a}_1, \nm{a}_2, \dots, \nm{a}_n$ names, the formula
+  $P(\nm{a}_1, \nm{a}_2, \dots, \nm{a}_n)$ has value $\tr$ just in case
+  $(\interp{\nm{a}_1}, \interp{\nm{a}_2}, \dots, \interp{\nm{a}_n}) \in
+  \interp{P}$.\sidenote{The book uses the notation
+    $\langle a, b,\dots, c\rangle$ for a tuple rather than $(a, b,\dots c)$.}
 
+  If $n=0$, there is only one tuple, namely ``the empty tuple;'' thus
+  $P$ is true when $\interp{P}=\{\emptyset\}$ and false otherwise.
+\item For terms $\term{s}$ and $\term{t}$ having no free variables, the sentence $\term{s}=\term{t}$ is true when $\interp{\term{s}}$ and $\interp{\term{t}}$ refer to the same element of~$\mathcal{D}$, and false otherwise.
+\item The truth value of a logical combinations of sentences, using the
+  connectives $\vee$, $\wedge$, $\leftrightarrow$, $\rightarrow$, and $\neg$, is given by the same rules as
+  in propositional logic.
+\item The sentence $\forall\var{x}\,\phi(\dots x\dots)$ is true if every object in the domain $\mathcal{D}$ satisfies $\phi(\dots x\dots)$. 
+\item The sentence $\exists\var{x}\,\phi(\dots x\dots)$ is true if there is some object in the domain $\mathcal{D}$ that satisfies $\phi(\dots x\dots)$. 
 \end{enumerate}
 
+\subsubsection{Arguments (reprise)}
+Sentences $\wff{A}_1$, $\wff{A}_2, \dots, \wff{A}_n$ \defn{entail}
+sentence $\wff{C}$ if there is no interepration under which all of the
+$\wff{A}_i$ are true and~$\wff{C}$ is false.  We write
+\begin{equation*}
+  \wff{A}_1, \wff{A}_2, \dotsc, \wff{A}_n \vDash \wff{C},
+\end{equation*}
+to say that the $\wff{A}_i$ entail~$\wff{C}$.
 
-
-
+A sentence $\wff{C}$ that is true under every interpretation is a
+\defn{validity} (sometimes called a \emph{tautology}),
+written~$\vDash\wff{C}$.  Other terms follow the same pattern as in
+propositional logic: A sentence is that is false under every
+intrepretation is called a \emph{contradiction}; sentences that are
+neither validities nor contradictions are \emph{contingent}.
 
 \subsection{Natural deduction}
 
