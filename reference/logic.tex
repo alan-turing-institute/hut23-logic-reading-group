@@ -10,6 +10,8 @@
 \ndrules% include standard rules
 \renewcommand{\ii}{\by{$\to$I}}
 \renewcommand{\ie}{\by{$\to$E}}
+\def\eqi{\by{$=$I}}
+\def\eqe{\by{$=$E}}
 \def\x{\by{X}}
 \def\ip{\by{IP}}}
 \usepackage[rules=myrules]{fitch}
@@ -696,16 +698,26 @@ figure~\ref{fig:bnf-formula}).  Most of the rules are straightforward
 but the rules for the quantifiers require a little extra machinery.
 
 The issue is that we'd like to be able to say something like the
-following: ``$\exists\var{x}\,\phi(\dots x\dots)$ is true if and only if there is
-some object $o\in\mathcal{D}$, and name $\nm{n}$ whose referent
-$\interp{\nm{n}}$ is~$o$, such that $\phi(\dots n\dots)$'' is true.  But
-even if an appropriate object exists, we do not necessarily have a name
-for it.
+following: ``$\exists\var{x}\,\phi(...\var{x}...\var{x}...)$ is true if and only
+if there is some object $o\in\mathcal{D}$, and name $\nm{n}$ whose referent
+$\interp{\nm{n}}$ is~$o$, such that $\phi(...\nm{n}...\nm{n}...)$'' is
+true.  Here the meaning of the notation is that
+$\phi(...\var{x}...\var{x}...)$ is some formula involving $\var{x}$ and
+$\phi(...\nm{n}...\nm{n}...)$ is the formula obtained by substituting
+$\nm{n}$ for every free occurrence of~$\var{x}$.
+
+However, even if an appropriate object $o$ exists, we do not necessarily
+have a name for it in the signature, so we can't straightforwardly use
+this rule. Instead, we imagine ``extending'' both the signature and the
+interpretation.
 
 Thus, an \defn{extension}, $I' = I[o/\nm{n}]$ of an interpretation~$I$,
 is an interpretation just like~$I$ except that, in addition, it also
-assigns the name~$\nm{n}$ to the object~$o$. Here $\nm{n}$ must be a new
-name that does not already occur in~$I$. We say that the object $o$ \defn{satisfies} a formula $\phi(\dots x\dots)$ if and only if $\phi(\dots \nm{n}\dots)$ is true under the interpration~$I[o/\nm{n}]$. 
+assigns the name~$\nm{n}$ to the object~$o\in\mathcal{D}$. Here $\nm{n}$ must be a
+new name that does not already occur in~$I$. We say that the object $o$
+\defn{satisfies} a formula $\phi(...\var{x}...\var{x}...)$ if and only if
+$\phi(...\nm{n}...\nm{n}...)$ is true under the
+interpration~$I[o/\nm{n}]$.
 
 \subsubsection{Valuations}
 Now we can evaluate the truth value of sentences under some interpretation.
@@ -723,8 +735,9 @@ Now we can evaluate the truth value of sentences under some interpretation.
 \item The truth value of a logical combinations of sentences, using the
   connectives $\vee$, $\wedge$, $\leftrightarrow$, $\rightarrow$, and $\neg$, is given by the same rules as
   in propositional logic.
-\item The sentence $\forall\var{x}\,\phi(\dots x\dots)$ is true if every object in the domain $\mathcal{D}$ satisfies $\phi(\dots x\dots)$. 
-\item The sentence $\exists\var{x}\,\phi(\dots x\dots)$ is true if there is some object in the domain $\mathcal{D}$ that satisfies $\phi(\dots x\dots)$. 
+\item The sentence $\forall\var{x}\,\phi(...\var{x}...\var{x}...)$ is true if
+  every object in the domain $\mathcal{D}$ satisfies $\phi(...\var{x}...\var{x}...)$.
+\item The sentence $\exists\var{x}\,\phi(...\var{x}...\var{x}...)$ is true if there is some object in the domain $\mathcal{D}$ that satisfies $\phi(...\var{x}...\var{x}...)$. 
 \end{enumerate}
 
 \subsubsection{Arguments (reprise)}
@@ -746,21 +759,99 @@ neither validities nor contradictions are \emph{contingent}.
 \subsection{Natural deduction}
 
 The rules of proofs for first-order logic extend those shown in
-section~\ref{sec:rules-of-derivation}. There are four new rules: one introduction rule and one elimination rule for each of the two quantifiers. However, because we now have variables and constants, some care must be taken in the conditions for these rules.
+section~\ref{sec:rules-of-derivation}. There are three new paris of
+rules: one introduction rule and one elimination rule for each of the
+two quantifiers and for identity. However, because we now have variables
+and constants, some care must be taken in the conditions for these
+rules.
 
-%% 
-\begin{figure}[ht]\centering
-  \sidecaption{Universal elimination. \label{fig:rule:universal-elim}}
+%% Universal quantification
+\begin{figure}[ht]
+  \sidecaption{Universal quantification. If something is true for an
+    arbitrary object, it is true for all; conversely, if something is
+    true for all objects, it is true for a specific one.  In the
+    introduction rule, the name $\nm{c}$ must not occur in any
+    undischarged assumption (or premiss).  In the elimination rule
+    $\nm{c}$ may be any name.\label{fig:rule:universal}}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Universal introduction.}
     \[
       \begin{nd}
-        \have[m]{m}{\forall \var{x}\,\wff{A(...x...x...)}}
-        \have[~]{}{\wff{A(...\nm{c}...\nm{c}...)}} \Ae{m}
+        \have[m]{m}{\wff{A}(...\nm{c}...\nm{c}...)} 
+        \have[~]{}{\forall \var{x}\,\wff{A}(...\var{x}...\var{x}...)} \Ai{m}
       \end{nd}
     \]
+  \end{subfigure}\hfil
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Universal elimination.}
+    \[
+      \begin{nd}
+        \have[m]{m}{\forall\var{x}\,\wff{A}(...\var{x}...\var{x}...)}
+        \have[~]{}{\wff{A}(...\nm{c}...\nm{c}...)} \Ae{m}
+      \end{nd}
+    \]
+  \end{subfigure}
 \end{figure}
 
+%% Existential quantification
+\begin{figure}[ht]
+  \sidecaption{Existential quantification. If a proposition is true of a
+    particular thing, then the proposition is true of some thing. In the
+    introduction rule, $\nm{c}$ is any name, and the variable $\var{x}$
+    need not replace all instances of it (but not of course in the scope
+    of a binding of $\var{x}$ by some other quantifier). In the
+    elimination rule, the name $\nm{c}$ must not occur in any
+    undischarged assumption (or premiss) before line~$i$; must not occur
+    in $\exists\var{x}\,\wff{A}(...\var{x}...\var{x}...)$ in line $m$; and
+    must not occur in~$\wff{B}$.\label{fig:rule:existential}}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Existential introduction.}
+    \[
+      \begin{nd}
+        \have[m]{m}{\wff{A}(...\nm{c}...\nm{c}...)} 
+        \have[~]{}{\exists\var{x}\,\wff{A}(...\var{x}...\nm{c}...)} \Ei{m}
+      \end{nd}
+    \]
+  \end{subfigure}\hfil
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Existential elimination.}
+    \[
+      \begin{nd}
+        \have[m]{m}{\exists\var{x}\,\wff{A}(...\var{x}...\var{x}...)}
+          \open
+          \hypo[i]{i}{\wff{A}(...\nm{c}...\nm{c}...)} \by{AS}{}
+          \have[j]{j}{\wff{B}}
+          \close
+          \have[~]{}{\wff{B}} \Ee{i-j}
+      \end{nd}
+    \]
+  \end{subfigure}
+\end{figure}
 
-
+%% Identity
+\begin{figure}[ht]
+  \sidecaption{Identity. A thing is always equal to itself. If a thing
+    is equal to something else, then the second may be substituted for
+    the first.\label{fig:rule:identity}}
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Identity introduction.}
+    \[
+      \begin{nd}
+        \have[~]{}{\nm{c}=\nm{c}} \eqi{}
+      \end{nd}
+    \]
+  \end{subfigure}\hfil
+  \begin{subfigure}{0.48\textwidth}
+    \subcaption{Existential elimination.}
+    \[
+      \begin{nd}
+        \have[m]{m}{\nm{a} = \nm{b}}
+        \have[n]{n}{\wff{A}(...\nm{a}...\nm{a})}
+        \have[~]{}{\wff{A}(...\nm{b}...\nm{a})} \eqe{m,n}
+      \end{nd}
+    \]
+  \end{subfigure}
+\end{figure}
 
 
 
