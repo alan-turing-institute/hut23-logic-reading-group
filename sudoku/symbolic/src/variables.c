@@ -40,6 +40,7 @@
 // Defines
 
 #define VARIABLENAMES_CHUNK	(16)
+#define VARIABLENAMEMAP_CHUNK	(16)
 
 //////////////////////////////////////////////////////////////////
 // Structures
@@ -70,6 +71,13 @@ struct _VariableNames {
 	int nAllocated;
 };
 
+struct _VariableNameMap {
+	char ** aszVarFrom;
+	char ** aszVarTo;
+	int nCount;
+	int nAllocated;
+};
+
 //////////////////////////////////////////////////////////////////
 // Global variables
 
@@ -78,6 +86,7 @@ struct _VariableNames {
 
 Variable * AddNewVariable (Variable * psVariables, char const * const szVar);
 void VariableNamesExtractRecursive(VariableNames * psVariableNames, Operation * psOp);
+bool VariableNameMapExtractRecursive (VariableNameMap * psVariableNameMap, Operation const * psOpFrom, Operation const * psOpTo);
 
 //////////////////////////////////////////////////////////////////
 // Main application
@@ -560,7 +569,7 @@ char * VariableNamesGet(VariableNames * psVariableNames, int nPos) {
 		szVar = psVariableNames->aszVar[nPos];
 	}
 	else {
-		szVar = 0;
+		szVar = NULL;
 	}
 	return szVar;
 }
@@ -599,6 +608,214 @@ void VariableNamesExtractRecursive(VariableNames * psVariableNames, Operation * 
 				break;
 		}
 	}
+}
+
+VariableNameMap * CreateVariableNameMap () {
+	VariableNameMap * psVariableNameMap;
+
+	psVariableNameMap = PropCalloc(1, sizeof(VariableNameMap));
+
+	return psVariableNameMap;
+}
+
+VariableNameMap * FreeVariableNameMap (VariableNameMap * psVariableNameMap) {
+	int nPos;
+
+	if (psVariableNameMap) {
+		if (psVariableNameMap->aszVarFrom && psVariableNameMap->aszVarTo) {
+			for (nPos = 0; nPos < psVariableNameMap->nCount; ++nPos) {
+				PropFree ((void *)psVariableNameMap->aszVarFrom[nPos]);
+				PropFree ((void *)psVariableNameMap->aszVarTo[nPos]);
+			}
+			PropFree ((void *)psVariableNameMap->aszVarFrom);
+			PropFree ((void *)psVariableNameMap->aszVarTo);
+			psVariableNameMap->nCount = 0;
+			psVariableNameMap->nAllocated = 0;
+		}
+		PropFree((void *)psVariableNameMap);
+	}
+
+	return NULL;
+}
+
+void VariableNameMapAdd (VariableNameMap * psVariableNameMap, char const * szVarFrom, char const * szVarTo) {
+	int nSize;
+	int nPos;
+	bool boExists;
+
+	if (psVariableNameMap) {
+		boExists = FALSE;
+		for (nPos = 0; (nPos < psVariableNameMap->nCount) && (!boExists); ++nPos) {
+			if ((strcmp (szVarFrom, psVariableNameMap->aszVarFrom[nPos]) == 0) && (strcmp (szVarTo, psVariableNameMap->aszVarTo[nPos]) == 0)) {
+				boExists = TRUE;
+			}
+		}
+
+		if (!boExists) {
+			psVariableNameMap->nCount += 1;
+			nSize = ((psVariableNameMap->nCount / VARIABLENAMEMAP_CHUNK) + 1) * VARIABLENAMEMAP_CHUNK;
+			if (psVariableNameMap->nCount > psVariableNameMap->nAllocated) {
+				psVariableNameMap->aszVarFrom = (char **)PropRealloc (psVariableNameMap->aszVarFrom, nSize * VARIABLENAMEMAP_CHUNK * sizeof (char *));
+				psVariableNameMap->aszVarTo = (char **)PropRealloc (psVariableNameMap->aszVarTo, nSize * VARIABLENAMEMAP_CHUNK * sizeof (char *));
+				psVariableNameMap->nAllocated = nSize;
+			}
+			nSize = strlen(szVarFrom);
+			psVariableNameMap->aszVarFrom[(psVariableNameMap->nCount - 1)] = (char *)PropMalloc (nSize + 1);
+			strncpy(psVariableNameMap->aszVarFrom[(psVariableNameMap->nCount - 1)], szVarFrom, nSize);
+			psVariableNameMap->aszVarFrom[(psVariableNameMap->nCount - 1)][nSize] = 0;
+			nSize = strlen(szVarTo);
+			psVariableNameMap->aszVarTo[(psVariableNameMap->nCount - 1)] = (char *)PropMalloc (nSize + 1);
+			strncpy(psVariableNameMap->aszVarTo[(psVariableNameMap->nCount - 1)], szVarTo, nSize);
+			psVariableNameMap->aszVarTo[(psVariableNameMap->nCount - 1)][nSize] = 0;
+		}
+	}
+}
+
+void VariableNameMapRemove (VariableNameMap * psVariableNameMap, char const * szVarFrom, char const * szVarTo) {
+	int nSize;
+	int nPos;
+	int nRemoved;
+
+	if (psVariableNameMap) {
+		nRemoved = 0;
+		for (nPos = 0; nPos < psVariableNameMap->nCount; ++nPos) {
+			if ((strcmp (szVarFrom, psVariableNameMap->aszVarFrom[nPos]) == 0) && (strcmp (szVarTo, psVariableNameMap->aszVarTo[nPos]) == 0)) {
+				PropFree (psVariableNameMap->aszVarFrom[nPos]);
+				psVariableNameMap->aszVarFrom[nPos] = NULL;
+				PropFree (psVariableNameMap->aszVarTo[nPos]);
+				psVariableNameMap->aszVarTo[nPos] = NULL;
+				nRemoved += 1;
+			}
+			else {
+				if (nRemoved > 0) {
+					psVariableNameMap->aszVarFrom[nPos - nRemoved] = psVariableNameMap->aszVarFrom[nPos];
+					psVariableNameMap->aszVarFrom[nPos] = NULL;
+					psVariableNameMap->aszVarTo[nPos - nRemoved] = psVariableNameMap->aszVarTo[nPos];
+					psVariableNameMap->aszVarTo[nPos] = NULL;
+				}
+			}
+		}
+
+		if (nRemoved > 0) {
+			psVariableNameMap->nCount -= nRemoved;
+			nSize = ((psVariableNameMap->nCount / VARIABLENAMEMAP_CHUNK) + 1) * VARIABLENAMEMAP_CHUNK;
+			if (nSize != psVariableNameMap->nAllocated) {
+				psVariableNameMap->aszVarFrom = (char **)PropRealloc (psVariableNameMap->aszVarFrom, nSize * VARIABLENAMEMAP_CHUNK * sizeof (char *));
+				psVariableNameMap->aszVarTo = (char **)PropRealloc (psVariableNameMap->aszVarTo, nSize * VARIABLENAMEMAP_CHUNK * sizeof (char *));
+				psVariableNameMap->nAllocated = nSize;
+			}
+		}
+	}
+}
+
+int VariableNameMapCount (VariableNameMap * psVariableNameMap) {
+	return psVariableNameMap->nCount;
+}
+
+char const * VariableNameMapGetFrom (VariableNameMap * psVariableNameMap, int nPos) {
+	char * szVarFrom;
+
+	if ((nPos >= 0) && (nPos < psVariableNameMap->nCount)) {
+		szVarFrom = psVariableNameMap->aszVarFrom[nPos];
+	}
+	else {
+		szVarFrom = NULL;
+	}
+	return szVarFrom;
+}
+
+char const * VariableNameMapGetTo (VariableNameMap * psVariableNameMap, int nPos) {
+	char * szVarTo;
+
+	if ((nPos >= 0) && (nPos < psVariableNameMap->nCount)) {
+		szVarTo = psVariableNameMap->aszVarTo[nPos];
+	}
+	else {
+		szVarTo = NULL;
+	}
+	return szVarTo;
+}
+
+bool VariableNameMapExtract (VariableNameMap * psVariableNameMap, Operation const * psOpFrom, Operation const * psOpTo) {
+	return VariableNameMapExtractRecursive(psVariableNameMap, psOpFrom, psOpTo);
+}
+
+bool VariableNameMapExtractRecursive (VariableNameMap * psVariableNameMap, Operation const * psOpFrom, Operation const * psOpTo) {
+	bool boReturn = TRUE;
+    size_t uVar;
+
+	if (psOpFrom && psOpTo && (psOpFrom->eOpType == psOpTo->eOpType)) {
+		switch (psOpFrom->eOpType) {
+			case OPTYPE_TRUTHVALUE: {
+				if (psOpFrom->Vars.boTruth != psOpTo->Vars.boTruth) {
+					boReturn = FALSE;
+				}
+			}
+			break;
+			case OPTYPE_VARIABLE: {
+				if (strcmp (psOpFrom->Vars.psVar->szVar, psOpTo->Vars.psVar->szVar) != 0) {
+					boReturn = FALSE;
+				}
+			}
+			break;
+			case OPTYPE_UNARY: {
+				// Check any operations further down the tree
+				if (psOpFrom->Vars.psUnary->eOpType == psOpTo->Vars.psUnary->eOpType) {
+					boReturn = VariableNameMapExtractRecursive (psVariableNameMap, psOpFrom->Vars.psUnary->psVar1, psOpTo->Vars.psUnary->psVar1);
+				}
+				else {
+					boReturn = FALSE;
+				}
+			}
+			break;
+			case OPTYPE_BINARY: {
+				// Check any operations further down the tree
+				if (psOpFrom->Vars.psBinary->eOpType == psOpTo->Vars.psBinary->eOpType) {
+					boReturn = boReturn && VariableNameMapExtractRecursive (psVariableNameMap, psOpFrom->Vars.psBinary->psVar1, psOpTo->Vars.psBinary->psVar1);
+					boReturn = boReturn && VariableNameMapExtractRecursive (psVariableNameMap, psOpFrom->Vars.psBinary->psVar2, psOpTo->Vars.psBinary->psVar2);
+				}
+				else {
+					boReturn = FALSE;
+				}
+			}
+			break;
+            case OPTYPE_QUANTIFIER: {
+				if (psOpFrom->Vars.psQuantifier->eQuType == psOpTo->Vars.psQuantifier->eQuType) {
+		            if (strcmp(psOpFrom->Vars.psQuantifier->szVar, psOpTo->Vars.psQuantifier->szVar) != 0) {
+						VariableNameMapAdd (psVariableNameMap, psOpFrom->Vars.psQuantifier->szVar, psOpTo->Vars.psQuantifier->szVar);
+		            }
+	                boReturn = VariableNameMapExtractRecursive (psVariableNameMap, psOpFrom->Vars.psQuantifier->psVar1, psOpTo->Vars.psQuantifier->psVar1);
+                }
+                else {
+					boReturn = FALSE;
+                }
+            }
+            break;
+            case OPTYPE_RELATION: {
+				if (strcmp (psOpFrom->Vars.psRelation->szName, psOpTo->Vars.psRelation->szName) == 0) {
+		            if (psOpFrom->Vars.psRelation->nArity == psOpTo->Vars.psRelation->nArity) {
+		                for (uVar = 0; uVar < psOpFrom->Vars.psRelation->nArity; ++uVar) {
+		                    if (strcmp (psOpFrom->Vars.psRelation->aszVar[uVar], psOpTo->Vars.psRelation->aszVar[uVar]) != 0) {
+								VariableNameMapAdd (psVariableNameMap, psOpFrom->Vars.psRelation->aszVar[uVar], psOpTo->Vars.psRelation->aszVar[uVar]);
+		                    }
+		                }
+		            }
+		            else {
+						boReturn = FALSE;
+		            }
+		        }
+		        else {
+					boReturn = FALSE;
+		        }
+		    }
+            break;
+			default:
+				printf("Invalid operation type\n");
+				break;
+		}
+	}
+
+	return boReturn;
 }
 
 

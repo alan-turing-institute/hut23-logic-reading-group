@@ -35,6 +35,8 @@
 // Defines
 
 #define WORDALIGN (b) (((b) + 3) & ~3)
+#define VARIABLE_CHARS "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+#define WHITESPACE_CHARS " \n\r\t"
 
 //#define MAXVARSIZE (64)
 
@@ -92,6 +94,8 @@ typedef enum _OPTYPE {
 	OPTYPE_VARIABLE,
 	OPTYPE_UNARY,
 	OPTYPE_BINARY,
+	OPTYPE_QUANTIFIER,
+	OPTYPE_RELATION,
 
 	OPTYPE_NUM
 } OPTYPE;
@@ -115,6 +119,20 @@ typedef struct _OpVariable {
 	Variable * psValue;
 } OpVariable;
 
+// Quantifiers
+typedef struct _OpQuantifier {
+	QUANTIFIER eQuType;
+	char * szVar;
+	Operation * psVar1;
+} OpQuantifier;
+
+// Relations
+typedef struct _OpRelation {
+	char * szName;
+	size_t nArity;
+	char ** aszVar;
+} OpRelation;
+
 // General operation structure
 struct _Operation {
 	OPTYPE eOpType;
@@ -125,12 +143,14 @@ struct _Operation {
 		OpVariable * psVar;
 		OpUnary * psUnary;
 		OpBinary * psBinary;
+		OpQuantifier * psQuantifier;
+		OpRelation * psRelation;
 	} Vars;
 };
 
 typedef struct _OperationMap {
-    char * szVar;
-    Operation * psOp;
+    Operation * psFrom;
+    Operation * psTo;
 } OperationMap;
 
 struct _Extract {
@@ -146,31 +166,39 @@ void DecrementVarRef (Variable * psVar);
 void IncrementVarRef (Variable * psVar);
 
 // String conversion
-char * RecurseToString (Operation * psOp, int nStrLen);
-int RecurseToStringLength (Operation * psOp);
+char * RecurseToString (Operation const * psOp, int nStrLen);
+int RecurseToStringLength (Operation const * psOp);
 char * RecurseToStringC (Operation * psOp, int nStrLen);
 int RecurseToStringCLength (Operation * psOp);
+char * DuplicateWithoutWhitespace(char const * szString, int nStrLen, int *pnOutLen);
 
 // LaTeX string conversion
 char * RecurseToStringLatex (Operation * psOp, int nStrLen);
 int RecurseToStringLengthLatex (Operation * psOp);
 
-// User Func operations
-void IncrementUserFuncRef (UserFunc * psUserFunc);
-void DecrementUserFuncRef (UserFunc * psUserFunc);
+// Relation operations
+Operation * CreateRelationLength (char const * szName, size_t nLength, size_t nArity, char const * const * aszVar, size_t * anVarLen);
+Operation * CopyRelation (Operation const * psOp);
+bool RelationCompare (Operation const * psOp1, Operation const * psOp2);
+char * RelationToString (Operation const * psOp, char * szString, int nStrLen);
+int RelationToStringLength (Operation const * psOp);
+char * RelationToStringC (Operation * psOp, char * szString, int nStrLen);
+int RelationToStringCLength (Operation * psOp);
+void RelationFreeRecursive (Operation * psOp);
+int RelationToStringCLength (Operation * psOp);
+char * RelationToStringLatex (Operation * psOp, char * szString, int nStrLen);
+int RelationToStringLengthLatex (Operation * psOp);
+bool TryRelation (char const * szString, int nStrLen, int *pnArity);
+Operation * StringToRelation (char const * szString, int nStrLen, int nArity);
 
-// User Unary operations
-Operation * CopyUser (Operation * psOp);
-double UserApproximateDefault (Operation * psOp);
-Operation * UserDifferentiateDefault (Operation * psOp, Operation * psWRT);
-Operation * UserSimplifyDefault (Operation * psOp);
-bool UserCompare (Operation * psOp1, Operation * psOp2);
-char * UserToString (Operation * psOp, char * szString, int nStrLen);
-int UserToStringLength (Operation * psOp);
-char * UserToStringC (Operation * psOp, char * szString, int nStrLen);
-int UserToStringCLength (Operation * psOp);
-void UserFreeRecursive (Operation * psOp);
-
-
+// Variable stack operations
+VarStack * CreateVarStack ();
+VarStack * FreeVarStack (VarStack * psVarStack);
+void VarStackPush(VarStack * psVarStack, char const* szVar);
+char * VarStackPop(VarStack * psVarStack);
+void VarStackDrop(VarStack * psVarStack);
+int VarStackCount(VarStack * psVarStack);
+bool VarStackMatchUnbound (VarStack const * psBoundVars, Operation * psOp);
+bool VarStackContains (VarStack const * psVarStack, char const * szVar);
 
 #endif // if !defined _H_SYMBOLIC_PRIVATE

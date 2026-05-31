@@ -61,6 +61,12 @@ static char const aszOpBinaryLatex[OPBINARY_NUM][17] = {
 	"\\\\nleftrightarrow",
 };
 
+// Textual equivalents of the quantifiers
+static char const aszQuantifier[QUANTIFIER_NUM][9] = {
+	"\\\\forall",
+	"\\\\exists",
+};
+
 //////////////////////////////////////////////////////////////////
 // Function prototypes
 
@@ -178,6 +184,30 @@ char * RecurseToStringLatex (Operation * psOp, int nStrLen) {
 				PropFree (szVar1);
 				PropFree (szVar2);
 				break;
+			case OPTYPE_QUANTIFIER:
+				// Quantifiers must be handled recursively
+				// First convert the result the quantifier is applied to
+				szVar1 = RecurseToStringLatex (psOp->Vars.psQuantifier->psVar1, nStrLen);
+				// We use a couple of arrays representing the operations
+				switch (psOp->Vars.psQuantifier->eQuType) {
+					case QUANTIFIER_UNIVERSAL:
+					case QUANTIFIER_EXISTENTIAL:
+						// These operations are of the form "forall x a" (variable x, operation a)
+						snprintf (szReturn, nStrLen, "%s %s %s", aszQuantifier[psOp->Vars.psQuantifier->eQuType], psOp->Vars.psQuantifier->szVar, szVar1);
+						szReturn[nStrLen - 1] = 0;
+						break;
+					default:
+						// Whoa there, we don't know how to handle that
+						printf("Invalid quantifier\n");
+						break;
+				}
+				// Free up the allocated string since we've already a copy
+				PropFree (szVar1);
+				break;
+			case OPTYPE_RELATION:
+				// Relations don't have a recursive element
+				szReturn = RelationToStringLatex (psOp, szReturn, nStrLen);
+				break;
 			default:
 				// These operations are of the form *a (operation * applied to a)
 				printf("Invalid operation type\n");
@@ -277,6 +307,28 @@ int RecurseToStringLengthLatex (Operation * psOp) {
 						printf("Invalid binary operator\n");
 						break;
 				}
+				break;
+
+			case OPTYPE_QUANTIFIER:
+				// The length of the quantifier, variable and operation combined
+				// Calculate the lengths of the variable and operation first
+				nVar1 = RecurseToStringLengthLatex (psOp->Vars.psQuantifier->psVar1);
+				switch (psOp->Vars.psQuantifier->eQuType) {
+					case QUANTIFIER_UNIVERSAL:
+					case QUANTIFIER_EXISTENTIAL:
+						// These operations are of the form "forall x a" (variable x, operation a)
+						// nReturn = snprintf (szReturn, nStrLen, "%s %s %s", aszQuantifier[psOp->Vars.psQuantifier->eQuType], psOp->Vars.psQuantifier->szVar, szVar1);
+						nReturn = strlen (aszQuantifier[psOp->Vars.psQuantifier->eQuType]) + strlen (psOp->Vars.psQuantifier->szVar) + nVar1 + 2;
+						break;
+					default:
+						// Whoa there, we don't know how to handle that
+						printf("Invalid quantifier\n");
+						break;
+				}
+				break;
+			case OPTYPE_RELATION:
+				// Relations don't have a recursive element
+				nReturn = RelationToStringLengthLatex (psOp);
 				break;
 			default:
 				// Not something we know about (shouldn't happen)
@@ -386,6 +438,7 @@ Operation * RecurseToOperationLatex (char const * szString, int nStrLen) {
 	bool boMatch;
 	OPUNARY eUnary = OPUNARY_INVALID;
 	OPBINARY eBinary = OPBINARY_INVALID;
+	QUANTIFIER eQuantifier = QUANTIFIER_INVALID;
 	Operation * psReturnOp = NULL;
 	int nRightStart;
 	double fDecimal;
@@ -393,6 +446,8 @@ Operation * RecurseToOperationLatex (char const * szString, int nStrLen) {
 	char * szVariable = NULL;
 	int nNameEnd;
 	bool boTruth;
+	int nLength;
+	int nArity;
 
 	// Remove the edge brackets
 	boMatch = TRUE;
@@ -482,19 +537,55 @@ Operation * RecurseToOperationLatex (char const * szString, int nStrLen) {
 			psReturnOp = CreateUnary (eUnary, RecurseToOperationLatex (szString + nRightStart, nStrLen - nRightStart));
 		}
 		else {
-			boMatch = TryStringToTruthLatex (szString, nStrLen, &boTruth);
+			// Check if it's a quantifier
+			eQuantifier = (QUANTIFIER)((int)QUANTIFIER_INVALID + 1);
+			while ((!boMatch) && (eQuantifier < QUANTIFIER_NUM)) {
+				nLength = (int)strlen (aszQuantifier[eQuantifier]);
+				if (nStrLen > nLength) {
+					// String compare with the possible quantifiers
+					if (strncmp (aszQuantifier[eQuantifier], szString, nLength) == 0) {
+						boMatch = TRUE;
+					}
+				}
+
+				// Move on to check the next operation
+				eQuantifier = (QUANTIFIER)((int)eQuantifier + 1);
+			}
+
 			if (boMatch) {
-				psReturnOp = CreateTruthValue (boTruth);
+				// Extract the variable to quantify over
+				nPos = nLength + 1;
+				while ((nPos < nStrLen) && (szString[nPos] != ' ')) {
+					nPos += 1;
+				}
+				szVariable = DuplicateWithoutWhitespace(szString + nLength + 1, nPos - nLength - 1, NULL);
+
+				// Recurse on whatever is left
+				eQuantifier = (QUANTIFIER)((int)eQuantifier - 1);
+				nRightStart = nPos + 1;
+				psReturnOp = CreateQuantifier (eQuantifier, szVariable, RecurseToOperationLatex (szString + nRightStart, nStrLen - nRightStart));
+				PropFree (szVariable);
 			}
 			else {
-				// Interpret as a variable, since it's all that's left
-				// TODO: Check whether this can really be a valid variable name (e.g. no brackets)
-				szVariable = (char *)PropMalloc (nStrLen + 1);
-				strncpy (szVariable, szString, nStrLen);
-				szVariable[nStrLen] = '\0';
-				psReturnOp = CreateVariable (szVariable);
-				PropFree (szVariable);
-				szVariable = NULL;
+				boMatch = TryRelation (szString, nStrLen, &nArity);
+
+				if (boMatch) {
+					psReturnOp = StringToRelation (szString, nStrLen, nArity);
+				}
+				else {
+					boMatch = TryStringToTruthLatex (szString, nStrLen, &boTruth);
+					if (boMatch) {
+						psReturnOp = CreateTruthValue (boTruth);
+					}
+					else {
+						// Interpret as a variable, since it's all that's left
+						// TODO: Check whether this can really be a valid variable name (e.g. no brackets)
+						szVariable = DuplicateWithoutWhitespace(szString, nStrLen, NULL);
+						psReturnOp = CreateVariable (szVariable);
+						PropFree (szVariable);
+						szVariable = NULL;
+					}
+				}
 			}
 		}
 	}

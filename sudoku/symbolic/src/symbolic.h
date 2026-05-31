@@ -81,12 +81,18 @@
 typedef struct _Operation Operation;
 // Main variable strucutre
 typedef struct _Variable Variable;
-// Main user function strucutre
-typedef struct _UserFunc UserFunc;
+// Main relation strucutre
+typedef struct _Relation Relation;
 // Operation mapping for pattern extraction
 typedef struct _Extract Extract;
 // List of variable names
 typedef struct _VariableNames VariableNames;
+// List of variable name mappings
+typedef struct _VariableNameMap VariableNameMap;
+// List of relations
+typedef struct _RelationList RelationList;
+// List of relations
+typedef struct _VarStack VarStack;
 
 // User operation callbacks
 typedef double (*UserApproximate)(double fVar1, void * psContext);
@@ -103,12 +109,6 @@ typedef enum _OPUNARY
 	OPUNARY_NUM
 } OPUNARY;
 
-// Textual equivalents of the unary operations
-// TODO: This array should be moved into Convert.cpp
-static char const aszOpUnary[OPUNARY_NUM][7] = {
-	"!",
-};
-
 // Binary operations
 typedef enum _OPBINARY {
 	OPBINARY_INVALID = -1,
@@ -121,15 +121,6 @@ typedef enum _OPBINARY {
 	OPBINARY_NUM
 } OPBINARY;
 
-// Textual equivalents of the binary operations
-// TODO: This array should be moved into Convert.cpp
-static char const aszOpBinary[OPBINARY_NUM][6] = {
-	"^",
-	"v",
-	"->",
-	"x",
-};
-
 // Ternary operatons
 typedef enum _OPTERNARY {
 	OPTERNARY_INVALID = -1,
@@ -137,8 +128,20 @@ typedef enum _OPTERNARY {
 	OPTERNARY_NUM
 } OPTERNARY;
 
+// Quantifier operations
+typedef enum _QUANTIFIER {
+	QUANTIFIER_INVALID = -1,
+
+	QUANTIFIER_UNIVERSAL,
+	QUANTIFIER_EXISTENTIAL,
+
+	QUANTIFIER_NUM
+} QUANTIFIER;
+
 //////////////////////////////////////////////////////////////////
 // Function prototypes
+
+void PrintOperation (Operation const * psOp);
 
 // Memory related functions
 void PropMemReset (void);
@@ -153,10 +156,12 @@ Operation * CreateTruthValue (bool const boTruth);
 Operation * CreateVariable (char const * szVar);
 Operation * CreateUnary (OPUNARY eOpType, Operation * psVar1);
 Operation * CreateBinary (OPBINARY eOpType, Operation * psVar1, Operation * psVar2);
+Operation * CreateQuantifier (QUANTIFIER eQuType, char const * szVar, Operation * psVar1);
+Operation * CreateRelation (char const * szName, size_t nArity, char * const * aszVar);
 
 // Conversion to and from strings
-char * OperationToString (Operation * psOp, char * szString, int nStrLen);
-int OperationToStringLength (Operation * psOp);
+char * OperationToString (Operation const * psOp, char * szString, int nStrLen);
+int OperationToStringLength (Operation const * psOp);
 Operation * StringToOperation (char const * szString);
 
 // Conversion to and from LaTeX strings
@@ -166,7 +171,7 @@ Operation * StringToOperationLatex (char const * szString);
 
 // Managing operations
 void FreeRecursive (Operation * psOp);
-Operation * CopyRecursive (Operation * psOp);
+Operation * CopyRecursive (Operation const * psOp);
 Operation * FindOperation (Operation * psMain, Operation * psFind);
 
 // Manipulating operations mathematically
@@ -174,7 +179,7 @@ Operation * SubstituteOperation (Operation * psMain, Operation * psFind, Operati
 Operation * SubstituteOperationPair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2);
 Operation * SubstituteOperationMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount);
 Operation * SimplifyOperation (Operation * psOp);
-bool CompareOperations (Operation * psOp1, Operation * psOp2);
+bool CompareOperations (Operation const * psOp1, Operation const * psOp2);
 double ApproximateOperation (Operation * psOp);
 Operation * UberSimplifyOperation (Operation * psOp);
 
@@ -198,10 +203,13 @@ char const * VariableName (Variable const * const psVariable);
 Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee);
 Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee, int nCount);
 int ExtractCount(Extract * psExtract);
-char * ExtractName(Extract * psExtract, int nPosition);
-Operation * ExtractValue(Extract * psExtract, char const * const szName);
-Operation * ExtractValueFromPos(Extract * psExtract, int nPosition);
-void FreeExtract(Extract * psExtract);
+Operation * ExtractRelation (Extract * psExtract, int nPosition);
+Operation * ExtractValueFromPos (Extract * psExtract, int nPosition);
+Operation * ExtractValue (Extract * psExtract, Operation const * const psRelation);
+void FreeExtract (Extract * psExtract);
+
+void ReplaceUnbound (Operation * psOp, char const * const szVarFrom, char const * const szVarTo);
+bool OccursUnbound (Operation const * psOp, char const * const szVar);
 
 // Simple listing of variable names
 VariableNames * CreateVariableNames ();
@@ -211,5 +219,30 @@ void VariableNamesRemove(VariableNames * psVariableNames, char const * szVar);
 int VariableNamesCount(VariableNames * psVariableNames);
 char * VariableNamesGet(VariableNames * psVariableNames, int nPos);
 void VariableNamesExtract(VariableNames * psVariableNames, Operation * psOp);
+
+// Simple listing of relations
+RelationList * CreateRelationList ();
+RelationList * FreeRelationList (RelationList * psRelationList);
+void RelationListAdd(RelationList * psRelationList, Operation const * psOp);
+void RelationListRemove(RelationList * psRelationList, Operation const * psOp);
+int RelationListCount(RelationList * psRelationList);
+Operation * RelationListGet(RelationList * psRelationList, int nPos);
+void RelationListExtract(RelationList * psRelationList, Operation * psOp);
+
+// TODO: Remove the following once the pattern matching is working
+// Managing quantifiers
+QUANTIFIER QuantifierGetType(Operation const* psOp);
+char const* QuantifierGetVariable(Operation const* psOp);
+Operation const* QuantifierGetSub(Operation const* psOp);
+
+// Variable name mapping
+VariableNameMap * CreateVariableNameMap ();
+VariableNameMap * FreeVariableNameMap (VariableNameMap * psVariableNameMap);
+void VariableNameMapAdd (VariableNameMap * psVariableNameMap, char const * szVarFrom, char const * szVarTo);
+void VariableNameMapRemove (VariableNameMap * psVariableNameMap, char const * szVarFrom, char const * szVarTo);
+bool VariableNameMapExtract (VariableNameMap * psVariableNameMap, Operation const * psOpFrom, Operation const * psOpTo);
+int VariableNameMapCount (VariableNameMap * psVariableNameMap);
+char const * VariableNameMapGetFrom (VariableNameMap * psVariableNameMap, int nPos);
+char const * VariableNameMapGetTo (VariableNameMap * psVariableNameMap, int nPos);
 
 #endif // if !defined _H_SYMBOLIC
