@@ -157,11 +157,19 @@ size_t command_next_non_space_comma(char const* szStart, size_t uLength) {
 size_t command_next_space_comma(char const* szStart, size_t uLength) {
 	size_t uPos;
 	bool boContinue;
+	int nBrackets;
 
 	uPos = 0;
+	nBrackets = 0;
 	boContinue = TRUE;
 	while ((uPos < uLength) && boContinue) {
-		if (szStart[uPos] == ',') {
+		if (szStart[uPos] == '(') {
+			nBrackets += 1;
+		}
+		if (szStart[uPos] == ')') {
+			nBrackets -= 1;
+		}
+		if ((nBrackets == 0) && (szStart[uPos] == ',')) {
 			boContinue = FALSE;
 		}
 		else {

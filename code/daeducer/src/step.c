@@ -50,6 +50,14 @@ void step_delete(Step* psStep) {
 			free(psStep->apsRef);
 			psStep->apsRef = NULL;
 		}
+		if (psStep->aszVar) {
+			for (uPos = 0; uPos < psStep->uVarCount; ++uPos) {
+				free(psStep->aszVar[uPos]);
+				psStep->aszVar[uPos] = NULL;
+			}
+			free(psStep->aszVar);
+			psStep->aszVar = NULL;
+		}
 
 		free(psStep);
 	}
@@ -141,6 +149,30 @@ void step_print(Step* psStep, Ruleset* psRuleset) {
 				snprintf(szCommand, uCommandLength, "DIS");
 			}
 			break;
+			case STEP_UNIVERSAL_INTRO: {
+				uCommandLength = snprintf(NULL, 0, "UI, %s", psStep->apsRef[0]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "UI, %s", psStep->apsRef[0]->szName);
+			}
+			break;
+			case STEP_UNIVERSAL_ELIM: {
+				uCommandLength = snprintf(NULL, 0, "UE, %s", psStep->apsRef[0]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "UE, %s", psStep->apsRef[0]->szName);
+			}
+			break;
+			case STEP_EXISTENTIAL_INTRO: {
+				uCommandLength = snprintf(NULL, 0, "EI, %s", psStep->apsRef[0]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "EI, %s", psStep->apsRef[0]->szName);
+			}
+			break;
+			case STEP_EXISTENTIAL_ELIM: {
+				uCommandLength = snprintf(NULL, 0, "EE, %s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "EE, %s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName);
+			}
+			break;
 			case STEP_QED: {
 				uCommandLength = 4;
 				szCommand = calloc(uCommandLength, sizeof(char));
@@ -203,7 +235,7 @@ void step_command_output(Step* psStep, Ruleset* psRuleset, FILE* fhFile) {
 		if (szCommand) {
 			fprintf(fhFile, "%s", szCommand);
 
-			uParameters = psStep->uRefCount + psStep->uInputCount;
+			uParameters = psStep->uRefCount + psStep->uInputCount + psStep->uVarCount;
 			if (uParameters > 0) {
 				fprintf(fhFile, " ");
 
@@ -213,11 +245,16 @@ void step_command_output(Step* psStep, Ruleset* psRuleset, FILE* fhFile) {
 						fprintf(fhFile, "%s", psStep->apsRef[uPos]->szName);
 					}
 					else {
-						uLength = OperationToStringLength(psStep->apsInput[(uPos - psStep->uRefCount)]) + 1;
-						szOperation = malloc(uLength);
-						OperationToString(psStep->apsInput[(uPos - psStep->uRefCount)], szOperation, uLength);
-						fprintf(fhFile, "%s", szOperation);
-						free(szOperation);
+						if (uPos < (psStep->uRefCount + psStep->uInputCount)) {
+							uLength = OperationToStringLength(psStep->apsInput[(uPos - psStep->uRefCount)]) + 1;
+							szOperation = malloc(uLength);
+							OperationToString(psStep->apsInput[(uPos - psStep->uRefCount)], szOperation, uLength);
+							fprintf(fhFile, "%s", szOperation);
+							free(szOperation);
+						}
+						else {
+							fprintf(fhFile, "%s", psStep->aszVar[(uPos - (psStep->uRefCount + psStep->uInputCount))]);
+						}
 					}
 					uPos += 1;
 					if (uPos < uParameters) {

@@ -134,7 +134,7 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 						apsSub = calloc(uVarCount, sizeof(Operation*));
 
 						for (uPos = 0; uPos < uVarCount; ++uPos) {
-							apsFind[uPos] = CreateVariable(ExtractName(psExtract, uPos));
+							apsFind[uPos] = CopyRecursive(ExtractRelation(psExtract, uPos));
 							apsSub[uPos] = ExtractValueFromPos(psExtract, uPos);
 						}
 
@@ -205,10 +205,10 @@ Lemma* lemma_from_proof(Proof* psProof) {
 	size_t uLength;
 	size_t uPos;
 	size_t uRefPos;
-	size_t uVarCount;
-	char const* szVar;
-	VariableNames* psRefVariables;
-	VariableNames* psResultVariables;
+	size_t uRelationsCount;
+	Operation const* psRelation;
+	RelationList* psRefRelations;
+	RelationList* psResultRelations;
 
 	psLemma = lemma_new();
 
@@ -220,14 +220,14 @@ Lemma* lemma_from_proof(Proof* psProof) {
 	psLemma->szAnnotation = malloc(uLength + 1);
 	strncpy(psLemma->szAnnotation, psProof->szAnnotation, uLength + 1);
 
-	psRefVariables = CreateVariableNames();
+	psRefRelations = CreateRelationList();
 	psLemma->uRefNum = 0;
 	psLemma->uOpNum = 0;
 	uPos = 0;
 	while (uPos < psProof->uStepCount) {
 		if (psProof->apsStep[uPos]->eCommand == STEP_PREMISE) {
 			psLemma->uRefNum += 1;
-			VariableNamesExtract(psRefVariables, psProof->apsStep[uPos]->psResult);
+			RelationListExtract(psRefRelations, psProof->apsStep[uPos]->psResult);
 		}
 		uPos += 1;
 	}
@@ -236,16 +236,16 @@ Lemma* lemma_from_proof(Proof* psProof) {
 		psLemma->psResult = CopyRecursive(psProof->apsStep[(psProof->uStepCount - 2)]->psResult);
 	}
 
-	psResultVariables = CreateVariableNames();
-	VariableNamesExtract(psResultVariables, psLemma->psResult);
+	psResultRelations = CreateRelationList();
+	RelationListExtract(psResultRelations, psLemma->psResult);
 
-	uVarCount = VariableNamesCount(psRefVariables);
-	for (uPos = 0; uPos < uVarCount; ++uPos) {
-		szVar = VariableNamesGet(psRefVariables, uPos);
-		VariableNamesRemove(psResultVariables, szVar);
+	uRelationsCount = RelationListCount(psRefRelations);
+	for (uPos = 0; uPos < uRelationsCount; ++uPos) {
+		psRelation = RelationListGet(psRefRelations, uPos);
+		RelationListRemove(psResultRelations, psRelation);
 	}
 
-	psLemma->uOpNum = VariableNamesCount(psResultVariables);
+	psLemma->uOpNum = RelationListCount(psResultRelations);
 	psLemma->apsPattern = calloc((psLemma->uRefNum + psLemma->uOpNum), sizeof(Operation*));
 
 	uPos = 0;
@@ -259,12 +259,12 @@ Lemma* lemma_from_proof(Proof* psProof) {
 	}
 
 	for (uPos = 0; uPos < psLemma->uOpNum; ++uPos) {
-		szVar = VariableNamesGet(psResultVariables, uPos);
-		psLemma->apsPattern[psLemma->uRefNum + uPos] = CreateVariable(szVar);
+		psRelation = RelationListGet(psResultRelations, uPos);
+		psLemma->apsPattern[psLemma->uRefNum + uPos] = CopyRecursive(psRelation);
 	}
 
-	FreeVariableNames(psResultVariables);
-	FreeVariableNames(psRefVariables);
+	FreeRelationList(psResultRelations);
+	FreeRelationList(psRefRelations);
 
 	return psLemma;
 }
