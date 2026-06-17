@@ -672,6 +672,9 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 					bool boFound;
 					char* szVarFrom;
 					char* szVarTo;
+					int nUnboundBefore;
+					int nUnboundAfter;
+					Operation* psResult;
 
 					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 1);
 					if (boFound) {
@@ -691,14 +694,23 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 								// Check that szVarFrom doesn't occur in a premise or undischarged assumption
 								boFound = proof_variable_assumed_in_scope(psProof, psProof->uStepCount - 1, szVarFrom);
 								if (!boFound) {
-									psStep->uRefCount = 1;
-									psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
-									psStep->apsRef[0] = apsRef[0];
+									psResult = CopyRecursive(apsScrutinee[0]);
+									nUnboundBefore = OccursUnbound(psResult, szVarFrom);
+									ReplaceUnbound(psResult, szVarFrom, szVarTo);
+									nUnboundAfter = OccursUnbound(psResult, szVarTo);
+									if (nUnboundBefore == nUnboundAfter) {
+										psStep->uRefCount = 1;
+										psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+										psStep->apsRef[0] = apsRef[0];
 
-									psStep->psResult = CopyRecursive(apsScrutinee[0]);
-									ReplaceUnbound(psStep->psResult, szVarFrom, szVarTo);
-									psStep->psResult = CreateQuantifier(QUANTIFIER_UNIVERSAL, szVarTo, psStep->psResult);
-									boError = FALSE;
+										psStep->psResult = CreateQuantifier(QUANTIFIER_UNIVERSAL, szVarTo, psResult);
+										boError = FALSE;
+									}
+									else {
+										FreeRecursive(psResult);
+										psResult = NULL;
+										szError = "The replaced variable cannot become bound by an existing quantifer.";
+									}
 								}
 								else {
 									szError = "The variable to replace must not occur in a premise or undischarged assumption";
