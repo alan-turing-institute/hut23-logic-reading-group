@@ -145,7 +145,10 @@ am____libsymbolic_a_OBJECTS = ___libsymbolic_a-approximate.$(OBJEXT) \
 	___libsymbolic_a-convert.$(OBJEXT) \
 	___libsymbolic_a-variables.$(OBJEXT) \
 	___libsymbolic_a-extract.$(OBJEXT) \
-	___libsymbolic_a-latex.$(OBJEXT)
+	___libsymbolic_a-latex.$(OBJEXT) \
+	___libsymbolic_a-relation.$(OBJEXT) \
+	___libsymbolic_a-relationlist.$(OBJEXT) \
+	___libsymbolic_a-varstack.$(OBJEXT)
 ___libsymbolic_a_OBJECTS = $(am____libsymbolic_a_OBJECTS)
 am__dirstamp = $(am__leading_dot)dirstamp
 am____symbolic_OBJECTS = ___symbolic-interface.$(OBJEXT)
@@ -171,8 +174,11 @@ am__depfiles_remade = ./$(DEPDIR)/___libsymbolic_a-approximate.Po \
 	./$(DEPDIR)/___libsymbolic_a-extract.Po \
 	./$(DEPDIR)/___libsymbolic_a-latex.Po \
 	./$(DEPDIR)/___libsymbolic_a-prop.Po \
+	./$(DEPDIR)/___libsymbolic_a-relation.Po \
+	./$(DEPDIR)/___libsymbolic_a-relationlist.Po \
 	./$(DEPDIR)/___libsymbolic_a-simplify.Po \
 	./$(DEPDIR)/___libsymbolic_a-variables.Po \
+	./$(DEPDIR)/___libsymbolic_a-varstack.Po \
 	./$(DEPDIR)/___symbolic-interface.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_$(V))
@@ -322,7 +328,7 @@ top_builddir = ..
 top_srcdir = ..
 lib_LIBRARIES = ../libsymbolic.a
 include_HEADERS = symbolic.h
-___libsymbolic_a_SOURCES = symbolic_private.h symbolic.h approximate.c prop.c simplify.c convert.c variables.c extract.c latex.c
+___libsymbolic_a_SOURCES = symbolic_private.h symbolic.h approximate.c prop.c simplify.c convert.c variables.c extract.c latex.c relation.c relationlist.c varstack.c
 ___libsymbolic_a_CFLAGS = -std=c99
 ___symbolic_SOURCES = interface.c
 ___symbolic_CPPFLAGS = -std=c99
@@ -418,8 +424,11 @@ include ./$(DEPDIR)/___libsymbolic_a-convert.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-extract.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-latex.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-prop.Po # am--include-marker
+include ./$(DEPDIR)/___libsymbolic_a-relation.Po # am--include-marker
+include ./$(DEPDIR)/___libsymbolic_a-relationlist.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-simplify.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-variables.Po # am--include-marker
+include ./$(DEPDIR)/___libsymbolic_a-varstack.Po # am--include-marker
 include ./$(DEPDIR)/___symbolic-interface.Po # am--include-marker
 
 $(am__depfiles_remade):
@@ -539,6 +548,48 @@ ___libsymbolic_a-latex.obj: latex.c
 #	$(AM_V_CC)source='latex.c' object='___libsymbolic_a-latex.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-latex.obj `if test -f 'latex.c'; then $(CYGPATH_W) 'latex.c'; else $(CYGPATH_W) '$(srcdir)/latex.c'; fi`
+
+___libsymbolic_a-relation.o: relation.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-relation.o -MD -MP -MF $(DEPDIR)/___libsymbolic_a-relation.Tpo -c -o ___libsymbolic_a-relation.o `test -f 'relation.c' || echo '$(srcdir)/'`relation.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-relation.Tpo $(DEPDIR)/___libsymbolic_a-relation.Po
+#	$(AM_V_CC)source='relation.c' object='___libsymbolic_a-relation.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-relation.o `test -f 'relation.c' || echo '$(srcdir)/'`relation.c
+
+___libsymbolic_a-relation.obj: relation.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-relation.obj -MD -MP -MF $(DEPDIR)/___libsymbolic_a-relation.Tpo -c -o ___libsymbolic_a-relation.obj `if test -f 'relation.c'; then $(CYGPATH_W) 'relation.c'; else $(CYGPATH_W) '$(srcdir)/relation.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-relation.Tpo $(DEPDIR)/___libsymbolic_a-relation.Po
+#	$(AM_V_CC)source='relation.c' object='___libsymbolic_a-relation.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-relation.obj `if test -f 'relation.c'; then $(CYGPATH_W) 'relation.c'; else $(CYGPATH_W) '$(srcdir)/relation.c'; fi`
+
+___libsymbolic_a-relationlist.o: relationlist.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-relationlist.o -MD -MP -MF $(DEPDIR)/___libsymbolic_a-relationlist.Tpo -c -o ___libsymbolic_a-relationlist.o `test -f 'relationlist.c' || echo '$(srcdir)/'`relationlist.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-relationlist.Tpo $(DEPDIR)/___libsymbolic_a-relationlist.Po
+#	$(AM_V_CC)source='relationlist.c' object='___libsymbolic_a-relationlist.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-relationlist.o `test -f 'relationlist.c' || echo '$(srcdir)/'`relationlist.c
+
+___libsymbolic_a-relationlist.obj: relationlist.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-relationlist.obj -MD -MP -MF $(DEPDIR)/___libsymbolic_a-relationlist.Tpo -c -o ___libsymbolic_a-relationlist.obj `if test -f 'relationlist.c'; then $(CYGPATH_W) 'relationlist.c'; else $(CYGPATH_W) '$(srcdir)/relationlist.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-relationlist.Tpo $(DEPDIR)/___libsymbolic_a-relationlist.Po
+#	$(AM_V_CC)source='relationlist.c' object='___libsymbolic_a-relationlist.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-relationlist.obj `if test -f 'relationlist.c'; then $(CYGPATH_W) 'relationlist.c'; else $(CYGPATH_W) '$(srcdir)/relationlist.c'; fi`
+
+___libsymbolic_a-varstack.o: varstack.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-varstack.o -MD -MP -MF $(DEPDIR)/___libsymbolic_a-varstack.Tpo -c -o ___libsymbolic_a-varstack.o `test -f 'varstack.c' || echo '$(srcdir)/'`varstack.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-varstack.Tpo $(DEPDIR)/___libsymbolic_a-varstack.Po
+#	$(AM_V_CC)source='varstack.c' object='___libsymbolic_a-varstack.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-varstack.o `test -f 'varstack.c' || echo '$(srcdir)/'`varstack.c
+
+___libsymbolic_a-varstack.obj: varstack.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-varstack.obj -MD -MP -MF $(DEPDIR)/___libsymbolic_a-varstack.Tpo -c -o ___libsymbolic_a-varstack.obj `if test -f 'varstack.c'; then $(CYGPATH_W) 'varstack.c'; else $(CYGPATH_W) '$(srcdir)/varstack.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-varstack.Tpo $(DEPDIR)/___libsymbolic_a-varstack.Po
+#	$(AM_V_CC)source='varstack.c' object='___libsymbolic_a-varstack.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-varstack.obj `if test -f 'varstack.c'; then $(CYGPATH_W) 'varstack.c'; else $(CYGPATH_W) '$(srcdir)/varstack.c'; fi`
 
 ___symbolic-interface.o: interface.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(___symbolic_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ___symbolic-interface.o -MD -MP -MF $(DEPDIR)/___symbolic-interface.Tpo -c -o ___symbolic-interface.o `test -f 'interface.c' || echo '$(srcdir)/'`interface.c
@@ -708,8 +759,11 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-extract.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-latex.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-prop.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-relation.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-relationlist.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-simplify.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-variables.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-varstack.Po
 	-rm -f ./$(DEPDIR)/___symbolic-interface.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -761,8 +815,11 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-extract.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-latex.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-prop.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-relation.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-relationlist.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-simplify.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-variables.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-varstack.Po
 	-rm -f ./$(DEPDIR)/___symbolic-interface.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic

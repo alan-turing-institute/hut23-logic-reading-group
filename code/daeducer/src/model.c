@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include "sampler.h"
 #include "config.h"
@@ -190,29 +191,36 @@ void model_neuralize(Model* psModel) {
 }
 
 void model_load(Model* psModel, char const* szFilename) {
-	// Logging output
-	llama_log_set(llama_log, NULL);
+	// Check the model exists
+	if (access(szFilename, F_OK) == 0) {
+		// Logging output
+		llama_log_set(llama_log, NULL);
 
-	// Load dynamic backends
-	ggml_backend_load_all();
+		// Load dynamic backends
+		ggml_backend_load_all();
 
-	if (psModel) {
-		// Initialize the model
-		struct llama_model_params sModelParams = llama_model_default_params();
-		sModelParams.n_gpu_layers = 99;
+		if (psModel) {
+			// Initialize the model
+			struct llama_model_params sModelParams = llama_model_default_params();
+			sModelParams.n_gpu_layers = 99;
 
-		psModel->psModel = llama_model_load_from_file(szFilename, sModelParams);
-		if (!psModel->psModel) {
-			fprintf(stderr , "%s: error: unable to load model\n" , __func__);
-			exit(0);
+			psModel->psModel = llama_model_load_from_file(szFilename, sModelParams);
+			if (!psModel->psModel) {
+				fprintf(stderr , "%s: error: unable to load model\n", __func__);
+				exit(0);
+			}
+			config_set_model(psModel->psConfig, psModel->psModel, CONTEXT_WINDOW);
+
+			psModel->uFormattedSize = llama_n_ctx(psModel->psConfig->psContext);
+			psModel->szFormatted = malloc(psModel->uFormattedSize);
+			if (psModel->uFormattedSize > 0) {
+				psModel->szFormatted[0] = 0;
+			}
 		}
-		config_set_model(psModel->psConfig, psModel->psModel, CONTEXT_WINDOW);
-
-		psModel->uFormattedSize = llama_n_ctx(psModel->psConfig->psContext);
-		psModel->szFormatted = malloc(psModel->uFormattedSize);
-		if (psModel->uFormattedSize > 0) {
-			psModel->szFormatted[0] = 0;
-		}
+	}
+	else {
+		fprintf(stderr , "Could not read model: %s\n", szFilename);
+		fprintf(stderr , "Skipping model loading.\n");
 	}
 }
 

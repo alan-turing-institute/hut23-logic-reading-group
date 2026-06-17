@@ -29,6 +29,10 @@ typedef enum _STEP {
 	STEP_EXPLOSION,
 	STEP_ASSUMPTION,
 	STEP_DISCHARGE,
+	STEP_UNIVERSAL_INTRO,
+	STEP_UNIVERSAL_ELIM,
+	STEP_EXISTENTIAL_INTRO,
+	STEP_EXISTENTIAL_ELIM,
 	STEP_QED,
 	STEP_CONTROL,
 	STEP_RESET = STEP_CONTROL,
@@ -49,6 +53,8 @@ struct _Step {
 	Step** apsRef;
 	size_t uInputCount;
 	Operation** apsInput;
+	size_t uVarCount;
+	char** aszVar;
 	Operation* psResult;
 	size_t uIndent;
 };
@@ -70,6 +76,10 @@ static char const aszCommand[STEP_NUM][16] = {
 	"explosion",
 	"assumption",
 	"discharge",
+	"forall_intro",
+	"forall_elim",
+	"exists_intro",
+	"exists_elim",
 	"qed",
 	"reset",
 	"print",
@@ -97,6 +107,10 @@ static char const aszHelp[STEP_NUM][64] = {
 	"explosion           <ref>, <exp>",
 	"assumption          <exp>",
 	"discharge",
+	"forall_intro        <ref>, <var>, <var>",
+	"forall_elim         <ref>, <var>",
+	"exists_intro        <ref>, <exp>",
+	"exists_elim         <ref>, <ref>, <ref>",
 	"qed",
 	"reset",
 	"print",

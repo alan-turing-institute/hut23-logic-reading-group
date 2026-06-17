@@ -48,9 +48,12 @@
 //////////////////////////////////////////////////////////////////
 // Function prototypes
 
-Extract * CreateExtract();
-bool ExtractRecursive (Extract * psExtract, Operation * psPattern, Operation * psScrutinee);
-OperationMap * ExtractOperationMap(Extract * psExtract, char const * const szName);
+Extract * CreateExtract ();
+bool ExtractRecursive (Extract * psExtract, Operation * psPattern, Operation * psScrutinee, VarStack * psBoundVars);
+OperationMap * ExtractOperationMap (Extract * psExtract, Operation const * const psRelation);
+void ReplaceUnboundRecurse (Operation * psOp, char const * const szVarFrom, char const * const szVarTo);
+bool OccursUnboundRecurse (Operation const * psOp, char const * const szVar);
+char const* FindFirstVaraibleDiffRecurse (Operation const* psOpFrom, Operation const* psOpTo);
 
 //////////////////////////////////////////////////////////////////
 // Main application
@@ -66,32 +69,34 @@ Extract * CreateExtract() {
 Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee) {
     Extract * psExtract;
     bool boResult;
-    int nVariableCount;
+    int nRelationCount;
     int nPos;
-    char const * szVar;
-    VariableNames * psVariableNames;
+    Operation const * psOp;
+    RelationList * psRelationList;
+    VarStack * psBoundVars;
 
     psExtract = CreateExtract ();
-    psVariableNames = CreateVariableNames();
+    psRelationList = CreateRelationList();
+    psBoundVars = CreateVarStack();
 
-    VariableNamesExtract(psVariableNames, psPattern);
-    nVariableCount = VariableNamesCount (psVariableNames);
-    psExtract->nCount = nVariableCount;
+    RelationListExtract(psRelationList, psPattern);
+    nRelationCount = RelationListCount (psRelationList);
+    psExtract->nCount = nRelationCount;
 
-    if (nVariableCount > 0) {
-        psExtract->apsOps = PropCalloc(nVariableCount, sizeof(OperationMap));
+    if (nRelationCount > 0) {
+        psExtract->apsOps = PropCalloc(nRelationCount, sizeof(OperationMap));
 
-        for (nPos = 0; nPos < nVariableCount; ++nPos) {
-            szVar = VariableNamesGet (psVariableNames, nPos);
+        for (nPos = 0; nPos < nRelationCount; ++nPos) {
+            psOp = RelationListGet (psRelationList, nPos);
 
-            psExtract->apsOps[nPos].szVar = PropCalloc(strlen(szVar) + 1, sizeof(char));
-            strcpy(psExtract->apsOps[nPos].szVar, szVar);
+            psExtract->apsOps[nPos].psFrom = CopyRecursive(psOp);
         }
     }
 
-    psVariableNames = FreeVariableNames (psVariableNames);
+    psRelationList = FreeRelationList (psRelationList);
+    boResult = ExtractRecursive(psExtract, psPattern, psScrutinee, psBoundVars);
 
-    boResult = ExtractRecursive(psExtract, psPattern, psScrutinee);
+    psBoundVars = FreeVarStack (psBoundVars);
 
     if (boResult == FALSE) {
         FreeExtract(psExtract);
@@ -101,40 +106,54 @@ Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee) {
     return psExtract;
 }
 
-bool ExtractRecursive (Extract * psExtract, Operation * psPattern, Operation * psScrutinee) {
+bool ExtractRecursive (Extract * psExtract, Operation * psPattern, Operation * psScrutinee, VarStack * psBoundVars) {
     bool boSuccess = FALSE;
-    char * szVar;
+    Operation * psRelation;
     OperationMap * psMap;
 
     switch (psPattern->eOpType) {
         case OPTYPE_TRUTHVALUE:
             // Intentional fallthrough
+        case OPTYPE_VARIABLE:
+            // Intentional fallthrough
         default: {
             boSuccess = CompareOperations (psPattern, psScrutinee);
         }
         break;
-	    case OPTYPE_VARIABLE: {
-            szVar = psPattern->Vars.psVar->szVar;
-            psMap = ExtractOperationMap(psExtract, szVar);
-            assert(psMap != NULL);
-            if (psMap->psOp) {
-                boSuccess = CompareOperations (psMap->psOp, psScrutinee);
-            }
-            else {
-                psMap->psOp = psScrutinee;
-                boSuccess = TRUE;
-            }
-	    }
-	    break;
-	    case OPTYPE_UNARY: {
+        case OPTYPE_UNARY: {
             if ((psScrutinee->eOpType == OPTYPE_UNARY) && (psPattern->Vars.psUnary->eOpType == psScrutinee->Vars.psUnary->eOpType)) {
-                boSuccess = ExtractRecursive(psExtract, psPattern->Vars.psUnary->psVar1, psScrutinee->Vars.psUnary->psVar1);
+                boSuccess = ExtractRecursive(psExtract, psPattern->Vars.psUnary->psVar1, psScrutinee->Vars.psUnary->psVar1, psBoundVars);
             }
         }
         break;
-	    case OPTYPE_BINARY: {
+        case OPTYPE_BINARY: {
             if ((psScrutinee->eOpType == OPTYPE_BINARY) && (psPattern->Vars.psBinary->eOpType == psScrutinee->Vars.psBinary->eOpType)) {
-                boSuccess = ExtractRecursive(psExtract, psPattern->Vars.psBinary->psVar1, psScrutinee->Vars.psBinary->psVar1) && ExtractRecursive(psExtract, psPattern->Vars.psBinary->psVar2, psScrutinee->Vars.psBinary->psVar2);
+                boSuccess = ExtractRecursive (psExtract, psPattern->Vars.psBinary->psVar1, psScrutinee->Vars.psBinary->psVar1, psBoundVars) && ExtractRecursive (psExtract, psPattern->Vars.psBinary->psVar2, psScrutinee->Vars.psBinary->psVar2, psBoundVars);
+            }
+        }
+        break;
+        case OPTYPE_QUANTIFIER: {
+            if ((psScrutinee->eOpType == OPTYPE_QUANTIFIER) && (psPattern->Vars.psQuantifier->eQuType == psScrutinee->Vars.psQuantifier->eQuType) && (strcmp(psPattern->Vars.psQuantifier->szVar, psScrutinee->Vars.psQuantifier->szVar) == 0)) {
+                VarStackPush(psBoundVars, psPattern->Vars.psQuantifier->szVar);
+                boSuccess = ExtractRecursive (psExtract, psPattern->Vars.psQuantifier->psVar1, psScrutinee->Vars.psQuantifier->psVar1, psBoundVars);
+                VarStackDrop(psBoundVars);
+            }
+        }
+        break;
+        case OPTYPE_RELATION: {
+            boSuccess = VarStackMatchUnbound (psBoundVars, psScrutinee);
+
+            if (boSuccess) {
+                psMap = ExtractOperationMap (psExtract, psPattern);
+                assert(psMap != NULL);
+                if (psMap->psTo) {
+                    boSuccess = CompareOperations (psMap->psTo, psScrutinee);
+
+                }
+                else {
+                    psMap->psTo = psScrutinee;
+                    boSuccess = TRUE;
+                }
             }
         }
         break;
@@ -146,39 +165,38 @@ bool ExtractRecursive (Extract * psExtract, Operation * psPattern, Operation * p
 Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee, int nCount) {
     Extract * psExtract;
     bool boResult;
-    Variable * psVariables;
-    Variable * psVariableCurrent;
-    int nVariableCount;
+    int nRelationCount;
     int nPos;
     char const * szVar;
-    VariableNames * psVariableNames;
+    Operation const * psOp;
+    RelationList * psRelationList;
+    VarStack * psBoundVars;
 
     psExtract = CreateExtract ();
-    psVariableNames = CreateVariableNames();
+    psRelationList = CreateRelationList();
+    psBoundVars = CreateVarStack();
 
-    psVariables = NULL;
     for (nPos = 0; nPos < nCount; ++nPos) {
-        VariableNamesExtract(psVariableNames, apsPattern[nPos]);
+        RelationListExtract(psRelationList, apsPattern[nPos]);
     }
-    nVariableCount = VariableNamesCount (psVariableNames);
-    psExtract->nCount = nVariableCount;
+    nRelationCount = RelationListCount (psRelationList);
+    psExtract->nCount = nRelationCount;
 
-    if (nVariableCount > 0) {
-        psExtract->apsOps = PropCalloc(nVariableCount, sizeof(OperationMap));
+    if (nRelationCount > 0) {
+        psExtract->apsOps = PropCalloc(nRelationCount, sizeof(OperationMap));
 
-        for (nPos = 0; nPos < nVariableCount; ++nPos) {
-            szVar = VariableNamesGet (psVariableNames, nPos);
+        for (nPos = 0; nPos < nRelationCount; ++nPos) {
+            psOp = RelationListGet (psRelationList, nPos);
 
-            psExtract->apsOps[nPos].szVar = PropCalloc(strlen(szVar) + 1, sizeof(char));
-            strcpy(psExtract->apsOps[nPos].szVar, szVar);
+            psExtract->apsOps[nPos].psFrom = CopyRecursive(psOp);
         }
     }
 
-    psVariableNames = FreeVariableNames (psVariableNames);
+    psRelationList = FreeRelationList (psRelationList);
 
     boResult = TRUE;
     for (nPos = 0; (nPos < nCount) && boResult; ++nPos) {
-        boResult = ExtractRecursive(psExtract, apsPattern[nPos], apsScrutinee[nPos]);
+        boResult = ExtractRecursive(psExtract, apsPattern[nPos], apsScrutinee[nPos], psBoundVars);
     }
 
     if (boResult == FALSE) {
@@ -186,42 +204,44 @@ Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee
         psExtract = NULL;
     }
 
+    psBoundVars = FreeVarStack (psBoundVars);
+
     return psExtract;
 }
 
-int ExtractCount(Extract * psExtract) {
+int ExtractCount (Extract * psExtract) {
     return psExtract->nCount;
 }
 
-char * ExtractName(Extract * psExtract, int nPosition) {
-    char * szName = NULL;
+Operation * ExtractRelation(Extract * psExtract, int nPosition) {
+    Operation * psOp = NULL;
 
     if ((nPosition >= 0) && (nPosition < psExtract->nCount)) {
-        szName = psExtract->apsOps[nPosition].szVar;
+        psOp = psExtract->apsOps[nPosition].psFrom;
     }
 
-    return szName;
+    return psOp;
 }
 
-Operation * ExtractValueFromPos(Extract * psExtract, int nPosition) {
+Operation * ExtractValueFromPos (Extract * psExtract, int nPosition) {
     Operation * psValue = NULL;
     int nPos;
 
     if ((nPosition >= 0) && (nPosition < psExtract->nCount)) {
-        psValue = psExtract->apsOps[nPosition].psOp;
+        psValue = psExtract->apsOps[nPosition].psTo;
     }
 
     return psValue;
 }
 
-Operation * ExtractValue(Extract * psExtract, char const * const szName) {
+Operation * ExtractValue (Extract * psExtract, Operation const * const psRelation) {
     Operation * psValue = NULL;
     int nPos;
 
     nPos = 0;
     while ((psValue == NULL) && (nPos < psExtract->nCount)) {
-        if (strcmp(szName, psExtract->apsOps[nPos].szVar) == 0) {
-            psValue = psExtract->apsOps[nPos].psOp;
+        if (CompareOperations(psRelation, psExtract->apsOps[nPos].psFrom)) {
+            psValue = psExtract->apsOps[nPos].psTo;
         }
         nPos += 1;
     }
@@ -229,13 +249,13 @@ Operation * ExtractValue(Extract * psExtract, char const * const szName) {
     return psValue;
 }
 
-OperationMap * ExtractOperationMap(Extract * psExtract, char const * const szName) {
+OperationMap * ExtractOperationMap (Extract * psExtract, Operation const * const psRelation) {
     OperationMap * psMap = NULL;
     int nPos;
 
     nPos = 0;
     while ((psMap == NULL) && (nPos < psExtract->nCount)) {
-        if (strcmp(szName, psExtract->apsOps[nPos].szVar) == 0) {
+        if (CompareOperations(psRelation, psExtract->apsOps[nPos].psFrom)) {
             psMap = &psExtract->apsOps[nPos];
         }
         nPos += 1;
@@ -244,16 +264,16 @@ OperationMap * ExtractOperationMap(Extract * psExtract, char const * const szNam
     return psMap;
 }
 
-void FreeExtract(Extract * psExtract) {
+void FreeExtract (Extract * psExtract) {
     int nPos;
 
     if (psExtract) {
         if (psExtract->apsOps) {
             for (nPos = 0; nPos < psExtract->nCount; ++nPos) {
-                if (psExtract->apsOps[nPos].szVar) {
-                    PropFree (psExtract->apsOps[nPos].szVar);
-                    psExtract->apsOps[nPos].szVar = NULL;
-                    psExtract->apsOps[nPos].psOp = NULL;
+                if (psExtract->apsOps[nPos].psFrom) {
+                    FreeRecursive(psExtract->apsOps[nPos].psFrom);
+                    psExtract->apsOps[nPos].psFrom = NULL;
+                    psExtract->apsOps[nPos].psTo = NULL;
                 }
             }
 
@@ -265,3 +285,101 @@ void FreeExtract(Extract * psExtract) {
     }
 }
 
+void ReplaceUnbound (Operation * psOp, char const * const szVarFrom, char const * const szVarTo) {
+    ReplaceUnboundRecurse(psOp, szVarFrom, szVarTo);
+}
+
+void ReplaceUnboundRecurse (Operation * psOp, char const * const szVarFrom, char const * const szVarTo) {
+    size_t nVar;
+
+    // Check the operations recursively
+    if (psOp) {
+        switch (psOp->eOpType) {
+            case OPTYPE_TRUTHVALUE:
+                // Nothing to do
+                break;
+            case OPTYPE_VARIABLE:
+                // Nothing to do
+                break;
+            case OPTYPE_UNARY:
+                ReplaceUnboundRecurse(psOp->Vars.psUnary->psVar1, szVarFrom, szVarTo);
+                break;
+            case OPTYPE_BINARY:
+                ReplaceUnboundRecurse(psOp->Vars.psBinary->psVar1, szVarFrom, szVarTo);
+                ReplaceUnboundRecurse(psOp->Vars.psBinary->psVar2, szVarFrom, szVarTo);
+                break;
+            case OPTYPE_QUANTIFIER:
+                // Once a variable is bound it'll be bound in all subformulae
+                // So only recursive if we're not binding the variable
+                if (strcmp(szVarFrom, psOp->Vars.psQuantifier->szVar) != 0) {
+                    ReplaceUnboundRecurse(psOp->Vars.psQuantifier->psVar1, szVarFrom, szVarTo);
+                }
+                break;
+            case OPTYPE_RELATION:
+                for (nVar = 0; nVar < psOp->Vars.psRelation->nArity; ++nVar) {
+                    // Replace any instances of szVarFrom with szVarTo
+                    if (strcmp (szVarFrom, psOp->Vars.psRelation->aszVar[nVar]) == 0) {
+                        PropFree (psOp->Vars.psRelation->aszVar[nVar]);
+                        psOp->Vars.psRelation->aszVar[nVar] = (char *)PropMalloc (strlen (szVarTo) + 1);
+                        strcpy (psOp->Vars.psRelation->aszVar[nVar], szVarTo);
+                    }
+                }
+                break;
+            default:
+                // Not something we know about (shouldn't happen)
+                printf("Invalid operation type\n");
+                break;
+        }
+    }
+}
+
+bool OccursUnbound (Operation const * psOp, char const * const szVar) {
+   return OccursUnboundRecurse (psOp, szVar);
+}
+
+bool OccursUnboundRecurse (Operation const * psOp, char const * const szVar) {
+    size_t nVar;
+    bool boOccurs = FALSE;
+
+    // Check the operations recursively
+    if (psOp) {
+        switch (psOp->eOpType) {
+            case OPTYPE_TRUTHVALUE:
+                // Nothing to do
+                break;
+            case OPTYPE_VARIABLE:
+                // Nothing to do
+                break;
+            case OPTYPE_UNARY:
+                boOccurs = OccursUnboundRecurse(psOp->Vars.psUnary->psVar1, szVar);
+                break;
+            case OPTYPE_BINARY:
+                boOccurs = OccursUnboundRecurse(psOp->Vars.psBinary->psVar1, szVar);
+                boOccurs |= OccursUnboundRecurse(psOp->Vars.psBinary->psVar2, szVar);
+                break;
+            case OPTYPE_QUANTIFIER:
+                // Once a variable is bound it'll be bound in all subformulae
+                // So only recursive if we're not binding the variable
+                if (strcmp(szVar, psOp->Vars.psQuantifier->szVar) != 0) {
+                    boOccurs = OccursUnboundRecurse(psOp->Vars.psQuantifier->psVar1, szVar);
+                }
+                break;
+            case OPTYPE_RELATION:
+                nVar = 0;
+                while ((boOccurs == FALSE) && (nVar < psOp->Vars.psRelation->nArity)) {
+                    // Replace any instances of szVarFrom with szVarTo
+                    if (strcmp (szVar, psOp->Vars.psRelation->aszVar[nVar]) == 0) {
+                        boOccurs = TRUE;
+                    }
+                    nVar += 1;
+                }
+                break;
+            default:
+                // Not something we know about (shouldn't happen)
+                printf("Invalid operation type\n");
+                break;
+        }
+    }
+
+    return boOccurs;
+}

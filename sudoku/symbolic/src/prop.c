@@ -170,6 +170,8 @@ Operation * CreateTruthValue (bool const boTruth) {
 /**
  * Create a variable.
  *
+ * The szVar string will be copied.
+ *
  * @param szVar the name of the variable.
  * @return pointer to the created Operation.
  *
@@ -182,7 +184,7 @@ Operation * CreateVariable (char const * szVar) {
 	psOp->eOpType = OPTYPE_VARIABLE;
 	psOp->Vars.psVar = (OpVariable*)PropMalloc(sizeof(OpVariable));
 
-	// Store the user functioon name
+	// Store the user function name
 	nNameLen = (int)strlen (szVar);
 	psOp->Vars.psVar->szVar = (char *)PropMalloc (nNameLen + 1);
 	strncpy (psOp->Vars.psVar->szVar, szVar, nNameLen);
@@ -243,6 +245,41 @@ Operation * CreateBinary (OPBINARY eOpType, Operation * psVar1, Operation * psVa
 }
 
 /**
+ * Create a quantifier operation.
+ *
+ * The szVar string will be copied.
+ *
+ * Contrariwise psVar1 is used directly, rather than being copied. As
+ * such it will be freed when the resulting combined Operation is freed
+ * recursively.
+ *
+ * @param eQuantType the type of quantifer (universal or existential).
+ * @param psVar the name of the variable to quantify over.
+ * @param psVar1 the Operation that the quantifier applies to.
+ * @return pointer to the created Operation.
+ *
+ */
+Operation * CreateQuantifier (QUANTIFIER eQuType, char const * szVar, Operation * psVar1) {
+	Operation * psOp;
+	int nNameLen;
+
+	psOp = (Operation*)PropMalloc (sizeof(Operation));
+	psOp->eOpType = OPTYPE_QUANTIFIER;
+	psOp->Vars.psQuantifier = (OpQuantifier*)PropMalloc(sizeof(OpQuantifier));
+	psOp->Vars.psQuantifier->eQuType = eQuType;
+
+	// Store the user function name
+	nNameLen = (int)strlen (szVar);
+	psOp->Vars.psQuantifier->szVar = (char *)PropMalloc (nNameLen + 1);
+	strncpy (psOp->Vars.psQuantifier->szVar, szVar, nNameLen);
+	psOp->Vars.psQuantifier->szVar[nNameLen] = 0;
+
+	psOp->Vars.psQuantifier->psVar1 = psVar1;
+
+	return psOp;
+}
+
+/**
  * Recursively free up all of the memory used by a formula and its sub formulas.
  * Care should be taken not to perform multiple frees, by freeing up an
  * Operation that was already freed by this.
@@ -258,7 +295,7 @@ void FreeRecursive (Operation * psOp) {
 				// Nothing else to free - backtrack
 				break;
 			case OPTYPE_VARIABLE:
-				// Free up the variable string and decrement
+				// Free up the variable name string and decrement
 				// variable reference if there is one,
 				// then backtrack
 				if (psOp->Vars.psVar->psValue) {
@@ -284,6 +321,17 @@ void FreeRecursive (Operation * psOp) {
 				}
 				// Then backtrack
 				break;
+			case OPTYPE_QUANTIFIER:
+				// Free up the variable name string and any operations further down the tree
+				if (psOp->Vars.psQuantifier) {
+					PropFree (psOp->Vars.psQuantifier->szVar);
+					FreeRecursive (psOp->Vars.psQuantifier->psVar1);
+					PropFree (psOp->Vars.psQuantifier);
+				}
+				break;
+			case OPTYPE_RELATION:
+				RelationFreeRecursive (psOp);
+				break;
 			default:
 				printf("Invalid operation type\n");
 				break;
@@ -303,7 +351,7 @@ void FreeRecursive (Operation * psOp) {
  * @return the newly created copy.
  *
  */
-Operation * CopyRecursive (Operation * psOp)
+Operation * CopyRecursive (Operation const * psOp)
 {
 	Operation * psReturn = NULL;
 	if (psOp) {
@@ -324,6 +372,14 @@ Operation * CopyRecursive (Operation * psOp)
 					CopyRecursive (psOp->Vars.psBinary->psVar1),
 					CopyRecursive (psOp->Vars.psBinary->psVar2));
 				break;
+			case OPTYPE_QUANTIFIER:
+				psReturn = CreateQuantifier (psOp->Vars.psQuantifier->eQuType,
+					psOp->Vars.psQuantifier->szVar,
+					CopyRecursive (psOp->Vars.psQuantifier->psVar1));
+				break;
+			case OPTYPE_RELATION:
+				psReturn = CopyRelation (psOp);
+				break;
 			default:
 				printf("Invalid operation type\n");
 				break;
@@ -341,7 +397,7 @@ Operation * CopyRecursive (Operation * psOp)
  * @return true iff the two Operations have identical content.
  *
  */
-bool CompareOperations (Operation * psOp1, Operation * psOp2) {
+bool CompareOperations (Operation const * psOp1, Operation const * psOp2) {
 	bool boReturn = TRUE;
 
 	if ((psOp1) && (psOp2)) {
@@ -376,6 +432,23 @@ bool CompareOperations (Operation * psOp1, Operation * psOp2) {
 							&& CompareOperations (psOp1->Vars.psBinary->psVar2,
 							psOp2->Vars.psBinary->psVar2));
 					}
+					break;
+				case OPTYPE_QUANTIFIER:
+					if (psOp1->Vars.psQuantifier->eQuType != psOp2->Vars.psQuantifier->eQuType) {
+						boReturn = FALSE;
+					}
+					else {
+						if (strcmp (psOp1->Vars.psQuantifier->szVar, psOp2->Vars.psQuantifier->szVar) != 0) {
+							boReturn = FALSE;
+						}
+						else {
+							boReturn = CompareOperations (psOp1->Vars.psQuantifier->psVar1,
+								psOp2->Vars.psQuantifier->psVar1);
+						}
+					}
+					break;
+				case OPTYPE_RELATION:
+					boReturn = RelationCompare (psOp1, psOp2);
 					break;
 				default:
 					printf("Invalid operation type\n");
@@ -437,6 +510,21 @@ Operation * FindOperation (Operation * psMain, Operation * psFind) {
 					}
 				}
 				break;
+			case OPTYPE_QUANTIFIER:
+				psReturn = FindOperation (psMain->Vars.psQuantifier->psVar1, psFind);
+				if (!psReturn) {
+					boSame = CompareOperations (psMain, psFind);
+					if (boSame) {
+						psReturn = psMain;
+					}
+				}
+				break;
+			case OPTYPE_RELATION:
+				boSame = RelationCompare (psMain, psFind);
+				if (boSame) {
+					psReturn = psMain;
+				}
+				break;
 			default:
 				printf("Invalid operation type\n");
 				break;
@@ -495,6 +583,8 @@ bool SubstituteRecursive (Operation * psMain, Operation * psFind, Operation * ps
 		switch (psMain->eOpType) {
 			case OPTYPE_VARIABLE:
 			case OPTYPE_TRUTHVALUE:
+				boSubstitute = CompareOperations (psMain, psFind);
+				break;
 			case OPTYPE_UNARY:
 				boSubstitute = CompareOperations (psMain, psFind);
 				if (!boSubstitute) {
@@ -520,6 +610,19 @@ bool SubstituteRecursive (Operation * psMain, Operation * psFind, Operation * ps
 						psMain->Vars.psBinary->psVar2 = CopyRecursive (psSub);
 					}
 				}
+				break;
+			case OPTYPE_QUANTIFIER:
+				boSubstitute = CompareOperations (psMain, psFind);
+				if (!boSubstitute) {
+					boFind = SubstituteRecursive (psMain->Vars.psQuantifier->psVar1, psFind, psSub);
+					if (boFind) {
+						FreeRecursive (psMain->Vars.psQuantifier->psVar1);
+						psMain->Vars.psQuantifier->psVar1 = CopyRecursive (psSub);
+					}
+				}
+				break;
+			case OPTYPE_RELATION:
+				boSubstitute = RelationCompare (psMain, psFind);
 				break;
 			default:
 				printf("Invalid operation type\n");
@@ -600,8 +703,9 @@ int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation 
 	if ((psMain) && (psSub1) && (psSub2)) {
 		switch (psMain->eOpType) {
 			case OPTYPE_TRUTHVALUE:
-				break;
 			case OPTYPE_VARIABLE:
+				nSubstitute = CompareOperationsPair (psMain, psFind1, psFind2);
+				break;
 			case OPTYPE_UNARY:
 				nSubstitute = CompareOperationsPair (psMain, psFind1, psFind2);
 				if (nSubstitute == 0) {
@@ -656,6 +760,29 @@ int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation 
 							break;
 					}
 				}
+				break;
+			case OPTYPE_QUANTIFIER:
+				nSubstitute = CompareOperationsPair (psMain, psFind1, psFind2);
+				if (nSubstitute == 0) {
+					nFind = SubstituteRecursivePair (psMain->Vars.psQuantifier->psVar1,
+						psFind1, psSub1, psFind2, psSub2);
+					switch (nFind) {
+						case 1:
+							FreeRecursive (psMain->Vars.psQuantifier->psVar1);
+							psMain->Vars.psQuantifier->psVar1 = CopyRecursive (psSub1);
+							break;
+						case 2:
+							FreeRecursive (psMain->Vars.psQuantifier->psVar1);
+							psMain->Vars.psQuantifier->psVar1 = CopyRecursive (psSub2);
+							break;
+						default:
+							// Do nothing
+							break;
+					}
+				}
+				break;
+			case OPTYPE_RELATION:
+				nSubstitute = CompareOperationsPair (psMain, psFind1, psFind2);
 				break;
 			default:
 				printf("Invalid operation type\n");
@@ -743,8 +870,9 @@ int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation
 	if (psMain != NULL) {
 		switch (psMain->eOpType) {
 			case OPTYPE_TRUTHVALUE:
-				break;
 			case OPTYPE_VARIABLE:
+				nSubstitute = CompareOperationsMany (psMain, apsFind, nCount);
+				break;
 			case OPTYPE_UNARY:
 				nSubstitute = CompareOperationsMany (psMain, apsFind, nCount);
 				if (nSubstitute == 0) {
@@ -773,6 +901,20 @@ int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation
 						psMain->Vars.psBinary->psVar2 = CopyRecursive (apsSub[(nFind - 1)]);
 					}
 				}
+				break;
+			case OPTYPE_QUANTIFIER:
+				nSubstitute = CompareOperationsMany (psMain, apsFind, nCount);
+				if (nSubstitute == 0) {
+					nFind = SubstituteRecursiveMany (psMain->Vars.psQuantifier->psVar1,
+						apsFind, apsSub, nCount);
+					if (nFind != 0) {
+						FreeRecursive (psMain->Vars.psQuantifier->psVar1);
+						psMain->Vars.psQuantifier->psVar1 = CopyRecursive (apsSub[(nFind - 1)]);
+					}
+				}
+				break;
+			case OPTYPE_RELATION:
+				nSubstitute = CompareOperationsMany (psMain, apsFind, nCount);
 				break;
 			default:
 				printf("Invalid operation type\n");
@@ -829,5 +971,48 @@ int CompareOperationsMany (Operation * psMain, Operation ** apsCompare, int nCou
 		}
 	}
 	return nReturn;
+}
+
+// TODO: Remove the following functions
+
+void PrintOperation (Operation const * psOp) {
+	char *szString;
+	int nLength;
+
+	nLength = OperationToStringLength (psOp) + 1;
+	szString = PropMalloc (nLength);
+	OperationToString (psOp, szString, nLength);
+	printf("Operation: %s\n", szString);
+	PropFree (szString);
+}
+
+QUANTIFIER QuantifierGetType(Operation const* psOp) {
+	QUANTIFIER eQuType = QUANTIFIER_INVALID;
+
+	if (psOp->eOpType == OPTYPE_QUANTIFIER) {
+		eQuType = psOp->Vars.psQuantifier->eQuType;
+	}
+
+	return eQuType;
+}
+
+char const* QuantifierGetVariable(Operation const* psOp) {
+	char* szVariable = NULL;
+
+	if (psOp->eOpType == OPTYPE_QUANTIFIER) {
+		szVariable = psOp->Vars.psQuantifier->szVar;
+	}
+
+	return szVariable;
+}
+
+Operation const* QuantifierGetSub(Operation const* psOp) {
+	Operation* psResult = NULL;
+
+	if (psOp->eOpType == OPTYPE_QUANTIFIER) {
+		psResult = psOp->Vars.psQuantifier->psVar1;
+	}
+
+	return psResult;
 }
 

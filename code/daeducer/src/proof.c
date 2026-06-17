@@ -151,7 +151,7 @@ bool proof_get_steps(Proof* psProof, size_t auIndex[], Step* apsStep[], size_t u
 	for (uPos = 0; (uPos < uCount) && boResult; ++uPos) {
 		psStep = proof_get_step(psProof, auIndex[uPos]);
 		apsStep[uPos] = psStep;
-		if (!psStep) {
+		if (!psStep || !psStep->psResult) {
 			boResult = FALSE;
 		}
 	}
@@ -211,6 +211,54 @@ bool proof_scoped_subproof(Proof* psProof, size_t uStep1, size_t uStep2) {
 	}
 
 	return boScoped;
+}
+
+bool proof_variable_assumed_in_scope(Proof* psProof, size_t uStep, char const* szVar) {
+	size_t uCount;
+	size_t uPos;
+	bool boUnbound;
+	size_t uScoped;
+
+	uScoped = psProof->apsStep[uStep]->uIndent;
+	boUnbound = FALSE;
+
+	// Best to work backwards
+	for (uCount = uStep + 1; (uCount > 0) && !boUnbound; --uCount) {
+		uPos = uCount - 1;
+		if (psProof->apsStep[uPos]->uIndent <= uScoped) {
+			uScoped = psProof->apsStep[uPos]->uIndent;
+			// We're in scope
+			if ((psProof->apsStep[uPos]->eCommand == STEP_PREMISE) || (psProof->apsStep[uPos]->eCommand == STEP_ASSUMPTION)) {
+				boUnbound = OccursUnbound(psProof->apsStep[uPos]->psResult, szVar);
+			}
+		}
+	}
+
+	return boUnbound;
+}
+
+bool proof_replaced_variables_match(VariableNameMap* psVariableNameMap, Operation const* psOpFrom, Operation const* psOpTo) {
+	bool boResult = FALSE;
+	char const* szVarFrom;
+	char const* szVarTo;
+	Operation* psReplaced;
+	size_t uCount;
+
+	boResult = VariableNameMapExtract(psVariableNameMap, psOpFrom, psOpTo);
+	uCount = VariableNameMapCount(psVariableNameMap);
+
+	if (boResult && (uCount == 1)) {
+		szVarFrom = VariableNameMapGetFrom(psVariableNameMap, 0);
+		szVarTo = VariableNameMapGetTo(psVariableNameMap, 0);
+		psReplaced = CopyRecursive(psOpTo);
+		ReplaceUnbound(psReplaced, szVarTo, szVarFrom);
+		boResult = CompareOperations(psOpFrom, psReplaced);
+	}
+	else {
+		boResult = FALSE;
+	}
+
+	return boResult;
 }
 
 void proof_print(Proof* psProof) {
@@ -407,6 +455,8 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 			case STEP_DISJUNCTION_ELIM: {
 				if (psCommand->uCount == 5) {
 					size_t auRef[5];
+					Operation* psRelation1;
+					Operation* psRelation2;
 					bool boFound;
 					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 5);
 					if (boFound) {
@@ -416,11 +466,13 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 									Step* apsRef[5];
 									boFound = proof_get_steps(psProof, auRef, apsRef, 5);
 									if (boFound) {
-										psPattern = CreateBinary(OPBINARY_LOR, CreateVariable("A"), CreateVariable("B"));
+										psPattern = CreateBinary(OPBINARY_LOR, CreateRelation("A", 0, NULL), CreateRelation("B", 0, NULL));
 										psExtract = ExtractPattern(psPattern, apsRef[0]->psResult);
 										if (psExtract) {
-											if (CompareOperations(ExtractValue(psExtract, "A"), apsRef[1]->psResult)) {
-												if (CompareOperations(ExtractValue(psExtract, "B"), apsRef[3]->psResult)) {
+											psRelation1 = CreateRelation ("A", 0, NULL);
+											if (CompareOperations(ExtractValue(psExtract, psRelation1), apsRef[1]->psResult)) {
+												psRelation2 = CreateRelation ("B", 0, NULL);
+												if (CompareOperations(ExtractValue(psExtract, psRelation2), apsRef[3]->psResult)) {
 													if (CompareOperations(apsRef[2]->psResult, apsRef[4]->psResult)) {
 
 														psStep->uRefCount = 5;
@@ -441,12 +493,16 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 												else {
 													szError = "The right hand side of the disjunction in the first reference must match the assumption of the second subproof.";
 												}
+												FreeRecursive(psRelation2);
+												psRelation2 = NULL;
 											}
 											else {
 												szError = "The left hand side of the disjunction in the first reference must match the assumption of the first subproof.";
 											}
 											FreeExtract(psExtract);
 											psExtract = NULL;
+											FreeRecursive(psRelation1);
+											psRelation1 = NULL;
 										}
 										else {
 											szError = "First backreference must be in the form (A v B).";
@@ -525,6 +581,7 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 				if (psCommand->uCount == 2) {
 					size_t auRef[2];
 					bool boFound;
+					Operation* psRelation;
 					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 2);
 					if (boFound) {
 						Step* apsRef[2];
@@ -533,17 +590,20 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 							if (proof_scoped_subproof(psProof, auRef[0], auRef[1])) {
 								Operation* psOp = CreateTruthValue(FALSE);
 								if (CompareOperations(apsRef[1]->psResult, psOp)) {
-									psPattern = CreateUnary(OPUNARY_NOT, CreateVariable("A"));
+									psPattern = CreateUnary(OPUNARY_NOT, CreateRelation("A", 0, NULL));
 									psExtract = ExtractPattern(psPattern, apsRef[0]->psResult);
 									if (psExtract) {
+										psRelation = CreateRelation("A", 0, NULL);
 										psStep->uRefCount = 2;
 										psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
 										psStep->apsRef[0] = apsRef[0];
 										psStep->apsRef[1] = apsRef[1];
-										psStep->psResult = CopyRecursive(ExtractValue(psExtract, "A"));
+										psStep->psResult = CopyRecursive(ExtractValue(psExtract, psRelation));
 										boError = FALSE;
 										FreeExtract(psExtract);
 										psExtract = NULL;
+										FreeRecursive(psRelation);
+										psRelation = NULL;
 									}
 									else {
 										szError = "First backreference must be in the form !A.";
@@ -601,6 +661,276 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 				}
 				else {
 					szError = "The discharge command takes no parameters.";
+				}
+			}
+			break;
+			case STEP_UNIVERSAL_INTRO: {
+				if (psCommand->uCount == 3) {
+					size_t auRef[1];
+					Step* apsRef[1];
+					Operation* apsScrutinee[1];
+					bool boFound;
+					char* szVarFrom;
+					char* szVarTo;
+
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 1);
+					if (boFound) {
+						boFound = proof_step_scoped(psProof, auRef[0]);
+						if (boFound) {
+							boFound = proof_get_steps(psProof, auRef, apsRef, 1);
+							if (boFound) {
+								apsScrutinee[0] = apsRef[0]->psResult;
+
+								psStep->uVarCount = 2;
+								psStep->aszVar = calloc(psStep->uVarCount, sizeof(char*));
+								psStep->aszVar[0] = strdup(psCommand->aszParameter[1]);
+								psStep->aszVar[1] = strdup(psCommand->aszParameter[2]);
+								szVarFrom = psStep->aszVar[0];
+								szVarTo = psStep->aszVar[1];
+
+								// Check that szVarFrom doesn't occur in a premise or undischarged assumption
+								boFound = proof_variable_assumed_in_scope(psProof, psProof->uStepCount - 1, szVarFrom);
+								if (!boFound) {
+									psStep->uRefCount = 1;
+									psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+									psStep->apsRef[0] = apsRef[0];
+
+									psStep->psResult = CopyRecursive(apsScrutinee[0]);
+									ReplaceUnbound(psStep->psResult, szVarFrom, szVarTo);
+									psStep->psResult = CreateQuantifier(QUANTIFIER_UNIVERSAL, szVarTo, psStep->psResult);
+									boError = FALSE;
+								}
+								else {
+									szError = "The variable to replace must not occur in a premise or undischarged assumption";
+								}
+							}
+							else {
+								szError = "Thew back reference is missing";
+							}
+						}
+						else {
+							szError = "The back reference is out of scope.";
+						}
+					}
+					else {
+						szError = "Back reference could not be found";
+					}
+				}
+				else {
+					szError = "The universal introduction command takes one reference and two variable names as parameters.";
+				}
+			}
+			break;
+			case STEP_UNIVERSAL_ELIM: {
+				if (psCommand->uCount == 2) {
+					size_t auRef[1];
+					Step* apsRef[1];
+					Operation* apsScrutinee[1];
+					bool boFound;
+					char* szVarTo;
+					char const* szVarFrom;
+//					Operation* psPattern;
+//					Extract* psExtract;
+//					int nExtractCount;
+					QUANTIFIER eQuType;
+
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 1);
+					if (boFound) {
+						boFound = proof_step_scoped(psProof, auRef[0]);
+						if (boFound) {
+							boFound = proof_get_steps(psProof, auRef, apsRef, 1);
+
+							if (boFound) {
+								apsScrutinee[0] = apsRef[0]->psResult;
+
+								psStep->uVarCount = 1;
+								psStep->aszVar = calloc(psStep->uVarCount, sizeof(char*));
+								psStep->aszVar[0] = strdup(psCommand->aszParameter[1]);
+								szVarTo = psStep->aszVar[0];
+
+								// Check whether it's a universal quantifier
+//								psPattern = CreateQuantifier(QUANTIFIER_UNIVERSAL, "x", CreateRelation("A", 0, NULL));
+//								psExtract = ExtractPattern(psPattern, apsScrutinee[0]);
+//								if (psExtract) {
+//									nExtractCount = ExtractCount(psExtract);
+//									if (nExtractCount == 1) {
+//										Operation* psQuantifiedOver = ExtractValueFromPos(psExtract, 0);
+//
+//
+//										char const* szVar = ExtractVarnameMapping(psExtract, 0, 0);
+//
+//
+//
+//									}
+//								}
+
+								eQuType = QuantifierGetType(apsScrutinee[0]);
+								if (eQuType == QUANTIFIER_UNIVERSAL) {
+									psStep->uRefCount = 1;
+									psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+									psStep->apsRef[0] = apsRef[0];
+
+									szVarFrom = QuantifierGetVariable(apsScrutinee[0]);
+									psStep->psResult = CopyRecursive(QuantifierGetSub(apsScrutinee[0]));
+									ReplaceUnbound(psStep->psResult, szVarFrom, szVarTo);
+									boError = FALSE;
+								}
+								else {
+									szError = "The referenced expressions must match the rule structure.";
+								}
+							}
+							else {
+								szError = "Thew back reference is missing";
+							}
+						}
+						else {
+							szError = "The back reference is out of scope.";
+						}
+					}
+					else {
+						szError = "Back reference could not be found";
+					}
+				}
+				else {
+					szError = "The universal elimination command takes one reference and a variable name as parameters.";
+				}
+			}
+			break;
+			case STEP_EXISTENTIAL_INTRO: {
+				if (psCommand->uCount == 2) {
+					size_t auRef[1];
+					Step* apsRef[1];
+					Operation* apsScrutinee[1];
+					bool boFound;
+					VariableNameMap* psVariableNameMap;
+					char const* szVarTo;
+
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 1);
+					if (boFound) {
+						boFound = proof_step_scoped(psProof, auRef[0]);
+						if (boFound) {
+							boFound = proof_get_steps(psProof, auRef, apsRef, 1);
+							if (boFound) {
+								apsScrutinee[0] = apsRef[0]->psResult;
+
+								psStep->uInputCount = 1;
+								psStep->apsInput = calloc(psStep->uInputCount, sizeof(Operation*));
+								psStep->apsInput[0] = StringToOperationCheck(psCommand->aszParameter[1]);
+
+								// Check that every unbound instance of szVarTo in the result used to be an instancxe of the same thing
+
+								psVariableNameMap = CreateVariableNameMap();
+								boFound = proof_replaced_variables_match(psVariableNameMap, apsScrutinee[0], psStep->apsInput[0]);
+								if (boFound) {
+									psStep->uRefCount = 1;
+									psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+									psStep->apsRef[0] = apsRef[0];
+
+									psStep->psResult = CopyRecursive(psStep->apsInput[0]);
+									szVarTo = VariableNameMapGetTo(psVariableNameMap, 0);
+									psStep->psResult = CreateQuantifier(QUANTIFIER_EXISTENTIAL, szVarTo, psStep->psResult);
+									boError = FALSE;
+								}
+								else {
+									szError = "Only unbound variables with the same name can be replaced with existential introduction.";
+								}
+								psVariableNameMap = FreeVariableNameMap(psVariableNameMap);
+							}
+							else {
+								szError = "Thew back reference is missing";
+							}
+						}
+						else {
+							szError = "The back reference is out of scope.";
+						}
+					}
+					else {
+						szError = "Back reference could not be found";
+					}
+				}
+				else {
+					szError = "The existential introduction command takes one reference and an expression as parameters.";
+				}
+			}
+			break;
+			case STEP_EXISTENTIAL_ELIM: {
+				if (psCommand->uCount == 3) {
+					size_t auRef[3];
+					VariableNameMap* psVariableNameMap;
+					char const* szVarTo;
+					QUANTIFIER eQuType;
+					bool boFound;
+
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 3);
+					if (boFound) {
+						if (proof_step_scoped(psProof, auRef[0])) {
+							if (proof_scoped_subproof(psProof, auRef[1], auRef[2])) {
+								Step* apsRef[3];
+								boFound = proof_get_steps(psProof, auRef, apsRef, 3);
+								if (boFound) {
+									eQuType = QuantifierGetType(apsRef[0]->psResult);
+									if (eQuType == QUANTIFIER_EXISTENTIAL) {
+										Operation const* psSub = QuantifierGetSub(apsRef[0]->psResult);
+										psVariableNameMap = CreateVariableNameMap();
+										boFound = proof_replaced_variables_match(psVariableNameMap, psSub, apsRef[1]->psResult);
+
+										if (boFound) {
+											szVarTo = VariableNameMapGetTo(psVariableNameMap, 0);
+											// Check that szVarTo doesn't occur in a premise or undischarged assumption
+											boFound = proof_variable_assumed_in_scope(psProof, psProof->uStepCount - 1, szVarTo);
+											if (!boFound) {
+												boFound = OccursUnbound(apsRef[0]->psResult, szVarTo);
+												if (!boFound) {
+													boFound = OccursUnbound(apsRef[2]->psResult, szVarTo);
+													if (!boFound) {
+														psStep->uRefCount = 3;
+														psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+														psStep->apsRef[0] = apsRef[0];
+														psStep->apsRef[1] = apsRef[1];
+														psStep->apsRef[2] = apsRef[2];
+
+														psStep->psResult = CopyRecursive(apsRef[2]->psResult);
+														boError = FALSE;
+													}
+													else {
+														szError = "The variable to replace must not occur in the subproof conclusion.";
+													}
+												}
+												else {
+													szError = "The variable to replace must not occur in the sentence being quantified over.";
+												}
+											}
+											else {
+												szError = "The variable to replace must not occur in a premise or undischarged assumption";
+											}
+										}
+										else {
+												szError = "The subproof assumption must match the sentence being quantified over.";
+										}
+										psVariableNameMap = FreeVariableNameMap(psVariableNameMap);
+									}
+									else {
+										szError = "Existential elimination can only be applied to an existentially quantified expression.";
+									}
+								}
+								else {
+									szError = "Back references are missing.";
+								}
+							}
+							else {
+								szError = "The first subproof is out of scope";
+							}
+						}
+						else {
+							szError = "The first back reference is out of scope.";
+						}
+					}
+					else {
+						szError = "Back references could not be found.";
+					}
+				}
+				else {
+					szError = "The or_elim command takes five back references as parameters.";
 				}
 			}
 			break;
