@@ -52,7 +52,7 @@ Extract * CreateExtract ();
 bool ExtractRecursive (Extract * psExtract, Operation * psPattern, Operation * psScrutinee, VarStack * psBoundVars);
 OperationMap * ExtractOperationMap (Extract * psExtract, Operation const * const psRelation);
 void ReplaceUnboundRecurse (Operation * psOp, char const * const szVarFrom, char const * const szVarTo);
-bool OccursUnboundRecurse (Operation const * psOp, char const * const szVar);
+int OccursUnboundRecurse (Operation const * psOp, char const * const szVar);
 char const* FindFirstVaraibleDiffRecurse (Operation const* psOpFrom, Operation const* psOpTo);
 
 //////////////////////////////////////////////////////////////////
@@ -333,13 +333,13 @@ void ReplaceUnboundRecurse (Operation * psOp, char const * const szVarFrom, char
     }
 }
 
-bool OccursUnbound (Operation const * psOp, char const * const szVar) {
+int OccursUnbound (Operation const * psOp, char const * const szVar) {
    return OccursUnboundRecurse (psOp, szVar);
 }
 
-bool OccursUnboundRecurse (Operation const * psOp, char const * const szVar) {
+int OccursUnboundRecurse (Operation const * psOp, char const * const szVar) {
     size_t nVar;
-    bool boOccurs = FALSE;
+    int nOccurences = 0;
 
     // Check the operations recursively
     if (psOp) {
@@ -351,25 +351,25 @@ bool OccursUnboundRecurse (Operation const * psOp, char const * const szVar) {
                 // Nothing to do
                 break;
             case OPTYPE_UNARY:
-                boOccurs = OccursUnboundRecurse(psOp->Vars.psUnary->psVar1, szVar);
+                nOccurences = OccursUnboundRecurse(psOp->Vars.psUnary->psVar1, szVar);
                 break;
             case OPTYPE_BINARY:
-                boOccurs = OccursUnboundRecurse(psOp->Vars.psBinary->psVar1, szVar);
-                boOccurs |= OccursUnboundRecurse(psOp->Vars.psBinary->psVar2, szVar);
+                nOccurences += OccursUnboundRecurse(psOp->Vars.psBinary->psVar1, szVar);
+                nOccurences += OccursUnboundRecurse(psOp->Vars.psBinary->psVar2, szVar);
                 break;
             case OPTYPE_QUANTIFIER:
                 // Once a variable is bound it'll be bound in all subformulae
                 // So only recursive if we're not binding the variable
                 if (strcmp(szVar, psOp->Vars.psQuantifier->szVar) != 0) {
-                    boOccurs = OccursUnboundRecurse(psOp->Vars.psQuantifier->psVar1, szVar);
+                    nOccurences += OccursUnboundRecurse(psOp->Vars.psQuantifier->psVar1, szVar);
                 }
                 break;
             case OPTYPE_RELATION:
                 nVar = 0;
-                while ((boOccurs == FALSE) && (nVar < psOp->Vars.psRelation->nArity)) {
+                while (nVar < psOp->Vars.psRelation->nArity) {
                     // Replace any instances of szVarFrom with szVarTo
                     if (strcmp (szVar, psOp->Vars.psRelation->aszVar[nVar]) == 0) {
-                        boOccurs = TRUE;
+                        nOccurences += 1;
                     }
                     nVar += 1;
                 }
@@ -381,5 +381,5 @@ bool OccursUnboundRecurse (Operation const * psOp, char const * const szVar) {
         }
     }
 
-    return boOccurs;
+    return nOccurences;
 }

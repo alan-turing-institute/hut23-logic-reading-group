@@ -209,7 +209,7 @@ Operation * ExtractValue (Extract * psExtract, Operation const * const psRelatio
 void FreeExtract (Extract * psExtract);
 
 void ReplaceUnbound (Operation * psOp, char const * const szVarFrom, char const * const szVarTo);
-bool OccursUnbound (Operation const * psOp, char const * const szVar);
+int OccursUnbound (Operation const * psOp, char const * const szVar);
 
 // Simple listing of variable names
 VariableNames * CreateVariableNames ();
