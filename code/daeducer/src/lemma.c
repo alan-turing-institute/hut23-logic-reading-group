@@ -95,9 +95,6 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 	Step** apsRef;
 	Extract* psExtract;
 	Operation** apsScrutinee;
-	Operation** apsFind;
-	Operation** apsSub;
-	size_t uVarCount;
 	size_t uParameters;
 
 	uParameters = psLemma->uRefNum + psLemma->uOpNum;
@@ -128,16 +125,6 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 					boSuccess = (psExtract != NULL);
 
 					if (boSuccess) {
-						uVarCount = ExtractCount(psExtract);
-
-						apsFind = calloc(uVarCount, sizeof(Operation*));
-						apsSub = calloc(uVarCount, sizeof(Operation*));
-
-						for (uPos = 0; uPos < uVarCount; ++uPos) {
-							apsFind[uPos] = CopyRecursive(ExtractRelation(psExtract, uPos));
-							apsSub[uPos] = ExtractValueFromPos(psExtract, uPos);
-						}
-
 						psStep->uRefCount = psLemma->uRefNum;
 						psStep->apsRef = calloc(psLemma->uRefNum, sizeof(Step*));
 
@@ -152,18 +139,10 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 							psStep->apsInput[uPos] = apsScrutinee[(psLemma->uRefNum + uPos)];
 						}
 
-						psStep->psResult = SubstituteOperationMany(CopyRecursive(psLemma->psResult), apsFind, apsSub, uVarCount);
+						psStep->psResult = ExtractSubstitute (psExtract, CopyRecursive(psLemma->psResult));
 
 						FreeExtract(psExtract);
 						psExtract = NULL;
-
-						for (uPos = 0; uPos < uVarCount; ++uPos) {
-							FreeRecursive(apsFind[uPos]);
-						}
-						free(apsFind);
-						apsFind = NULL;
-						free(apsSub);
-						apsSub = NULL;
 					}
 					else {
 						*pszError = "The referenced expressions must match the rule structure.";
