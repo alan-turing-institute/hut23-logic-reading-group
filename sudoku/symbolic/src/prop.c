@@ -51,11 +51,12 @@ static int gnPropMemAllocated = 0;
 //////////////////////////////////////////////////////////////////
 // Function prototypes
 
-bool SubstituteRecursive (Operation * psMain, Operation * psFind, Operation * psSub);
-int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2);
-int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount);
-int CompareOperationsPair (Operation * psMain, Operation * psCompare1, Operation * psCompare2);
+bool SubstituteRecursive (Operation * psMain, Operation const * psFind, Operation const * psSub);
+int SubstituteRecursivePair (Operation * psMain, Operation const * psFind1, Operation const * psSub1, Operation const * psFind2, Operation const * psSub2);
+int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation const ** apsSub, int nCount);
+int CompareOperationsPair (Operation * psMain, Operation const * psCompare1, Operation const * psCompare2);
 int CompareOperationsMany (Operation * psMain, Operation ** psCompare, int nCount);
+bool CompareOperationPatternsRecursive (Operation const * psOp1, Operation const * psOp2, VarStack * psVarStack1, VarStack * psVarStack2);
 
 //////////////////////////////////////////////////////////////////
 // Main application
@@ -547,7 +548,7 @@ Operation * FindOperation (Operation * psMain, Operation * psFind) {
  *         same as psMain depending on whether a substitution occurs.
  *
  */
-Operation * SubstituteOperation (Operation * psMain, Operation * psFind, Operation * psSub) {
+Operation * SubstituteOperation (Operation * psMain, Operation const * psFind, Operation const * psSub) {
 	bool boFind;
 	Operation * psReturn;
 
@@ -575,7 +576,7 @@ Operation * SubstituteOperation (Operation * psMain, Operation * psFind, Operati
  *         be substituted).
  *
  */
-bool SubstituteRecursive (Operation * psMain, Operation * psFind, Operation * psSub) {
+bool SubstituteRecursive (Operation * psMain, Operation const * psFind, Operation const * psSub) {
 	bool boSubstitute = FALSE;
 	bool boFind;
 
@@ -652,7 +653,7 @@ bool SubstituteRecursive (Operation * psMain, Operation * psFind, Operation * ps
  *         same as psMain depending on whether a substitution occurs.
  *
  */
-Operation * SubstituteOperationPair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2) {
+Operation * SubstituteOperationPair (Operation * psMain, Operation const * psFind1, Operation const * psSub1, Operation const * psFind2, Operation const * psSub2) {
 	int nFind;
 	Operation * psReturn;
 
@@ -696,7 +697,7 @@ Operation * SubstituteOperationPair (Operation * psMain, Operation * psFind1, Op
  *         substituted by psSub1 or psSub2 respectively.
  *
  */
-int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2) {
+int SubstituteRecursivePair (Operation * psMain, Operation const * psFind1, Operation const * psSub1, Operation const * psFind2, Operation const * psSub2) {
 	int nSubstitute = 0;
 	int nFind;
 
@@ -811,7 +812,7 @@ int SubstituteRecursivePair (Operation * psMain, Operation * psFind1, Operation 
  *         same as psMain depending on whether a substitution occurs.
  *
  */
-Operation * SubstituteOperationMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount) {
+Operation * SubstituteOperationMany (Operation * psMain, Operation ** apsFind, Operation const ** apsSub, int nCount) {
 	int nFind;
 	Operation * psReturn;
 	bool boNull;
@@ -862,7 +863,7 @@ Operation * SubstituteOperationMany (Operation * psMain, Operation ** apsFind, O
  *         substituted the respective entry in apsSub.
  *
  */
-int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount) {
+int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation const ** apsSub, int nCount) {
 	int nSubstitute = 0;
 	int nFind;
 	int nPos;
@@ -935,7 +936,7 @@ int SubstituteRecursiveMany (Operation * psMain, Operation ** apsFind, Operation
  *         0 o/w.
  *
  */
-int CompareOperationsPair (Operation * psMain, Operation * psCompare1, Operation * psCompare2) {
+int CompareOperationsPair (Operation * psMain, Operation const * psCompare1, Operation const * psCompare2) {
 	int nReturn = 0;
 
 	if (CompareOperations (psMain, psCompare1)) {
@@ -1016,3 +1017,91 @@ Operation const* QuantifierGetSub(Operation const* psOp) {
 	return psResult;
 }
 
+/**
+ * Compare two formulae recursively. This will return true if and only if
+ * the Operation and all its sub-Operations have the same content.
+ *
+ * @param psOp1 the Operation to compare against psOp2.
+ * @param psOp2 the Operation to compare against psOp1.
+ * @return true iff the two Operations have identical content.
+ *
+ */
+bool CompareOperationPatterns (Operation const * psOp1, Operation const * psOp2) {
+	bool boResult;
+    VarStack * psVarStack1;
+    VarStack * psVarStack2;
+
+    psVarStack1 = CreateVarStack();
+    psVarStack2 = CreateVarStack();
+
+	boResult = CompareOperationPatternsRecursive (psOp1, psOp2, psVarStack1, psVarStack2);
+
+    psVarStack1 = FreeVarStack (psVarStack1);
+    psVarStack2 = FreeVarStack (psVarStack2);
+
+	return boResult;
+}
+
+bool CompareOperationPatternsRecursive (Operation const * psOp1, Operation const * psOp2, VarStack * psVarStack1, VarStack * psVarStack2) {
+	bool boReturn = TRUE;
+
+	if ((psOp1) && (psOp2)) {
+		if (psOp1->eOpType == psOp2->eOpType) {
+			switch (psOp1->eOpType) {
+				case OPTYPE_TRUTHVALUE:
+					if (psOp1->Vars.boTruth != psOp2->Vars.boTruth) {
+						boReturn = FALSE;
+					}
+					break;
+				case OPTYPE_VARIABLE:
+					if (strcmp (psOp1->Vars.psVar->szVar, psOp2->Vars.psVar->szVar) != 0) {
+						boReturn = FALSE;
+					}
+					break;
+				case OPTYPE_UNARY:
+					if (psOp1->Vars.psUnary->eOpType != psOp2->Vars.psUnary->eOpType) {
+						boReturn = FALSE;
+					}
+					else {
+						boReturn = CompareOperationPatternsRecursive (psOp1->Vars.psUnary->psVar1, psOp2->Vars.psUnary->psVar1, psVarStack1, psVarStack2);
+					}
+					break;
+				case OPTYPE_BINARY:
+					if (psOp1->Vars.psBinary->eOpType != psOp2->Vars.psBinary->eOpType) {
+						boReturn = FALSE;
+					}
+					else {
+						boReturn = (CompareOperationPatternsRecursive (psOp1->Vars.psBinary->psVar1, psOp2->Vars.psBinary->psVar1, psVarStack1, psVarStack2)
+							&& CompareOperationPatternsRecursive (psOp1->Vars.psBinary->psVar2, psOp2->Vars.psBinary->psVar2, psVarStack1, psVarStack2));
+					}
+					break;
+				case OPTYPE_QUANTIFIER:
+					if (psOp1->Vars.psQuantifier->eQuType != psOp2->Vars.psQuantifier->eQuType) {
+						boReturn = FALSE;
+					}
+					else {
+					    VarStackPush (psVarStack1, psOp1->Vars.psQuantifier->szVar);
+					    VarStackPush (psVarStack2, psOp2->Vars.psQuantifier->szVar);
+						boReturn = CompareOperationPatternsRecursive (psOp1->Vars.psQuantifier->psVar1, psOp2->Vars.psQuantifier->psVar1, psVarStack1, psVarStack2);
+					    VarStackDrop (psVarStack2);
+					    VarStackDrop (psVarStack1);
+					}
+					break;
+				case OPTYPE_RELATION:
+			        boReturn = RelationComparePatternStack (psOp1, psOp2, psVarStack1, psVarStack2);
+					break;
+				default:
+					printf("Invalid operation type\n");
+					break;
+			}
+		}
+		else {
+			boReturn = FALSE;
+		}
+	}
+	else {
+		boReturn = FALSE;
+	}
+
+	return boReturn;
+}

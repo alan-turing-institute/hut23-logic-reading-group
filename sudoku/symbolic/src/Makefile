@@ -148,7 +148,8 @@ am____libsymbolic_a_OBJECTS = ___libsymbolic_a-approximate.$(OBJEXT) \
 	___libsymbolic_a-latex.$(OBJEXT) \
 	___libsymbolic_a-relation.$(OBJEXT) \
 	___libsymbolic_a-relationlist.$(OBJEXT) \
-	___libsymbolic_a-varstack.$(OBJEXT)
+	___libsymbolic_a-varstack.$(OBJEXT) \
+	___libsymbolic_a-operationmap.$(OBJEXT)
 ___libsymbolic_a_OBJECTS = $(am____libsymbolic_a_OBJECTS)
 am__dirstamp = $(am__leading_dot)dirstamp
 am____symbolic_OBJECTS = ___symbolic-interface.$(OBJEXT)
@@ -173,6 +174,7 @@ am__depfiles_remade = ./$(DEPDIR)/___libsymbolic_a-approximate.Po \
 	./$(DEPDIR)/___libsymbolic_a-convert.Po \
 	./$(DEPDIR)/___libsymbolic_a-extract.Po \
 	./$(DEPDIR)/___libsymbolic_a-latex.Po \
+	./$(DEPDIR)/___libsymbolic_a-operationmap.Po \
 	./$(DEPDIR)/___libsymbolic_a-prop.Po \
 	./$(DEPDIR)/___libsymbolic_a-relation.Po \
 	./$(DEPDIR)/___libsymbolic_a-relationlist.Po \
@@ -328,7 +330,7 @@ top_builddir = ..
 top_srcdir = ..
 lib_LIBRARIES = ../libsymbolic.a
 include_HEADERS = symbolic.h
-___libsymbolic_a_SOURCES = symbolic_private.h symbolic.h approximate.c prop.c simplify.c convert.c variables.c extract.c latex.c relation.c relationlist.c varstack.c
+___libsymbolic_a_SOURCES = symbolic_private.h symbolic.h approximate.c prop.c simplify.c convert.c variables.c extract.c latex.c relation.c relationlist.c varstack.c operationmap.c
 ___libsymbolic_a_CFLAGS = -std=c99
 ___symbolic_SOURCES = interface.c
 ___symbolic_CPPFLAGS = -std=c99
@@ -423,6 +425,7 @@ include ./$(DEPDIR)/___libsymbolic_a-approximate.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-convert.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-extract.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-latex.Po # am--include-marker
+include ./$(DEPDIR)/___libsymbolic_a-operationmap.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-prop.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-relation.Po # am--include-marker
 include ./$(DEPDIR)/___libsymbolic_a-relationlist.Po # am--include-marker
@@ -591,6 +594,20 @@ ___libsymbolic_a-varstack.obj: varstack.c
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-varstack.obj `if test -f 'varstack.c'; then $(CYGPATH_W) 'varstack.c'; else $(CYGPATH_W) '$(srcdir)/varstack.c'; fi`
 
+___libsymbolic_a-operationmap.o: operationmap.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-operationmap.o -MD -MP -MF $(DEPDIR)/___libsymbolic_a-operationmap.Tpo -c -o ___libsymbolic_a-operationmap.o `test -f 'operationmap.c' || echo '$(srcdir)/'`operationmap.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-operationmap.Tpo $(DEPDIR)/___libsymbolic_a-operationmap.Po
+#	$(AM_V_CC)source='operationmap.c' object='___libsymbolic_a-operationmap.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-operationmap.o `test -f 'operationmap.c' || echo '$(srcdir)/'`operationmap.c
+
+___libsymbolic_a-operationmap.obj: operationmap.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -MT ___libsymbolic_a-operationmap.obj -MD -MP -MF $(DEPDIR)/___libsymbolic_a-operationmap.Tpo -c -o ___libsymbolic_a-operationmap.obj `if test -f 'operationmap.c'; then $(CYGPATH_W) 'operationmap.c'; else $(CYGPATH_W) '$(srcdir)/operationmap.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/___libsymbolic_a-operationmap.Tpo $(DEPDIR)/___libsymbolic_a-operationmap.Po
+#	$(AM_V_CC)source='operationmap.c' object='___libsymbolic_a-operationmap.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(___libsymbolic_a_CFLAGS) $(CFLAGS) -c -o ___libsymbolic_a-operationmap.obj `if test -f 'operationmap.c'; then $(CYGPATH_W) 'operationmap.c'; else $(CYGPATH_W) '$(srcdir)/operationmap.c'; fi`
+
 ___symbolic-interface.o: interface.c
 	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(___symbolic_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ___symbolic-interface.o -MD -MP -MF $(DEPDIR)/___symbolic-interface.Tpo -c -o ___symbolic-interface.o `test -f 'interface.c' || echo '$(srcdir)/'`interface.c
 	$(AM_V_at)$(am__mv) $(DEPDIR)/___symbolic-interface.Tpo $(DEPDIR)/___symbolic-interface.Po
@@ -758,6 +775,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-convert.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-extract.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-latex.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-operationmap.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-prop.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-relation.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-relationlist.Po
@@ -814,6 +832,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-convert.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-extract.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-latex.Po
+	-rm -f ./$(DEPDIR)/___libsymbolic_a-operationmap.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-prop.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-relation.Po
 	-rm -f ./$(DEPDIR)/___libsymbolic_a-relationlist.Po

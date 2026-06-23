@@ -92,7 +92,7 @@ void RelationListAdd(RelationList * psRelationList, Operation const * psRelation
 	if (psRelationList) {
 		boExists = FALSE;
 		for (nPos = 0; (nPos < psRelationList->nCount) && (!boExists); ++nPos) {
-			if (CompareOperations (psRelation, psRelationList->apsOp[nPos])) {
+			if (RelationComparePattern (psRelation, psRelationList->apsOp[nPos])) {
 				boExists = TRUE;
 			}
 		}
@@ -117,7 +117,7 @@ void RelationListRemove(RelationList * psRelationList, Operation const * psOp) {
 	if (psRelationList) {
 		nRemoved = 0;
 		for (nPos = 0; nPos < psRelationList->nCount; ++nPos) {
-			if (CompareOperations (psOp, psRelationList->apsOp[nPos])) {
+			if (RelationComparePattern (psOp, psRelationList->apsOp[nPos])) {
 				FreeRecursive (psRelationList->apsOp[nPos]);
 				psRelationList->apsOp[nPos] = NULL;
 				nRemoved += 1;

@@ -140,69 +140,92 @@ int VarStackCount(VarStack * psVarStack) {
 }
 
 bool VarStackMatchUnbound (VarStack const * psBoundVars, Operation * psOp) {
-    int nCount ;
-    VarStack * psVarStack;
+	int nCount ;
+	VarStack * psVarStack;
 
-    psVarStack = CreateVarStack();
-    nCount = VarStackMatchUnboundRecursive (psBoundVars, psVarStack, psOp);
-    psVarStack = FreeVarStack(psVarStack);
+	psVarStack = CreateVarStack();
+	nCount = VarStackMatchUnboundRecursive (psBoundVars, psVarStack, psOp);
+	psVarStack = FreeVarStack(psVarStack);
 
-    return nCount == 0;
+	return nCount == 0;
 }
 
 int VarStackMatchUnboundRecursive (VarStack const * psBoundVars, VarStack * psVarStack, Operation * psOp) {
-    int nCount = 0;
-    int nPos;
+	int nCount = 0;
+	int nPos;
 
-    switch (psOp->eOpType) {
-        case OPTYPE_TRUTHVALUE:
-            // Intentional fallthrough
-        case OPTYPE_VARIABLE:
-            // Intentional fallthrough
-        default: {
-            // Do nothing;
-        }
-        break;
-        case OPTYPE_UNARY: {
-            nCount += VarStackMatchUnboundRecursive(psBoundVars, psVarStack, psOp->Vars.psUnary->psVar1);
-        }
-        break;
-        case OPTYPE_BINARY: {
-            nCount += VarStackMatchUnboundRecursive(psBoundVars, psVarStack, psOp->Vars.psBinary->psVar1);
-            nCount += VarStackMatchUnboundRecursive(psBoundVars, psVarStack, psOp->Vars.psBinary->psVar2);
-        }
-        break;
-        case OPTYPE_QUANTIFIER: {
-            VarStackPush (psVarStack, psOp->Vars.psQuantifier->szVar);
-            nCount += VarStackMatchUnboundRecursive (psBoundVars, psVarStack, psOp->Vars.psQuantifier->psVar1);
-            VarStackDrop (psVarStack);
-        }
-        break;
-        case OPTYPE_RELATION: {
-            for (nPos = 0; nPos < psOp->Vars.psRelation->nArity; ++nPos) {
-                if (!VarStackContains (psVarStack, psOp->Vars.psRelation->aszVar[nPos]) && VarStackContains (psBoundVars, psOp->Vars.psRelation->aszVar[nPos])) {
-                nCount += 1;
-                }
-            }
-        }
-        break;
-    }
+	switch (psOp->eOpType) {
+		case OPTYPE_TRUTHVALUE:
+			// Intentional fallthrough
+		case OPTYPE_VARIABLE:
+			// Intentional fallthrough
+		default: {
+			// Do nothing;
+		}
+		break;
+		case OPTYPE_UNARY: {
+			nCount += VarStackMatchUnboundRecursive(psBoundVars, psVarStack, psOp->Vars.psUnary->psVar1);
+		}
+		break;
+		case OPTYPE_BINARY: {
+			nCount += VarStackMatchUnboundRecursive(psBoundVars, psVarStack, psOp->Vars.psBinary->psVar1);
+			nCount += VarStackMatchUnboundRecursive(psBoundVars, psVarStack, psOp->Vars.psBinary->psVar2);
+		}
+		break;
+		case OPTYPE_QUANTIFIER: {
+			VarStackPush (psVarStack, psOp->Vars.psQuantifier->szVar);
+			nCount += VarStackMatchUnboundRecursive (psBoundVars, psVarStack, psOp->Vars.psQuantifier->psVar1);
+			VarStackDrop (psVarStack);
+		}
+		break;
+		case OPTYPE_RELATION: {
+			for (nPos = 0; nPos < psOp->Vars.psRelation->nArity; ++nPos) {
+				if (!VarStackContains (psVarStack, psOp->Vars.psRelation->aszVar[nPos]) && VarStackContains (psBoundVars, psOp->Vars.psRelation->aszVar[nPos])) {
+					nCount += 1;
+				}
+			}
+		}
+		break;
+	}
 
-    return nCount;
+	return nCount;
 }
 
 bool VarStackContains (VarStack const * psVarStack, char const * szVar) {
-    int nPos;
-    bool boFound;
+	int nPos;
+	bool boFound;
 
-    boFound = FALSE;
-    for (nPos = 0; (!boFound) && (nPos < psVarStack->nCount); ++nPos) {
-        if (strcmp(szVar, psVarStack->aszVars[nPos]) == 0) {
-            boFound = TRUE;
-        }
-    }
+	boFound = FALSE;
+	for (nPos = 0; (!boFound) && (nPos < psVarStack->nCount); ++nPos) {
+		if (strcmp(szVar, psVarStack->aszVars[nPos]) == 0) {
+			boFound = TRUE;
+		}
+	}
 
-    return boFound;
+	return boFound;
 }
 
+int VarStackFind (VarStack const * psVarStack, char const * szVar) {
+	int nPos;
+	int nFound;
+
+	nFound = -1;
+	for (nPos = (psVarStack->nCount - 1); (nFound < 0) && (nPos >= 0); --nPos) {
+		if (strcmp(szVar, psVarStack->aszVars[nPos]) == 0) {
+			nFound = nPos;
+		}
+	}
+
+	return nFound;
+}
+
+char const * VarStackGet(VarStack const * const psVarStack, int nPos) {
+	char const * szVar = NULL;
+
+	if (psVarStack && (nPos >= 0) && (nPos < psVarStack->nCount)) {
+		szVar = psVarStack->aszVars[nPos];
+	}
+
+	return szVar;
+}
 
