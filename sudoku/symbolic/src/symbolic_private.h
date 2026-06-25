@@ -151,11 +151,16 @@ struct _Operation {
 typedef struct _OperationMap {
     Operation * psFrom;
     Operation * psTo;
+    // List of "to" variables mapping to potential "from" variables
+    bool * aaboVarOrigin;
+    int nArityFrom;
+    int nArityTo;
+    char ** aszUnbound;
 } OperationMap;
 
 struct _Extract {
     int nCount;
-    OperationMap * apsOps;
+    OperationMap ** apsOps;
 };
 
 //////////////////////////////////////////////////////////////////
@@ -190,15 +195,34 @@ char * RelationToStringLatex (Operation * psOp, char * szString, int nStrLen);
 int RelationToStringLengthLatex (Operation * psOp);
 bool TryRelation (char const * szString, int nStrLen, int *pnArity);
 Operation * StringToRelation (char const * szString, int nStrLen, int nArity);
+bool RelationComparePattern (Operation const * psOp1, Operation const * psOp2);
+bool RelationComparePatternStack (Operation const * psOp1, Operation const * psOp2, VarStack const * psVarStack1, VarStack const * psVarStack2);
 
 // Variable stack operations
 VarStack * CreateVarStack ();
 VarStack * FreeVarStack (VarStack * psVarStack);
-void VarStackPush(VarStack * psVarStack, char const* szVar);
-char * VarStackPop(VarStack * psVarStack);
-void VarStackDrop(VarStack * psVarStack);
-int VarStackCount(VarStack * psVarStack);
+void VarStackPush (VarStack * psVarStack, char const* szVar);
+char * VarStackPop (VarStack * psVarStack);
+void VarStackDrop (VarStack * psVarStack);
+int VarStackCount (VarStack * psVarStack);
 bool VarStackMatchUnbound (VarStack const * psBoundVars, Operation * psOp);
 bool VarStackContains (VarStack const * psVarStack, char const * szVar);
+int VarStackFind (VarStack const * psVarStack, char const * szVar);
+char const * VarStackGet (VarStack const * const psVarStack, int nPos);
+
+// Extraction
+OperationMap * ExtractOperationMap (Extract * psExtract, Operation const * const psRelation);
+
+// Operation Maps
+OperationMap * CreateOperationMap ();
+OperationMap * FreeOperatoinMap (OperationMap * psOperationMap);
+void OperationMapSetFrom (OperationMap * psOperationMap, Operation const * psOp);
+bool OperationMapSetTo (OperationMap * psOperationMap, Operation const * psScrutinee, VarStack * psScrutineeVars);
+Operation const * OperationMapGetFrom (OperationMap const * psOperationMap);
+Operation const * OperationMapGetTo (OperationMap const * psOperationMap);
+void OperationMapInitVarOrigins (OperationMap * psOperationMap);
+void OperationMapVarOriginClear (OperationMap * psOperationMap, int nFrom, int nTo);
+bool OperationMapVarMappingUnique (OperationMap * psOperationMap);
+bool OperationMapVarOriginsClear (OperationMap * psOperationMap, Operation const * psFrom, Operation const * psTo, VarStack * psPatternVars, VarStack * psScrutineeVars);
 
 #endif // if !defined _H_SYMBOLIC_PRIVATE

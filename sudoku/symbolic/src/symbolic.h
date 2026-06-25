@@ -175,11 +175,12 @@ Operation * CopyRecursive (Operation const * psOp);
 Operation * FindOperation (Operation * psMain, Operation * psFind);
 
 // Manipulating operations mathematically
-Operation * SubstituteOperation (Operation * psMain, Operation * psFind, Operation * psSub);
-Operation * SubstituteOperationPair (Operation * psMain, Operation * psFind1, Operation * psSub1, Operation * psFind2, Operation * psSub2);
-Operation * SubstituteOperationMany (Operation * psMain, Operation ** apsFind, Operation ** apsSub, int nCount);
+Operation * SubstituteOperation (Operation * psMain, Operation const * psFind, Operation const * psSub);
+Operation * SubstituteOperationPair (Operation * psMain, Operation const * psFind1, Operation const * psSub1, Operation const * psFind2, Operation const * psSub2);
+Operation * SubstituteOperationMany (Operation * psMain, Operation ** apsFind, Operation const ** apsSub, int nCount);
 Operation * SimplifyOperation (Operation * psOp);
 bool CompareOperations (Operation const * psOp1, Operation const * psOp2);
+bool CompareOperationPatterns (Operation const * psOp1, Operation const * psOp2);
 double ApproximateOperation (Operation * psOp);
 Operation * UberSimplifyOperation (Operation * psOp);
 
@@ -203,13 +204,21 @@ char const * VariableName (Variable const * const psVariable);
 Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee);
 Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee, int nCount);
 int ExtractCount(Extract * psExtract);
-Operation * ExtractRelation (Extract * psExtract, int nPosition);
-Operation * ExtractValueFromPos (Extract * psExtract, int nPosition);
-Operation * ExtractValue (Extract * psExtract, Operation const * const psRelation);
+Operation const * ExtractRelation (Extract const * psExtract, int nPosition);
+Operation const * ExtractValueFromPos (Extract const * psExtract, int nPosition);
+Operation const * ExtractValue (Extract const * psExtract, Operation const * const psRelation);
 void FreeExtract (Extract * psExtract);
+Operation * ExtractSubstitute (Extract * psExtract, Operation * psMain);
+int ExtractCompareOperationsMany (Extract const * psExtract, Operation * psMain, VarStack const * psVarStack);
+void ExtractPerformSubstitution (Extract const * psExtract, Operation ** psFrom, int nFind);
 
+
+// Bounding of variables
 void ReplaceUnbound (Operation * psOp, char const * const szVarFrom, char const * const szVarTo);
+void ReplaceUnboundMany (Operation * psOp, VarStack const * const psVarsFrom, VarStack const * const psVarsTo);
 int OccursUnbound (Operation const * psOp, char const * const szVar);
+int OperationArity (Operation const * psOp);
+int OperationInputList (Operation const * psOp, VarStack * psInputs);
 
 // Simple listing of variable names
 VariableNames * CreateVariableNames ();
