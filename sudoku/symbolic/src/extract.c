@@ -56,6 +56,7 @@ char const* FindFirstVaraibleDiffRecurse (Operation const* psOpFrom, Operation c
 int OperationInputListRecurse (Operation const * psOp, VarStack * psVarStack, VarStack * psInputs);
 int ExtractSubstituteRecursive (Extract const * psExtract, Operation * psMain, VarStack * psVarStack);
 void ReplaceUnboundRecurseMany (Operation * psOp, VarStack const * const psVarsFrom, VarStack const * const psVarsTo, VarStack * psVarStack);
+bool ExtractCheckSubstitutionRecursive (Extract const * psExtract, Operation const * psMain, VarStack * psVarStack);
 
 //////////////////////////////////////////////////////////////////
 // Main application
@@ -512,6 +513,7 @@ Operation * ExtractSubstitute (Extract * psExtract, Operation * psMain) {
 	boSuccess = TRUE;
 	for (nFind = 0; (nFind < psExtract->nCount) && boSuccess; ++nFind) {
         if ((psExtract->apsOps == NULL) || (psExtract->apsOps[nFind]->psFrom == NULL) || (psExtract->apsOps[nFind]->psTo == NULL)) {
+            // The extraction hasn't been completed successfully
             boSuccess = FALSE;
         }
 	}
@@ -519,9 +521,22 @@ Operation * ExtractSubstitute (Extract * psExtract, Operation * psMain) {
 	if (boSuccess) {
         nUnbound = OperationArity (psMain);
         if (nUnbound != 0) {
+            // The result pattern contains unbound variables
             boSuccess = FALSE;
         }
 	}
+
+    if (boSuccess) {
+        for (nFind = 0; (nFind < psExtract->nCount) && boSuccess; ++nFind) {
+            // The mapping between to and from variables must be unique
+            boSuccess = OperationMapVarMappingUnique (psExtract->apsOps[nFind]);
+        }
+    }
+
+    if (boSuccess) {
+        // Ensure that no variables that shouldn't be bound get bound by the substitution
+        boSuccess = ExtractCheckSubstitution (psExtract, psMain);
+    }
 
 	if (boSuccess) {
         psVarStack = CreateVarStack ();
@@ -570,7 +585,6 @@ Operation * ExtractSubstitute (Extract * psExtract, Operation * psMain) {
 int ExtractSubstituteRecursive (Extract const * psExtract, Operation * psMain, VarStack * psVarStack) {
 	int nSubstitute = 0;
 	int nFind;
-	int nPos;
 
 	if (psMain != NULL) {
 		switch (psMain->eOpType) {
@@ -628,7 +642,7 @@ int ExtractSubstituteRecursive (Extract const * psExtract, Operation * psMain, V
  *         0 if there is no match.
  *
  */
-int ExtractCompareOperationsMany (Extract const * psExtract, Operation * psMain, VarStack const * psVarStack) {
+int ExtractCompareOperationsMany (Extract const * psExtract, Operation const * psMain, VarStack const * psVarStack) {
 	int nReturn = 0;
 	int nPos;
 
@@ -750,3 +764,65 @@ void ReplaceUnboundRecurseMany (Operation * psOp, VarStack const * const psVarsF
         }
     }
 }
+
+bool ExtractCheckSubstitution (Extract const * psExtract, Operation const * psMain) {
+    bool boSuccess;
+    VarStack * psVarStack;
+
+    psVarStack = CreateVarStack ();
+    boSuccess = ExtractCheckSubstitutionRecursive (psExtract, psMain, psVarStack);
+    psVarStack = FreeVarStack (psVarStack);
+
+    return boSuccess;
+}
+
+bool ExtractCheckSubstitutionRecursive (Extract const * psExtract, Operation const * psMain, VarStack * psVarStack) {
+	int nSubstitute;
+	bool boSuccess = TRUE;
+	int nFind;
+	int nVarTo;
+
+	if (psMain != NULL) {
+		switch (psMain->eOpType) {
+			case OPTYPE_TRUTHVALUE:
+			case OPTYPE_VARIABLE:
+                // Do nothing
+				break;
+			case OPTYPE_UNARY:
+				boSuccess = ExtractCheckSubstitutionRecursive (psExtract, psMain->Vars.psUnary->psVar1, psVarStack);
+				break;
+			case OPTYPE_BINARY:
+				boSuccess = ExtractCheckSubstitutionRecursive (psExtract, psMain->Vars.psBinary->psVar1, psVarStack) && ExtractCheckSubstitutionRecursive (psExtract, psMain->Vars.psBinary->psVar2, psVarStack);
+				break;
+			case OPTYPE_QUANTIFIER:
+                VarStackPush (psVarStack, psMain->Vars.psQuantifier->szVar);
+				boSuccess = ExtractCheckSubstitutionRecursive (psExtract, psMain->Vars.psQuantifier->psVar1, psVarStack);
+                VarStackDrop (psVarStack);
+				break;
+			case OPTYPE_RELATION:
+				nSubstitute = ExtractCompareOperationsMany (psExtract, psMain, psVarStack);
+				if (nSubstitute != 0) {
+                    // We're replacing:
+                    //    psMain (a relation)
+                    // with:
+                    //     psExtract->apsOps[(nSubstitute - 1)]->psTO
+                    // We need to check if anything in:
+                    //    psExtract->apsOps[(nSubstitute - 1)]->aszUnbound
+                    // is also in:
+                    //    psVarStack
+                    // If there's any overlap, then a variable that shouldn't be bound will become bound
+                    for (nVarTo = 0; (nVarTo < psExtract->apsOps[(nSubstitute - 1)]->nArityTo) && boSuccess; ++nVarTo) {
+                        if (psExtract->apsOps[(nSubstitute - 1)]->aszUnbound[nVarTo] != NULL) {
+                            boSuccess = !VarStackContains (psVarStack, psExtract->apsOps[(nSubstitute - 1)]->aszUnbound[nVarTo]);
+                        }
+                    }
+				}
+				break;
+			default:
+				printf("Invalid operation type\n");
+				break;
+		}
+	}
+	return boSuccess;
+}
+

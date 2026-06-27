@@ -209,9 +209,9 @@ Operation const * ExtractValueFromPos (Extract const * psExtract, int nPosition)
 Operation const * ExtractValue (Extract const * psExtract, Operation const * const psRelation);
 void FreeExtract (Extract * psExtract);
 Operation * ExtractSubstitute (Extract * psExtract, Operation * psMain);
-int ExtractCompareOperationsMany (Extract const * psExtract, Operation * psMain, VarStack const * psVarStack);
+int ExtractCompareOperationsMany (Extract const * psExtract, Operation const * psMain, VarStack const * psVarStack);
 void ExtractPerformSubstitution (Extract const * psExtract, Operation ** psFrom, int nFind);
-
+bool ExtractCheckSubstitution (Extract const * psExtract, Operation const * psMain);
 
 // Bounding of variables
 void ReplaceUnbound (Operation * psOp, char const * const szVarFrom, char const * const szVarTo);
