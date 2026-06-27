@@ -64,7 +64,9 @@ bool ExtractCheckSubstitutionRecursive (Extract const * psExtract, Operation con
 Extract * CreateExtract() {
     Extract * psExtract = NULL;
 
-    psExtract = PropCalloc(1, sizeof(Extract));
+    psExtract = PropCalloc(1, sizeof (Extract));
+    psExtract->psVarsFrom = CreateVarStack ();
+    psExtract->psVarsTo = CreateVarStack ();
 
     return psExtract;
 }
@@ -81,6 +83,9 @@ void FreeExtract (Extract * psExtract) {
             PropFree (psExtract->apsOps);
             psExtract->apsOps = NULL;
         }
+
+        psExtract->psVarsFrom = FreeVarStack (psExtract->psVarsFrom);
+        psExtract->psVarsTo = FreeVarStack (psExtract->psVarsTo);
 
         PropFree (psExtract);
     }
@@ -140,6 +145,8 @@ bool ExtractRecursive (Extract * psExtract, Operation * psPattern, Operation * p
     bool boSuccess = FALSE;
     Operation * psRelation;
     OperationMap * psOperationMap;
+    int nVarFrom;
+    int nVarTo;
 
     switch (psPattern->eOpType) {
         case OPTYPE_TRUTHVALUE:
@@ -164,13 +171,26 @@ bool ExtractRecursive (Extract * psExtract, Operation * psPattern, Operation * p
         break;
         case OPTYPE_QUANTIFIER: {
             if ((psScrutinee->eOpType == OPTYPE_QUANTIFIER) && (psPattern->Vars.psQuantifier->eQuType == psScrutinee->Vars.psQuantifier->eQuType)) {
-                VarStackPush (psPatternVars, psPattern->Vars.psQuantifier->szVar);
-                VarStackPush (psScrutineeVars, psScrutinee->Vars.psQuantifier->szVar);
+                nVarFrom = VarStackFind (psExtract->psVarsFrom, psPattern->Vars.psQuantifier->szVar);
+                nVarTo = VarStackFind (psExtract->psVarsTo, psScrutinee->Vars.psQuantifier->szVar);
 
-                boSuccess = ExtractRecursive (psExtract, psPattern->Vars.psQuantifier->psVar1, psScrutinee->Vars.psQuantifier->psVar1, psPatternVars, psScrutineeVars);
+                if (nVarFrom == nVarTo) {
+                    if (nVarFrom < 0) {
+                        VarStackPush (psExtract->psVarsFrom, psPattern->Vars.psQuantifier->szVar);
+                        VarStackPush (psExtract->psVarsTo, psScrutinee->Vars.psQuantifier->szVar);
+                    }
 
-                VarStackDrop(psPatternVars);
-                VarStackDrop(psScrutineeVars);
+                    VarStackPush (psPatternVars, psPattern->Vars.psQuantifier->szVar);
+                    VarStackPush (psScrutineeVars, psScrutinee->Vars.psQuantifier->szVar);
+
+                    boSuccess = ExtractRecursive (psExtract, psPattern->Vars.psQuantifier->psVar1, psScrutinee->Vars.psQuantifier->psVar1, psPatternVars, psScrutineeVars);
+
+                    VarStackDrop(psPatternVars);
+                    VarStackDrop(psScrutineeVars);
+                }
+                else {
+                    boSuccess = FALSE;
+                }
             }
         }
         break;
@@ -585,6 +605,8 @@ Operation * ExtractSubstitute (Extract * psExtract, Operation * psMain) {
 int ExtractSubstituteRecursive (Extract const * psExtract, Operation * psMain, VarStack * psVarStack) {
 	int nSubstitute = 0;
 	int nFind;
+	int nLength;
+	char const * szVarTo;
 
 	if (psMain != NULL) {
 		switch (psMain->eOpType) {
@@ -611,6 +633,14 @@ int ExtractSubstituteRecursive (Extract const * psExtract, Operation * psMain, V
 				break;
 			case OPTYPE_QUANTIFIER:
                 VarStackPush (psVarStack, psMain->Vars.psQuantifier->szVar);
+
+                nFind = VarStackFind (psExtract->psVarsFrom, psMain->Vars.psQuantifier->szVar);
+                if (nFind >= 0) {
+                    szVarTo = VarStackGet (psExtract->psVarsTo, nFind);
+                    nLength = strlen (szVarTo);
+                    psMain->Vars.psQuantifier->szVar = PropRealloc (psMain->Vars.psQuantifier->szVar, (nLength + 1) * sizeof (char));
+                    strcpy (psMain->Vars.psQuantifier->szVar, szVarTo);
+                }
 
 				nFind = ExtractSubstituteRecursive (psExtract, psMain->Vars.psQuantifier->psVar1, psVarStack);
 				if (nFind != 0) {
@@ -666,6 +696,7 @@ void ExtractPerformSubstitution (Extract const * psExtract, Operation ** psFrom,
 	VarStack * psInputsTo;
 	int nMapFrom;
 	VarStack * psReplacements;
+	int nReplace;
 
     psOperationMap = psExtract->apsOps[nFind];
 
@@ -683,7 +714,7 @@ void ExtractPerformSubstitution (Extract const * psExtract, Operation ** psFrom,
 
     for (nPosTo = 0; nPosTo < nArityTo; ++nPosTo) {
         if (psOperationMap->aszUnbound[nPosTo] != NULL) {
-            VarStackPush(psReplacements, psOperationMap->aszUnbound[nPosTo]);
+            VarStackPush (psReplacements, psOperationMap->aszUnbound[nPosTo]);
         }
         else {
             szVarTo = VarStackGet (psInputsTo, nPosTo);
@@ -698,6 +729,11 @@ void ExtractPerformSubstitution (Extract const * psExtract, Operation ** psFrom,
             assert (nMapFrom >= 0);
 
             szVarFrom = VarStackGet (psInputsFrom, nMapFrom);
+
+            nReplace = VarStackFind (psExtract->psVarsFrom, szVarFrom);
+            if (nReplace >= 0) {
+                szVarFrom = VarStackGet (psExtract->psVarsTo, nReplace);
+            }
 
             VarStackPush(psReplacements, szVarFrom);
         }

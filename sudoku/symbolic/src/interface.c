@@ -85,6 +85,8 @@ int main (int argc, char * * argv) {
 	int nToPos;
 	OperationMap * psOperationMap;
 	bool boMappable;
+	char const * szVarFrom;
+	char const * szVarTo;
 
 	// If we don't do this we get unused variable warnings
 	argc = argc;
@@ -144,6 +146,14 @@ int main (int argc, char * * argv) {
 			if (psExtract) {
 				nExtracted = ExtractCount(psExtract);
 				printf("Extracted: %d\n", nExtracted);
+
+				nLength = VarStackCount (psExtract->psVarsFrom);
+				for (nPos = 0; nPos < nLength; ++nPos) {
+					szVarFrom = VarStackGet (psExtract->psVarsFrom, nPos);
+					szVarTo = VarStackGet (psExtract->psVarsTo, nPos);
+					printf("Map: %s -> %s\n", szVarFrom, szVarTo);
+				}
+
 
 				for (nPos = 0; nPos < nExtracted; ++nPos) {
 					printf("Extraction: %d\n", nPos);

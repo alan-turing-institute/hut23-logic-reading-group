@@ -161,6 +161,8 @@ typedef struct _OperationMap {
 struct _Extract {
     int nCount;
     OperationMap ** apsOps;
+    VarStack * psVarsFrom;
+    VarStack * psVarsTo;
 };
 
 //////////////////////////////////////////////////////////////////
