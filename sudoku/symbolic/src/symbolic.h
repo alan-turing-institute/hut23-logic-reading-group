@@ -201,17 +201,22 @@ Variable * VariablePrev (Variable * psVariables);
 char const * VariableName (Variable const * const psVariable);
 
 // Pattern extraction
+Extract * FreeExtract (Extract * psExtract);
 Extract * ExtractPattern (Operation * psPattern, Operation * psScrutinee);
 Extract * ExtractPatternMany (Operation ** apsPattern, Operation ** apsScrutinee, int nCount);
 int ExtractCount(Extract * psExtract);
 Operation const * ExtractRelation (Extract const * psExtract, int nPosition);
 Operation const * ExtractValueFromPos (Extract const * psExtract, int nPosition);
 Operation const * ExtractValue (Extract const * psExtract, Operation const * const psRelation);
-void FreeExtract (Extract * psExtract);
-Operation * ExtractSubstitute (Extract * psExtract, Operation * psMain);
+Operation * ExtractSubstitute (Extract const * psExtract, Operation * psMain);
 int ExtractCompareOperationsMany (Extract const * psExtract, Operation const * psMain, VarStack const * psVarStack);
 void ExtractPerformSubstitution (Extract const * psExtract, Operation ** psFrom, int nFind);
-bool ExtractCheckSubstitution (Extract const * psExtract, Operation const * psMain);
+bool ExtractSubstituteValidate (Extract const * psExtract, Operation const * psMain, char** pszError);
+bool ExtractSubstituteCheckValidate (Extract const * psExtract, Operation const * psMain, char** pszError);
+Extract * ExtractPatternCheck (Operation * psPattern);
+Extract * ExtractPatternManyCheck (Operation ** apsPattern, int nCount);
+bool ExtractPatternMappingUnique (Operation ** apsPattern, int nCount);
+bool ExtractSubstituteCheck (Extract const * psExtract, Operation const * psMain, Operation const * psResult);
 
 // Bounding of variables
 void ReplaceUnbound (Operation * psOp, char const * const szVarFrom, char const * const szVarTo);

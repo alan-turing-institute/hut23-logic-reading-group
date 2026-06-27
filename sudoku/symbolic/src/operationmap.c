@@ -184,7 +184,7 @@ bool OperationMapVarMappingUnique (OperationMap * psOperationMap) {
                     nToCount += 1;
                 }
             }
-            boResult = boResult && (nToCount == 1);
+            boResult = boResult && (nToCount <= 1);
         }
     }
     return boResult;
@@ -253,7 +253,59 @@ bool OperationMapVarOriginsClear (OperationMap * psOperationMap, Operation const
     return boValidMap;
 }
 
+bool OperationMapVarOriginsCheckClear (OperationMap * psOperationMap, Operation const * psFrom) {
+    int nArityFrom;
+    int nArityTo;
+    int nVarFrom;
+    int nVarTo;
+    VarStack * psInputsFrom;
+    char const * szVarFrom;
+    char const * szRelationVar;
+    bool boValidMap;
+    int nValidCount;
+
+    psInputsFrom = CreateVarStack ();
+    nArityFrom = OperationInputList (psFrom, psInputsFrom);
+
+    nArityFrom = psOperationMap->nArityFrom;
+    nArityTo = psOperationMap->nArityTo;
 
 
+    boValidMap = TRUE;
+    for (nVarTo = 0; nVarTo < nArityTo; ++nVarTo) {
+        szVarFrom = VarStackGet (psInputsFrom, nVarTo);
 
+        nValidCount = 0;
+        for (nVarFrom = 0; nVarFrom < nArityFrom; ++ nVarFrom) {
+            szRelationVar = VarStackGet (psInputsFrom, nVarFrom);
+            if (strcmp (szVarFrom, szRelationVar) != 0) {
+                psOperationMap->aaboVarOrigin[(nVarTo * nArityFrom) + nVarFrom] = FALSE;
+            }
+            if (psOperationMap->aaboVarOrigin[(nVarTo * nArityFrom) + nVarFrom]) {
+                nValidCount += 1;
+            }
+        }
+        if (nValidCount == 0) {
+            boValidMap = FALSE;
+        }
+    }
+
+    psInputsFrom = FreeVarStack (psInputsFrom);
+
+    return boValidMap;
+}
+
+void OperationMapSetFromCheck (OperationMap * psOperationMap, Operation const * psOp) {
+    if (psOperationMap) {
+        if (psOperationMap->psFrom) {
+            FreeRecursive(psOperationMap->psFrom);
+        }
+        psOperationMap->psFrom = CopyRecursive(psOp);
+
+        psOperationMap->nArityFrom = OperationArity (psOperationMap->psFrom);
+        psOperationMap->nArityTo = psOperationMap->nArityFrom;
+
+        OperationMapInitVarOrigins (psOperationMap);
+    }
+}
 
