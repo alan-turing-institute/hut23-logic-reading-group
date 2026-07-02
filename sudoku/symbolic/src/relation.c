@@ -148,12 +148,7 @@ bool RelationCompare (Operation const * psOp1, Operation const * psOp2) {
     bool boReturn = TRUE;
     size_t nVar;
 
-    boReturn = ((psOp1) && (psOp1->eOpType == OPTYPE_RELATION) && (psOp2) && (psOp2->eOpType == OPTYPE_RELATION));
-
-    if (boReturn && ((strcmp (psOp1->Vars.psRelation->szName, psOp2->Vars.psRelation->szName) != 0)
-        || (psOp1->Vars.psRelation->nArity != psOp2->Vars.psRelation->nArity))) {
-        boReturn = FALSE;
-    }
+    boReturn = RelationComparePattern (psOp1, psOp2);
 
     nVar = 0;
     while (boReturn && (nVar < psOp1->Vars.psRelation->nArity)) {
@@ -518,4 +513,54 @@ Operation * StringToRelation (char const * szString, int nStrLen, int nArity) {
     PropFree(anVarLen);
 
     return psOp;
+}
+
+/**
+ * Compare two relations, but ignoring variable names.
+ *
+ * @param
+ * @return
+ *
+ */
+bool RelationComparePattern (Operation const * psOp1, Operation const * psOp2) {
+    bool boReturn = TRUE;
+
+    boReturn = ((psOp1) && (psOp1->eOpType == OPTYPE_RELATION) && (psOp2) && (psOp2->eOpType == OPTYPE_RELATION));
+
+    if (boReturn && ((strcmp (psOp1->Vars.psRelation->szName, psOp2->Vars.psRelation->szName) != 0)
+        || (psOp1->Vars.psRelation->nArity != psOp2->Vars.psRelation->nArity))) {
+        boReturn = FALSE;
+    }
+
+    return boReturn;
+}
+
+/**
+ * Compare two relations, but ignoring variable names.
+ *
+ * @param
+ * @return
+ *
+ */
+bool RelationComparePatternStack (Operation const * psOp1, Operation const * psOp2, VarStack const * psVarStack1, VarStack const * psVarStack2) {
+    bool boReturn = TRUE;
+    int nPos;
+	int nVarPos1;
+	int nVarPos2;
+
+    boReturn = ((psOp1) && (psOp1->eOpType == OPTYPE_RELATION) && (psOp2) && (psOp2->eOpType == OPTYPE_RELATION));
+
+    if (boReturn && ((strcmp (psOp1->Vars.psRelation->szName, psOp2->Vars.psRelation->szName) != 0)
+        || (psOp1->Vars.psRelation->nArity != psOp2->Vars.psRelation->nArity))) {
+        boReturn = FALSE;
+    }
+
+    for (nPos = 0; boReturn && (nPos < psOp1->Vars.psRelation->nArity); ++nPos) {
+	    nVarPos1 = VarStackFind (psVarStack1, psOp1->Vars.psRelation->aszVar[nPos]);
+	    nVarPos2 = VarStackFind (psVarStack2, psOp2->Vars.psRelation->aszVar[nPos]);
+
+        boReturn = (nVarPos1 == nVarPos2);
+    }
+
+    return boReturn;
 }

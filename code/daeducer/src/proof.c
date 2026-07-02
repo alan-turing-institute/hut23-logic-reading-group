@@ -942,7 +942,7 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 					}
 				}
 				else {
-					szError = "The or_elim command takes five back references as parameters.";
+					szError = "The exists_elim command takes three back references as parameters.";
 				}
 			}
 			break;

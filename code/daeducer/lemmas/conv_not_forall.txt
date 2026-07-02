@@ -1,0 +1,14 @@
+conv_not_forall
+CQ
+premise !forall x A(x)
+assumption !exists x !A(x)
+assumption !A(c)
+exists_intro 3, !A(x)
+not_elim 2, 4
+discharge
+indirect 3, 5
+forall_intro 7, c, x
+not_elim 1, 8
+discharge
+indirect 2, 9
+qed

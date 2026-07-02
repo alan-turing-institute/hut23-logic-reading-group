@@ -58,12 +58,13 @@
  *
  */
 int main (int argc, char * * argv) {
-	Operation * psOp;
-	Operation * psOp2;
+	Operation * psPattern;
+	Operation * psScrutinee;
 	char * szString;
 	Operation * psSub;
 	Operation * psFind;
 	Operation * psFind2;
+	Operation * psResult;
 	double fResult;
 	Variable * psVars = NULL;
 	Variable * psVar = NULL;
@@ -71,33 +72,159 @@ int main (int argc, char * * argv) {
 	char * szRead;
 	size_t nLength;
 	size_t nRead;
+	Extract * psExtract;
+	int nInputs;
+	VarStack * psInputs;
+	int nPos;
+	char const * szVar;
+	int nExtracted;
+	Operation const * psOp;
+	int nArityFrom;
+	int nFromPos;
+	int nArityTo;
+	int nToPos;
+	OperationMap * psOperationMap;
+	bool boMappable;
 
 	// If we don't do this we get unused variable warnings
 	argc = argc;
 	argv = argv;
 
+	printf("Pattern? \n");
 	szInput = NULL;
 	nRead = getline (&szInput, &nLength, stdin);
 
 	if (nRead != -1) {
-		psOp = StringToOperation (szInput);
+		psPattern = StringToOperation (szInput);
 
-		nLength = OperationToStringLength (psOp) + 1;
-		printf("Write length: %ld\n", nLength);
+		nLength = OperationToStringLength (psPattern) + 1;
 		szString = PropMalloc(nLength);
-		OperationToString (psOp, szString, nLength);
-		printf("Result: %s\n", szString);
+		OperationToString (psPattern, szString, nLength);
+		printf("Pattern: %s\n", szString);
 		PropFree(szString);
-
-		nLength = OperationToStringLengthLatex (psOp) + 1;
-		printf("LaTeX length: %ld\n", nLength);
-		szString = PropMalloc(nLength);
-		OperationToStringLatex (psOp, szString, nLength);
-		printf("LaTeX: %s\n", szString);
-		PropFree(szString);
-
 		free(szInput);
 		szInput = NULL;
+
+		psInputs = CreateVarStack();
+		nInputs = OperationInputList (psPattern, psInputs);
+		printf("Inputs: %d\n", nInputs);
+		for (nPos = 0; nPos < nInputs; ++nPos) {
+			szVar = VarStackGet(psInputs, nPos);
+			printf("Input %d: %s\n", nPos, szVar);
+		}
+		psInputs = FreeVarStack(psInputs);
+
+
+		printf("Scrutinee? \n");
+		szInput = NULL;
+		nRead = getline (&szInput, &nLength, stdin);
+
+		if (nRead != -1) {
+			psScrutinee = StringToOperation (szInput);
+
+			nLength = OperationToStringLength (psScrutinee) + 1;
+			szString = PropMalloc(nLength);
+			OperationToString (psScrutinee, szString, nLength);
+			printf("Scrutinee: %s\n", szString);
+			PropFree(szString);
+			free(szInput);
+			szInput = NULL;
+
+			psInputs = CreateVarStack();
+			nInputs = OperationInputList (psPattern, psInputs);
+			printf("Inputs: %d\n", nInputs);
+			for (nPos = 0; nPos < nInputs; ++nPos) {
+				szVar = VarStackGet(psInputs, nPos);
+				printf("Input %d: %s\n", nPos, szVar);
+			}
+			psInputs = FreeVarStack(psInputs);
+
+			psExtract = ExtractPattern (psPattern, psScrutinee);
+
+			if (psExtract) {
+				nExtracted = ExtractCount(psExtract);
+				printf("Extracted: %d\n", nExtracted);
+
+				for (nPos = 0; nPos < nExtracted; ++nPos) {
+					printf("Extraction: %d\n", nPos);
+
+					psOp = ExtractRelation (psExtract, nPos);
+
+					nLength = OperationToStringLength (psOp) + 1;
+					szString = PropMalloc(nLength);
+					OperationToString (psOp, szString, nLength);
+					printf("From: %s\n", szString);
+					PropFree(szString);
+					free(szInput);
+
+					psOp = ExtractValueFromPos (psExtract, nPos);
+
+					nLength = OperationToStringLength (psOp) + 1;
+					szString = PropMalloc(nLength);
+					OperationToString (psOp, szString, nLength);
+					printf("To: %s\n", szString);
+					PropFree(szString);
+					free(szInput);
+
+					printf("Variable mappings: \n");
+					psOp = ExtractRelation (psExtract, nPos);
+					psOperationMap = ExtractOperationMap (psExtract, psOp);
+
+					nArityFrom = psOperationMap->nArityFrom;
+					nArityTo = psOperationMap->nArityTo;
+
+					for (nToPos = 0; nToPos < nArityTo; ++nToPos) {
+						printf("To pos %d:", nToPos);
+						for (nFromPos = 0; nFromPos < nArityFrom; ++nFromPos) {
+							boMappable = psOperationMap->aaboVarOrigin[(nToPos * psOperationMap->nArityFrom) + nFromPos];
+							if (boMappable) {
+								printf(" T");
+							}
+							else {
+								printf(" F");
+							}
+						}
+						if (psOperationMap->aszUnbound[nToPos] != NULL) {
+							printf(" (unbound name '%s')\n", psOperationMap->aszUnbound[nToPos]);
+						}
+						else {
+							printf("\n");
+						}
+					}
+				}
+
+				printf("Result pattern? \n");
+				szInput = NULL;
+				nRead = getline (&szInput, &nLength, stdin);
+
+				if (nRead != -1) {
+					psResult = StringToOperation (szInput);
+
+					nLength = OperationToStringLength (psResult) + 1;
+					szString = PropMalloc(nLength);
+					OperationToString (psResult, szString, nLength);
+					printf("Result pattern: %s\n", szString);
+					PropFree(szString);
+					free(szInput);
+					szInput = NULL;
+
+					psResult = ExtractSubstitute (psExtract, psResult);
+
+					nLength = OperationToStringLength (psResult) + 1;
+					szString = PropMalloc(nLength);
+					OperationToString (psResult, szString, nLength);
+					printf("Result: %s\n", szString);
+					PropFree(szString);
+				}
+				else {
+					printf("Replacement failed\n");
+				}
+			}
+			else {
+				printf("Extraction failed\n");
+			}
+
+		}
 	}
 
 	// And relax
