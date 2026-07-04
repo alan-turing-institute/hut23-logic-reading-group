@@ -173,6 +173,18 @@ void step_print(Step* psStep, Ruleset* psRuleset) {
 				snprintf(szCommand, uCommandLength, "EE, %s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName);
 			}
 			break;
+			case STEP_IDENTITY_INTRO: {
+				uCommandLength = snprintf(NULL, 0, "=I") + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "=I");
+			}
+			break;
+			case STEP_IDENTITY_ELIM: {
+				uCommandLength = snprintf(NULL, 0, "=E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "=E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
 			case STEP_QED: {
 				uCommandLength = 4;
 				szCommand = calloc(uCommandLength, sizeof(char));

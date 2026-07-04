@@ -241,7 +241,8 @@ bool proof_replaced_variables_match(VariableNameMap* psVariableNameMap, Operatio
 	bool boResult = FALSE;
 	char const* szVarFrom;
 	char const* szVarTo;
-	Operation* psReplaced;
+	Operation* psReplacedFrom;
+	Operation* psReplacedTo;
 	size_t uCount;
 
 	boResult = VariableNameMapExtract(psVariableNameMap, psOpFrom, psOpTo);
@@ -250,9 +251,13 @@ bool proof_replaced_variables_match(VariableNameMap* psVariableNameMap, Operatio
 	if (boResult && (uCount == 1)) {
 		szVarFrom = VariableNameMapGetFrom(psVariableNameMap, 0);
 		szVarTo = VariableNameMapGetTo(psVariableNameMap, 0);
-		psReplaced = CopyRecursive(psOpTo);
-		ReplaceUnbound(psReplaced, szVarTo, szVarFrom);
-		boResult = CompareOperations(psOpFrom, psReplaced);
+		psReplacedFrom = CopyRecursive(psOpFrom);
+		psReplacedTo = CopyRecursive(psOpTo);
+		ReplaceUnbound(psReplacedFrom, szVarFrom, szVarTo);
+		ReplaceUnbound(psReplacedTo, szVarFrom, szVarTo);
+		boResult = CompareOperations(psReplacedFrom, psReplacedTo);
+		FreeRecursive(psReplacedTo);
+		FreeRecursive(psReplacedFrom);
 	}
 	else {
 		boResult = FALSE;
@@ -741,9 +746,6 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 					bool boFound;
 					char* szVarTo;
 					char const* szVarFrom;
-//					Operation* psPattern;
-//					Extract* psExtract;
-//					int nExtractCount;
 					QUANTIFIER eQuType;
 
 					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 1);
@@ -761,21 +763,6 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 								szVarTo = psStep->aszVar[0];
 
 								// Check whether it's a universal quantifier
-//								psPattern = CreateQuantifier(QUANTIFIER_UNIVERSAL, "x", CreateRelation("A", 0, NULL));
-//								psExtract = ExtractPattern(psPattern, apsScrutinee[0]);
-//								if (psExtract) {
-//									nExtractCount = ExtractCount(psExtract);
-//									if (nExtractCount == 1) {
-//										Operation* psQuantifiedOver = ExtractValueFromPos(psExtract, 0);
-//
-//
-//										char const* szVar = ExtractVarnameMapping(psExtract, 0, 0);
-//
-//
-//
-//									}
-//								}
-
 								eQuType = QuantifierGetType(apsScrutinee[0]);
 								if (eQuType == QUANTIFIER_UNIVERSAL) {
 									psStep->uRefCount = 1;
@@ -829,7 +816,7 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 								psStep->apsInput = calloc(psStep->uInputCount, sizeof(Operation*));
 								psStep->apsInput[0] = StringToOperationCheck(psCommand->aszParameter[1]);
 
-								// Check that every unbound instance of szVarTo in the result used to be an instancxe of the same thing
+								// Check that every unbound instance of szVarTo in the result used to be an instance of the same thing
 
 								psVariableNameMap = CreateVariableNameMap();
 								boFound = proof_replaced_variables_match(psVariableNameMap, apsScrutinee[0], psStep->apsInput[0]);
@@ -943,6 +930,129 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 				}
 				else {
 					szError = "The exists_elim command takes three back references as parameters.";
+				}
+			}
+			break;
+			case STEP_IDENTITY_INTRO: {
+				if (psCommand->uCount == 1) {
+					char* aszVar[2];
+
+					psStep->uVarCount = 1;
+					psStep->aszVar = calloc(psStep->uVarCount, sizeof(char*));
+					psStep->aszVar[0] = strdup(psCommand->aszParameter[0]);
+					aszVar[0] = psStep->aszVar[0];
+					aszVar[1] = psStep->aszVar[0];
+
+					psStep->psResult = CreateRelation("=", 2, aszVar);
+					boError = FALSE;
+				}
+				else {
+					szError = "The identity introduction command takes one variable name as a parameter.";
+				}
+			}
+			break;
+			case STEP_IDENTITY_ELIM: {
+				if (psCommand->uCount == 3) {
+					size_t auRef[2];
+					Step* apsRef[2];
+					Operation* apsScrutinee[1];
+					bool boFound;
+					VariableNameMap* psVariableNameMap;
+					char const* szVarTo;
+					char const* szVarFrom;
+					size_t uCount;
+					char const * aszVar[2];
+					Operation* psIdentity;
+					VarStack* psInputs;
+					int nArity;
+
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 2);
+					if (boFound) {
+						boFound = proof_step_scoped(psProof, auRef[0]);
+						if (boFound) {
+							boFound = proof_step_scoped(psProof, auRef[1]);
+							if (boFound) {
+								boFound = proof_get_steps(psProof, auRef, apsRef, 2);
+								if (boFound) {
+
+									psIdentity = CreateRelation("=", 2, (char* const[]) {"x", "y"});
+
+									boFound = CompareOperationPatterns(psIdentity, apsRef[0]->psResult);
+
+									if (boFound) {
+										psInputs = CreateVarStack();
+										nArity = OperationInputList (apsRef[0]->psResult, psInputs);
+										if (nArity == 2) {
+											aszVar[0] = VarStackGet(psInputs, 0);
+											aszVar[1] = VarStackGet(psInputs, 1);
+
+											apsScrutinee[0] = apsRef[1]->psResult;
+
+											psStep->uInputCount = 1;
+											psStep->apsInput = calloc(psStep->uInputCount, sizeof(Operation*));
+											psStep->apsInput[0] = StringToOperationCheck(psCommand->aszParameter[2]);
+
+											// Check that every unbound instance of szVarTo in the result used to be an instancxe of the same thing
+
+											psVariableNameMap = CreateVariableNameMap();
+											boFound = proof_replaced_variables_match(psVariableNameMap, apsScrutinee[0], psStep->apsInput[0]);
+											if (boFound) {
+												uCount = VariableNameMapCount(psVariableNameMap);
+												if (uCount == 1) {
+													szVarTo = VariableNameMapGetTo(psVariableNameMap, 0);
+													szVarFrom = VariableNameMapGetFrom(psVariableNameMap, 0);
+													if (((strcmp(szVarFrom, aszVar[0]) == 0) || (strcmp(szVarTo, aszVar[0]) == 0)) && ((strcmp(szVarFrom, aszVar[1]) == 0) || (strcmp(szVarTo, aszVar[1]) == 0))) {
+
+														psStep->uRefCount = 2;
+														psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+														psStep->apsRef[0] = apsRef[0];
+														psStep->apsRef[1] = apsRef[1];
+
+														psStep->psResult = CopyRecursive(psStep->apsInput[0]);
+														boError = FALSE;
+													}
+													else {
+														szError = "The variables changed in the expression must match those from the equality.";
+													}
+												}
+												else {
+													szError = "Exactly one of the two variable names in the equality must be changed in the expression.";
+												}
+											}
+											else {
+												szError = "Only unbound variables with the same name can be replaced with existential introduction.";
+											}
+											psVariableNameMap = FreeVariableNameMap(psVariableNameMap);
+										}
+										else {
+											szError = "The first reference must be an identity relation with distinct variables.";
+										}
+										psInputs = FreeVarStack(psInputs);
+									}
+									else {
+										szError = "The first reference must be to an identity relation.";
+									}
+									FreeRecursive(psIdentity);
+									psIdentity = NULL;
+								}
+								else {
+									szError = "Thew back reference is missing";
+								}
+							}
+							else {
+								szError = "Back reference could not be found";
+							}
+						}
+						else {
+							szError = "The back reference is out of scope.";
+						}
+					}
+					else {
+						szError = "The back reference is out of scope.";
+					}
+				}
+				else {
+					szError = "The existential introduction command takes one reference and an expression as parameters.";
 				}
 			}
 			break;
