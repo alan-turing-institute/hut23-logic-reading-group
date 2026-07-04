@@ -161,6 +161,8 @@ typedef struct _OperationMap {
 struct _Extract {
     int nCount;
     OperationMap ** apsOps;
+    VarStack * psVarsFrom;
+    VarStack * psVarsTo;
 };
 
 //////////////////////////////////////////////////////////////////
@@ -211,7 +213,8 @@ int VarStackFind (VarStack const * psVarStack, char const * szVar);
 char const * VarStackGet (VarStack const * const psVarStack, int nPos);
 
 // Extraction
-OperationMap * ExtractOperationMap (Extract * psExtract, Operation const * const psRelation);
+OperationMap * ExtractOperationMap (Extract const * psExtract, Operation const * const psRelation);
+bool ExtractCheckSubstitution (Extract const * psExtract, Operation const * psMain);
 
 // Operation Maps
 OperationMap * CreateOperationMap ();
@@ -224,5 +227,7 @@ void OperationMapInitVarOrigins (OperationMap * psOperationMap);
 void OperationMapVarOriginClear (OperationMap * psOperationMap, int nFrom, int nTo);
 bool OperationMapVarMappingUnique (OperationMap * psOperationMap);
 bool OperationMapVarOriginsClear (OperationMap * psOperationMap, Operation const * psFrom, Operation const * psTo, VarStack * psPatternVars, VarStack * psScrutineeVars);
+bool OperationMapVarOriginsCheckClear (OperationMap * psOperationMap, Operation const * psFrom);
+void OperationMapSetFromCheck (OperationMap * psOperationMap, Operation const * psOp);
 
 #endif // if !defined _H_SYMBOLIC_PRIVATE

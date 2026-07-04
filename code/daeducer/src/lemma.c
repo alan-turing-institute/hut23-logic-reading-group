@@ -74,6 +74,8 @@ Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRe
 
 	psLemma->psResult = StringToOperationCheck(szResult);
 
+	psLemma->boRequiresValidation = !ExtractPatternMappingUnique(psLemma->apsPattern, (uRefNum + uOpNum));
+
 	return psLemma;
 }
 
@@ -95,13 +97,16 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 	Step** apsRef;
 	Extract* psExtract;
 	Operation** apsScrutinee;
+	Operation* psValidator = NULL;
 	size_t uParameters;
+	size_t uValidators;
 
 	uParameters = psLemma->uRefNum + psLemma->uOpNum;
+	uValidators = psLemma->boRequiresValidation ? 1 : 0;
 
-	if (psCommand->uCount == uParameters) {
+	if (psCommand->uCount == (uParameters + uValidators)) {
 		auRef = calloc(psLemma->uRefNum, sizeof(size_t));
-		apsRef = calloc(psLemma->uRefNum, sizeof(Operation*));
+		apsRef = calloc(psLemma->uRefNum, sizeof(Step*));
 		boSuccess = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, psLemma->uRefNum);
 
 		if (boSuccess) {
@@ -121,6 +126,10 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 						apsScrutinee[uPos] = StringToOperationCheck(psCommand->aszParameter[uPos]);
 					}
 
+					if (psLemma->boRequiresValidation) {
+						psValidator = StringToOperationCheck(psCommand->aszParameter[uParameters]);
+					}
+
 					psExtract = ExtractPatternMany(psLemma->apsPattern, apsScrutinee, uParameters);
 					boSuccess = (psExtract != NULL);
 
@@ -132,14 +141,36 @@ bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, St
 							psStep->apsRef[uPos] = apsRef[uPos];
 						}
 
-						psStep->uInputCount = psLemma->uOpNum;
-						psStep->apsInput = calloc(psLemma->uOpNum, sizeof(Step*));
+						psStep->uInputCount = psLemma->uOpNum + uValidators;
+						psStep->apsInput = calloc(psStep->uInputCount, sizeof(Step*));
 
 						for (uPos = 0; uPos < psLemma->uOpNum; ++uPos) {
 							psStep->apsInput[uPos] = apsScrutinee[(psLemma->uRefNum + uPos)];
 						}
 
-						psStep->psResult = ExtractSubstitute (psExtract, CopyRecursive(psLemma->psResult));
+						if (psLemma->boRequiresValidation) {
+							psStep->apsInput[psLemma->uOpNum] = psValidator;
+
+							boSuccess = ExtractSubstituteCheckValidate(psExtract, psLemma->psResult, pszError);
+
+							if (boSuccess) {
+								boSuccess = ExtractSubstituteCheck(psExtract, psLemma->psResult, psValidator);
+
+								if (boSuccess) {
+									psStep->psResult = CopyRecursive(psValidator);
+								}
+								else {
+									*pszError = "Propsed result does not match lemma requirements.";
+								}
+							}
+						}
+						else {
+							boSuccess = ExtractSubstituteValidate(psExtract, psLemma->psResult, pszError);
+
+							if (boSuccess) {
+								psStep->psResult = ExtractSubstitute(psExtract, CopyRecursive(psLemma->psResult));
+							}
+						}
 
 						FreeExtract(psExtract);
 						psExtract = NULL;
@@ -244,6 +275,8 @@ Lemma* lemma_from_proof(Proof* psProof) {
 
 	FreeRelationList(psResultRelations);
 	FreeRelationList(psRefRelations);
+
+	psLemma->boRequiresValidation = !ExtractPatternMappingUnique(psLemma->apsPattern, (psLemma->uRefNum + psLemma->uOpNum));
 
 	return psLemma;
 }

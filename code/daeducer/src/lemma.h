@@ -15,6 +15,7 @@ struct _Lemma {
 	size_t uOpNum;
 	Operation** apsPattern;
 	Operation* psResult;
+	bool boRequiresValidation;
 };
 
 Lemma* lemma_new();
