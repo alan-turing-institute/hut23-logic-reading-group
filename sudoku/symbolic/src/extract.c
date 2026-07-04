@@ -782,7 +782,7 @@ void ReplaceUnboundMany (Operation * psOp, VarStack const * const psVarsFrom, Va
 void ReplaceUnboundRecurseMany (Operation * psOp, VarStack const * const psVarsFrom, VarStack const * const psVarsTo, VarStack * psVarStack) {
     size_t nVar;
     int nVarStackPos;
-    char const * szVarFrom;
+    char const * szVarTo;
 
     // Check the operations recursively
     if (psOp) {
@@ -807,14 +807,17 @@ void ReplaceUnboundRecurseMany (Operation * psOp, VarStack const * const psVarsF
                 break;
             case OPTYPE_RELATION:
                 for (nVar = 0; nVar < psOp->Vars.psRelation->nArity; ++nVar) {
-                    // Replace any unbound instances of szVarFrom with szVarTo
-                    nVarStackPos = VarStackFind (psVarsTo, psOp->Vars.psRelation->aszVar[nVar]);
-                    assert (nVarStackPos >= 0);
-                    szVarFrom = VarStackGet (psVarsFrom, nVarStackPos);
-
-                    PropFree (psOp->Vars.psRelation->aszVar[nVar]);
-                    psOp->Vars.psRelation->aszVar[nVar] = (char *)PropMalloc (strlen (szVarFrom) + 1);
-                    strcpy (psOp->Vars.psRelation->aszVar[nVar], szVarFrom);
+                    nVarStackPos = VarStackFind (psVarStack, psOp->Vars.psRelation->aszVar[nVar]);
+                    if (nVarStackPos == -1) {
+                        // Replace any unbound instances of szVarFrom with szVarTo
+                        nVarStackPos = VarStackFind (psVarsFrom, psOp->Vars.psRelation->aszVar[nVar]);
+                        if (nVarStackPos >= 0) {
+                            szVarTo = VarStackGet (psVarsTo, nVarStackPos);
+                            PropFree (psOp->Vars.psRelation->aszVar[nVar]);
+                            psOp->Vars.psRelation->aszVar[nVar] = (char *)PropMalloc (strlen (szVarTo) + 1);
+                            strcpy (psOp->Vars.psRelation->aszVar[nVar], szVarTo);
+                        }
+                    }
                 }
                 break;
             default:

@@ -70,15 +70,13 @@ static char const aszQuantifier[QUANTIFIER_NUM][7] = {
 // Function prototypes
 
 Operation * RecurseToOperation (char const * szString, int nStrLen);
-bool StringCheckBinary (char const * szString, int const nStrLen, char const * szOperator);
 bool StringCheckQuantifier (char const * szString, int const nStrLen, char const * szQuantifier);
 bool TryStringToDouble (char const * const szString, int const nStrLen, double * pfDecimal);
 bool TryStringToTruth (char const * const szString, int const nStrLen, bool * pboTruth);
 bool TryUndefinedUnary (char const * szString, int nStrLen, int * pnNameEnd);
 bool CheckBracketsMatch (char const * szString, int nStrLen);
-void StripSurroundingWhitespace(char * szString, int * pnStrLen);
-char * DuplicateWithoutWhitespace(char const * szString, int nStrLen, int *pnOutLen);
-char const * StringGetBounds(char const * szString, int * pnStart, int * pnStrLen);
+void StripSurroundingWhitespace (char * szString, int * pnStrLen);
+char * DuplicateWithoutWhitespace (char const * szString, int nStrLen, int *pnOutLen);
 
 //////////////////////////////////////////////////////////////////
 // Main application
@@ -525,35 +523,31 @@ Operation * RecurseToOperation (char const * szString, int nStrLen) {
 
 	// Find the operation with highest precedent
 	boMatch = FALSE;
-	eBinary = (OPBINARY)((int)OPBINARY_INVALID + 1);
 	// We need to check for each binary operation until we match
-	// Potentially this could be optimised by looping through the operations
-	// after finding the highest precedent operation, rather than the other
-	// way around.
-	while ((!boMatch) && (eBinary < OPBINARY_NUM)) {
-		nBrackets = 0;
-		// Note we start with nPos = 1, so because the LHS of the binary
-		// operation has to exist in this case
-		for (nPos = 0; ((nPos < nStrLen) && (!boMatch)); nPos++) {
-			if (szString[nPos] == '(') {
-				// Opening bracket (increase bracket count)
-				nBrackets++;
-			}
-			if (szString[nPos] == ')') {
-				// Closing bracket (decrease bracket count)
-				nBrackets--;
-			}
-			if ((nBrackets == 0) && (nPos > 0)) {
-				// We're at the lowest level, right in the bowels of the formula
-				// So we should check whether this is the binary operation we need
+	nBrackets = 0;
+	for (nPos = 0; ((nPos < nStrLen) && (!boMatch)); nPos++) {
+		if (szString[nPos] == '(') {
+			// Opening bracket (increase bracket count)
+			nBrackets++;
+		}
+		if (szString[nPos] == ')') {
+			// Closing bracket (decrease bracket count)
+			nBrackets--;
+		}
+		if ((nBrackets == 0) && (nPos > 0)) {
+			// We're at the lowest level, right in the bowels of the formula
+			// So we should check whether this is a binary operation
+			eBinary = (OPBINARY)((int)OPBINARY_INVALID + 1);
+			while ((!boMatch) && (eBinary < OPBINARY_NUM)) {
 				boMatch = StringCheckBinary (szString + nPos, nStrLen - nPos, aszOpBinary[eBinary]);
+				// Move on to check the next operation
+				eBinary = (OPBINARY)((int)eBinary + 1);
 			}
 		}
-		// Move on to check the next operation
-		eBinary = (OPBINARY)((int)eBinary + 1);
 	}
 
 	if (boMatch) {
+		// We found a binary operation
 		// Split into two pieces and recurse
 		eBinary = (OPBINARY)((int)eBinary - 1);
 		nRightStart = nPos + (int)strlen(aszOpBinary[eBinary]) - 1;
@@ -800,7 +794,7 @@ bool CheckBracketsMatch (char const * szString, int nStrLen) {
  * @param nStrLen the length of the string.
  *
  */
-void StripSurroundingWhitespace(char * szString, int * pnStrLen) {
+void StripSurroundingWhitespace (char * szString, int * pnStrLen) {
 	int nPos;
 	int nStart;
 	int nLength;
@@ -850,7 +844,7 @@ void StripSurroundingWhitespace(char * szString, int * pnStrLen) {
  * @return the duplicated string with leading and trailing whitespace removed
  *
  */
-char * DuplicateWithoutWhitespace(char const * szString, int nStrLen, int *pnOutLen) {
+char * DuplicateWithoutWhitespace (char const * szString, int nStrLen, int *pnOutLen) {
 	int nPos;
 	int nStart;
 	int nLength;
@@ -904,7 +898,7 @@ char * DuplicateWithoutWhitespace(char const * szString, int nStrLen, int *pnOut
  * @return the start position of the non-whitespace string in memory.
  *
  */
-char const * StringGetBounds(char const * szString, int * pnStart, int * pnStrLen) {
+char const * StringGetBounds (char const * szString, int * pnStart, int * pnStrLen) {
 	int nLength;
 	int nPos;
 	int nStart;
