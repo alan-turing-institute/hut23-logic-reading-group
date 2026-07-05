@@ -166,6 +166,9 @@ struct _Extract {
 };
 
 //////////////////////////////////////////////////////////////////
+// Global variables
+
+//////////////////////////////////////////////////////////////////
 // Function prototypes
 
 // Reference counting for variables
@@ -184,7 +187,8 @@ char * RecurseToStringLatex (Operation * psOp, int nStrLen);
 int RecurseToStringLengthLatex (Operation * psOp);
 
 // Relation operations
-Operation * CreateRelationLength (char const * szName, size_t nLength, size_t nArity, char const * const * aszVar, size_t * anVarLen);
+Operation * CreateRelationLength (char const * szName, size_t uLength, size_t nArity, char const * const * aszVar, size_t * auVarLen);
+Operation * CreateRelationBinaryLength (char const * szName, size_t uLength, char const * szVar1, size_t uVar1Len, char const * szVar2, size_t uVar2Len);
 Operation * CopyRelation (Operation const * psOp);
 bool RelationCompare (Operation const * psOp1, Operation const * psOp2);
 char * RelationToString (Operation const * psOp, char * szString, int nStrLen);
@@ -201,8 +205,6 @@ bool RelationComparePattern (Operation const * psOp1, Operation const * psOp2);
 bool RelationComparePatternStack (Operation const * psOp1, Operation const * psOp2, VarStack const * psVarStack1, VarStack const * psVarStack2);
 
 // Variable stack operations
-VarStack * CreateVarStack ();
-VarStack * FreeVarStack (VarStack * psVarStack);
 void VarStackPush (VarStack * psVarStack, char const* szVar);
 char * VarStackPop (VarStack * psVarStack);
 void VarStackDrop (VarStack * psVarStack);
@@ -210,7 +212,6 @@ int VarStackCount (VarStack * psVarStack);
 bool VarStackMatchUnbound (VarStack const * psBoundVars, Operation * psOp);
 bool VarStackContains (VarStack const * psVarStack, char const * szVar);
 int VarStackFind (VarStack const * psVarStack, char const * szVar);
-char const * VarStackGet (VarStack const * const psVarStack, int nPos);
 
 // Extraction
 OperationMap * ExtractOperationMap (Extract const * psExtract, Operation const * const psRelation);
@@ -229,5 +230,9 @@ bool OperationMapVarMappingUnique (OperationMap * psOperationMap);
 bool OperationMapVarOriginsClear (OperationMap * psOperationMap, Operation const * psFrom, Operation const * psTo, VarStack * psPatternVars, VarStack * psScrutineeVars);
 bool OperationMapVarOriginsCheckClear (OperationMap * psOperationMap, Operation const * psFrom);
 void OperationMapSetFromCheck (OperationMap * psOperationMap, Operation const * psOp);
+
+// General utilities
+char const * StringGetBounds (char const * szString, int * pnStart, int * pnStrLen);
+bool StringCheckBinary (char const * szString, int const nStrLen, char const * szOperator);
 
 #endif // if !defined _H_SYMBOLIC_PRIVATE

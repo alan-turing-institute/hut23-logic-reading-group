@@ -158,6 +158,7 @@ Operation * CreateUnary (OPUNARY eOpType, Operation * psVar1);
 Operation * CreateBinary (OPBINARY eOpType, Operation * psVar1, Operation * psVar2);
 Operation * CreateQuantifier (QUANTIFIER eQuType, char const * szVar, Operation * psVar1);
 Operation * CreateRelation (char const * szName, size_t nArity, char * const * aszVar);
+VarStack * CreateVarStack ();
 
 // Conversion to and from strings
 char * OperationToString (Operation const * psOp, char * szString, int nStrLen);
@@ -258,5 +259,9 @@ bool VariableNameMapExtract (VariableNameMap * psVariableNameMap, Operation cons
 int VariableNameMapCount (VariableNameMap * psVariableNameMap);
 char const * VariableNameMapGetFrom (VariableNameMap * psVariableNameMap, int nPos);
 char const * VariableNameMapGetTo (VariableNameMap * psVariableNameMap, int nPos);
+
+// VarStack functionality
+VarStack * FreeVarStack (VarStack * psVarStack);
+char const * VarStackGet (VarStack const * const psVarStack, int nPos);
 
 #endif // if !defined _H_SYMBOLIC
