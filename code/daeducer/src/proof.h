@@ -42,12 +42,14 @@ bool proof_get_steps(Proof* psProof, size_t auIndex[], Step* apsStep[], size_t u
 
 void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand);
 void proof_print_step(Proof* psProof, size_t uStep);
+void proof_print_step_latex(Proof* psProof, size_t uStep);
 void proof_print_last_step(Proof* psProof);
 size_t proof_indent(Proof* psProof);
 bool proof_step_scoped(Proof* psProof, size_t uStep);
 bool proof_complete(Proof* psProof);
 bool proof_error(Proof* psProof, char** pszError);
 void proof_print(Proof* psProof);
+void proof_print_latex(Proof* psProof);
 bool proof_save(Proof* psProof, char const* szFilenzme, char const* szCommand, char const* szAnnotation);
 void proof_reset(Proof* psProof);
 void proof_clear(Proof* psProof);

@@ -276,6 +276,20 @@ void proof_print(Proof* psProof) {
 	printf("\n");
 }
 
+void proof_print_latex(Proof* psProof) {
+	size_t uPos;
+
+	printf("$\n");
+	printf("\\begin{nd}");
+
+	for (uPos = 0; uPos < psProof->uStepCount; ++uPos) {
+		printf("\n");
+		proof_print_step_latex(psProof, uPos);
+	}
+	printf("\\end{nd}\n");
+	printf("$\n");
+}
+
 void proof_print_help(Ruleset* psRuleset) {
 	size_t uPos;
 	size_t uLemmaNum;
@@ -1072,14 +1086,27 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 			}
 			break;
 			case STEP_PRINT: {
-				if (psCommand->uCount == 0) {
+				if ((psCommand->uCount == 0) || ((psCommand->uCount == 1) && (strcmp("default", psCommand->aszParameter[0]) == 0))) {
 					boError = FALSE;
 					boStep = FALSE;
 					proof_print(psProof);
 					printf("\n");
 				}
 				else {
-					szError = "The print command takes no parameters.";
+					if (psCommand->uCount == 1) {
+						if (strcmp("latex", psCommand->aszParameter[0]) == 0) {
+							boError = FALSE;
+							boStep = FALSE;
+							proof_print_latex(psProof);
+							printf("\n");
+						}
+						else {
+							szError = "The print command parameter must be either 'default' or 'latex'.";
+						}
+					}
+					else {
+						szError = "The print command takes zero or one parameters.";
+					}
 				}
 			}
 			break;
@@ -1214,6 +1241,12 @@ void proof_print_last_step(Proof* psProof) {
 void proof_print_step(Proof* psProof, size_t uStep) {
 	if (uStep < psProof->uStepCount) {
 		step_print(psProof->apsStep[uStep], psProof->psRuleset);
+	}
+}
+
+void proof_print_step_latex(Proof* psProof, size_t uStep) {
+	if (uStep < psProof->uStepCount) {
+		step_print_latex(psProof->apsStep[uStep], psProof->psRuleset);
 	}
 }
 
