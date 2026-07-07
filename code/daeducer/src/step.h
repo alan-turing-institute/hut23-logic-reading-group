@@ -130,6 +130,7 @@ static char const aszHelp[STEP_NUM][64] = {
 Step* step_new();
 void step_delete(Step* psStep);
 void step_print(Step* psStep, Ruleset* psRuleset);
+void step_print_latex(Step* psStep, Ruleset* psRuleset);
 void step_command_output(Step* psStep, Ruleset* psRuleset, FILE* fhFile);
 void step_command_string(Step* psStep, Ruleset* psRuleset, String* psString);
 void step_command_string_latex(Step* psStep, Ruleset* psRuleset, String* psString);
