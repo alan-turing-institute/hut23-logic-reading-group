@@ -471,6 +471,132 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 				}
 			}
 			break;
+			case STEP_BICONDITIONAL_ELIM: {
+				if (psCommand->uCount == 2) {
+					size_t auRef[2];
+					Operation* psRelation1;
+					Operation* psRelation2;
+					Operation const* psOp1;
+					Operation const* psOp2;
+					bool boFound;
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 2);
+					if (boFound) {
+						if (proof_step_scoped(psProof, auRef[0])) {
+							if (proof_step_scoped(psProof, auRef[1])) {
+									Step* apsRef[2];
+									boFound = proof_get_steps(psProof, auRef, apsRef, 2);
+									if (boFound) {
+										psPattern = CreateBinary(OPBINARY_LEQUIV, CreateRelation("A", 0, NULL), CreateRelation("B", 0, NULL));
+										psExtract = ExtractPattern(psPattern, apsRef[0]->psResult);
+										if (psExtract) {
+											psRelation1 = CreateRelation ("A", 0, NULL);
+											psRelation2 = CreateRelation ("B", 0, NULL);
+											psOp1 = ExtractValue(psExtract, psRelation1);
+											psOp2 = ExtractValue(psExtract, psRelation2);
+
+											if (CompareOperations(psOp1, apsRef[1]->psResult)) {
+												psStep->uRefCount = 2;
+												psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+												psStep->apsRef[0] = apsRef[0];
+												psStep->apsRef[1] = apsRef[1];
+												psStep->psResult = CopyRecursive(psOp2);
+												boError = FALSE;
+											}
+											else {
+												if (CompareOperations(psOp2, apsRef[1]->psResult)) {
+													psStep->uRefCount = 2;
+													psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+													psStep->apsRef[0] = apsRef[0];
+													psStep->apsRef[1] = apsRef[1];
+													psStep->psResult = CopyRecursive(psOp1);
+													boError = FALSE;
+												}
+												else {
+													szError = "The second back refererence must match one of the sides of the biconditional.";
+												}
+											}
+
+											FreeRecursive(psRelation2);
+											psRelation2 = NULL;
+											FreeRecursive(psRelation1);
+											psRelation1 = NULL;
+											FreeExtract(psExtract);
+											psExtract = NULL;
+										}
+										else {
+											szError = "The first back reference must be in the form (A <-> B).";
+										}
+										FreeRecursive(psPattern);
+										psPattern = NULL;
+									}
+									else {
+										szError = "Back references are missing.";
+									}
+							}
+							else {
+								szError = "The second back reference is out of scope.";
+							}
+						}
+						else {
+							szError = "The first back reference is out of scope.";
+						}
+					}
+					else {
+						szError = "Back references could not be found.";
+					}
+				}
+				else {
+					szError = "The or_elim command takes five back references as parameters.";
+				}
+			}
+			break;
+			case STEP_BICONDITIONAL_INTRO: {
+				if (psCommand->uCount == 4) {
+					size_t auRef[4];
+					bool boFound;
+					boFound = proof_find_step_indices(psProof, psCommand->aszParameter, auRef, 4);
+					if (boFound) {
+							if (proof_scoped_subproof(psProof, auRef[0], auRef[1])) {
+								if (proof_scoped_subproof(psProof, auRef[2], auRef[3])) {
+									Step* apsRef[4];
+									boFound = proof_get_steps(psProof, auRef, apsRef, 4);
+									if (boFound) {
+										boFound = CompareOperations(apsRef[0]->psResult, apsRef[3]->psResult) && CompareOperations(apsRef[1]->psResult, apsRef[2]->psResult);
+										if (boFound) {
+											psStep->uRefCount = 4;
+											psStep->apsRef = calloc(psStep->uRefCount, sizeof(Step*));
+											psStep->apsRef[0] = apsRef[0];
+											psStep->apsRef[1] = apsRef[1];
+											psStep->apsRef[2] = apsRef[2];
+											psStep->apsRef[3] = apsRef[3];
+											psStep->psResult = CreateBinary(OPBINARY_LEQUIV, CopyRecursive(apsRef[3]->psResult), CopyRecursive(apsRef[1]->psResult));
+											boError = FALSE;
+										}
+										else {
+											szError = "The first subproof premise must match the second conclusion and vice versa.";
+										}
+									}
+									else {
+										szError = "Back references are missing.";
+									}
+								}
+								else {
+									szError = "The second subproof is out of scope";
+								}
+							}
+							else {
+								szError = "The first subproof is out of scope";
+							}
+					}
+					else {
+						szError = "Back references could not be found.";
+					}
+				}
+				else {
+					szError = "The or_elim command takes five back references as parameters.";
+				}
+			}
+			break;
 			case STEP_DISJUNCTION_ELIM: {
 				if (psCommand->uCount == 5) {
 					size_t auRef[5];
@@ -524,7 +650,7 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 											psRelation1 = NULL;
 										}
 										else {
-											szError = "First backreference must be in the form (A v B).";
+											szError = "The first back reference must be in the form (A v B).";
 										}
 										FreeRecursive(psPattern);
 										psPattern = NULL;
@@ -625,7 +751,7 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 										psRelation = NULL;
 									}
 									else {
-										szError = "First backreference must be in the form !A.";
+										szError = "The first back reference must be in the form !A.";
 									}
 									FreeRecursive(psPattern);
 									psPattern = NULL;

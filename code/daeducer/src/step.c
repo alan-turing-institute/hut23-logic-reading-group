@@ -119,6 +119,18 @@ void step_print(Step* psStep, Ruleset* psRuleset) {
 				snprintf(szCommand, uCommandLength, "->I, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 			}
 			break;
+			case STEP_BICONDITIONAL_ELIM: {
+				uCommandLength = snprintf(NULL, 0, "<->E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "<->E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
+			case STEP_BICONDITIONAL_INTRO: {
+				uCommandLength = snprintf(NULL, 0, "<->I, %s-%s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "<->I, %s-%s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName);
+			}
+			break;
 			case STEP_DISJUNCTION_ELIM: {
 				uCommandLength = snprintf(NULL, 0, "vE, %s, %s-%s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName, psStep->apsRef[4]->szName) + 1;
 				szCommand = calloc(uCommandLength, sizeof(char));
@@ -303,6 +315,18 @@ void step_print_latex(Step* psStep, Ruleset* psRuleset) {
 				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\ii{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
 				szCommand = calloc(uCommandLength, sizeof(char));
 				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\ii{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
+			case STEP_BICONDITIONAL_ELIM: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\by{\\leftrightarrow E}{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\by{\\leftrightarrow E}{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
+			case STEP_BICONDITIONAL_INTRO: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\by{\\leftrightarrow I}{%s-%s,%s-%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\by{\\leftrightarrow I}{%s-%s,%s-%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName);
 			}
 			break;
 			case STEP_DISJUNCTION_ELIM: {
