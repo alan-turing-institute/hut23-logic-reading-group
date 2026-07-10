@@ -57,6 +57,7 @@ static char const aszOpBinary[OPBINARY_NUM][6] = {
 	"^",
 	"v",
 	"->",
+	"<->",
 	"xor",
 };
 
@@ -173,6 +174,7 @@ char * RecurseToString (Operation const * psOp, int nStrLen) {
 					case OPBINARY_LAND:
 					case OPBINARY_LOR:
 					case OPBINARY_LIMP:
+					case OPBINARY_LEQUIV:
 					case OPBINARY_LEOR:
 						// Of the form "(a * b)" where * is the operation
 						snprintf (szReturn, nStrLen, "(%s %s %s)", szVar1, aszOpBinary[psOp->Vars.psBinary->eOpType], szVar2);
@@ -300,6 +302,7 @@ int RecurseToStringLength (Operation const * psOp) {
 					case OPBINARY_LAND:
 					case OPBINARY_LOR:
 					case OPBINARY_LIMP:
+					case OPBINARY_LEQUIV:
 					case OPBINARY_LEOR:
 						//nReturn = snprintf (NULL, 0, "(%s %s %s)", szVar1, aszOpBinary[psOp->Vars.psBinary->eOpType], szVar2);
 						nReturn = nVar1 + strlen (aszOpBinary[psOp->Vars.psBinary->eOpType]) + nVar2 + 4;

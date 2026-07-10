@@ -58,6 +58,7 @@ static char const aszOpBinaryLatex[OPBINARY_NUM][17] = {
 	"\\\\land",
 	"\\\\lor",
 	"\\\\to",
+	"\\\\leftrightarrow",
 	"\\\\nleftrightarrow",
 };
 
@@ -170,6 +171,7 @@ char * RecurseToStringLatex (Operation * psOp, int nStrLen) {
 					case OPBINARY_LAND:
 					case OPBINARY_LOR:
 					case OPBINARY_LIMP:
+					case OPBINARY_LEQUIV:
 					case OPBINARY_LEOR:
 						// Of the form (a * b) where * is the operation
 						snprintf (szReturn, nStrLen, "(%s %s %s)", szVar1, aszOpBinaryLatex[psOp->Vars.psBinary->eOpType], szVar2);
@@ -298,6 +300,7 @@ int RecurseToStringLengthLatex (Operation * psOp) {
 					case OPBINARY_LAND:
 					case OPBINARY_LOR:
 					case OPBINARY_LIMP:
+					case OPBINARY_LEQUIV:
 					case OPBINARY_LEOR:
 						//nReturn = snprintf (NULL, 0, "(%s %s %s)", szVar1, aszOpBinaryLatex[psOp->Vars.psBinary->eOpType], szVar2);
 						nReturn = nVar1 + strlen (aszOpBinaryLatex[psOp->Vars.psBinary->eOpType]) + nVar2 + 4;
