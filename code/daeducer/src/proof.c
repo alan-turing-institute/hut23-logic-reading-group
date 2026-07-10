@@ -286,7 +286,7 @@ void proof_print_latex(Proof* psProof) {
 		printf("\n");
 		proof_print_step_latex(psProof, uPos);
 	}
-	printf("\\end{nd}\n");
+	printf("\n\\end{nd}\n");
 	printf("$\n");
 }
 
