@@ -1,0 +1,14 @@
+peano
+PEANO
+premise forall x !S(0, x)
+premise forall x forall y (exists z (S(x, z) ^ S(y, z)) -> x = y)
+premise forall x forall z (a(x, 0, z) <-> z = x)
+premise forall x forall y forall z (exists z_1 (S(y, z_1) ^ a(x, z_1, z)) <-> exists z_1 (a(x, y, z_1) ^ S(z_1, z)))
+premise forall x forall z (m(x, 0, z) <-> z = 0)
+premise forall x forall y forall z_1 (exists z_1 (S(y, z_1) ^ m(x, z_1, z)) <-> exists z_1 (m(x, y, z_1) ^ a(z_1, x, z)))
+premise forall x exists z S(x, z)
+premise forall x forall z_1 forall z_2 ((S(x, z_1) ^ S(x, z_2)) -> z_1 = z_2)
+premise forall x forall y exists z a(x, y, z)
+premise forall x forall y forall z_1 forall z_2 ((a(x, y, z_1) ^ a(x, y, z_2)) -> z_1 = z_2)
+premise forall x forall y exists z m(x, y, z)
+premise forall x forall y forall z_1 forall z_2 ((m(x, y, z_1) ^ m(x, y, z_2)) -> z_1 = z_2)
