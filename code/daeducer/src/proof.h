@@ -54,5 +54,6 @@ bool proof_save(Proof* psProof, char const* szFilenzme, char const* szCommand, c
 void proof_reset(Proof* psProof);
 void proof_clear(Proof* psProof);
 void proof_print_prompt(Proof* psProof);
+bool proof_remove_steps(Proof* psProof, size_t uSteps, char** pszError);
 
 #endif // _PROOF_H

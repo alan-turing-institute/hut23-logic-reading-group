@@ -1324,6 +1324,26 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 				}
 			}
 			break;
+			case STEP_UNDO: {
+				size_t uSteps = 1;
+				size_t uReadCount = 1;
+				if (psCommand->uCount <= 1) {
+					if (psCommand->uCount == 1) {
+						uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &uSteps);
+					}
+					if (uReadCount == 1) {
+						boError = proof_remove_steps(psProof, uSteps, &szError);
+						boStep = FALSE;
+					}
+					else {
+						szError = "The parameter to undo must be a number of steps as a non-negative integer.";
+					}
+				}
+				else {
+					szError = "The undo command takes either zero or one parameter.";
+				}
+			}
+			break;
 			default: {
 				boFound = ruleset_get_command_index_start(psProof->psRuleset, psCommand->szCommand, STEP_CONTROL, &uIndex);
 				if (boFound) {
@@ -1521,3 +1541,24 @@ void proof_print_prompt(Proof* psProof) {
 
 	printf(COL_GREEN "> ");
 }
+
+bool proof_remove_steps(Proof* psProof, size_t uSteps, char** pszError) {
+	size_t uPos;
+	bool boError = TRUE;
+
+	if (psProof->uStepCount >= uSteps) {
+		// Remove the last uSteps steps
+		for (uPos = 0; uPos < uSteps; ++uPos) {
+			step_delete(psProof->apsStep[(psProof->uStepCount - uPos - 1)]);
+		}
+		psProof->uStepCount -= uSteps;
+		psProof->apsStep = realloc(psProof->apsStep, psProof->uStepCount * sizeof(Step));
+		boError = FALSE;
+	}
+	else {
+		*pszError = "There are not enough steps in the proof to undo.";
+	}
+
+	return boError;
+}
+

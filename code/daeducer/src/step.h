@@ -46,6 +46,7 @@ typedef enum _STEP {
 	STEP_HELP,
 	STEP_PROVE,
 	STEP_NEURALIZE,
+	STEP_UNDO,
 
 	STEP_NUM
 } STEP;
@@ -96,6 +97,7 @@ static char const aszCommand[STEP_NUM][16] = {
 	"help",
 	"prove",
 	"neuralize",
+	"undo",
 };
 
 static char const aszHelp[STEP_NUM][64] = {
@@ -125,12 +127,13 @@ static char const aszHelp[STEP_NUM][64] = {
 	"id_elim             <ref>, <ref>, <exp>",
 	"qed",
 	"reset",
-	"print",
+	"print               [format]",
 	"load                <filename>",
 	"save                <filename>, <command>, <annotation>",
 	"help",
 	"prove               <exp>",
 	"neuralize",
+	"undo                [steps]",
 };
 
 Step* step_new();
