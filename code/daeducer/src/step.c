@@ -119,6 +119,18 @@ void step_print(Step* psStep, Ruleset* psRuleset) {
 				snprintf(szCommand, uCommandLength, "->I, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 			}
 			break;
+			case STEP_BICONDITIONAL_ELIM: {
+				uCommandLength = snprintf(NULL, 0, "<->E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "<->E, %s, %s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
+			case STEP_BICONDITIONAL_INTRO: {
+				uCommandLength = snprintf(NULL, 0, "<->I, %s-%s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "<->I, %s-%s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName);
+			}
+			break;
 			case STEP_DISJUNCTION_ELIM: {
 				uCommandLength = snprintf(NULL, 0, "vE, %s, %s-%s, %s-%s", psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName, psStep->apsRef[4]->szName) + 1;
 				szCommand = calloc(uCommandLength, sizeof(char));
@@ -262,32 +274,34 @@ void step_print_latex(Step* psStep, Ruleset* psRuleset) {
 	uCommandLength = 0;
 
 	if (psRuleset) {
-		psLemma = ruleset_get_lemma(psRuleset, psStep->eCommand);
+		if (psStep->eCommand >= (size_t)STEP_CONTROL) {
+			psLemma = ruleset_get_lemma(psRuleset, psStep->eCommand);
 
-		if (psLemma) {
-			uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\by{%s}{", psStep->szName, szResult, psLemma->szAnnotation) + 1;
-			for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
-				if (uPos == 0) {
-					uCommandLength += snprintf(NULL, 0, "%s", psStep->apsRef[uPos]->szName);
+			if (psLemma) {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\by{%s}{", psStep->szName, szResult, psLemma->szAnnotation) + 1;
+				for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
+					if (uPos == 0) {
+						uCommandLength += snprintf(NULL, 0, "%s", psStep->apsRef[uPos]->szName);
+					}
+					else {
+						uCommandLength += snprintf(NULL, 0, ",%s", psStep->apsRef[uPos]->szName);
+					}
 				}
-				else {
-					uCommandLength += snprintf(NULL, 0, ",%s", psStep->apsRef[uPos]->szName);
+				uCommandLength += snprintf(NULL, 0, "}");
+
+				szCommand = calloc(uCommandLength, sizeof(char));
+				uWritten = snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\by{%s}{", psStep->szName, szResult, psLemma->szAnnotation);
+
+				for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
+					if (uPos == 0) {
+						uWritten += snprintf(szCommand + uWritten, uCommandLength - uWritten, "%s", psStep->apsRef[uPos]->szName);
+					}
+					else {
+						uWritten += snprintf(szCommand + uWritten, uCommandLength - uWritten, ",%s", psStep->apsRef[uPos]->szName);
+					}
 				}
+				uWritten += snprintf(szCommand + uWritten, uCommandLength - uWritten, "}");
 			}
-			uCommandLength += snprintf(NULL, 0, "}");
-
-			szCommand = calloc(uCommandLength, sizeof(char));
-			uWritten = snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\by{%s}{", psStep->szName, szResult, psLemma->szAnnotation);
-
-			for (uPos = 0; uPos < psLemma->uRefNum; ++uPos) {
-				if (uPos == 0) {
-					uWritten += snprintf(szCommand + uWritten, uCommandLength - uWritten, "%s", psStep->apsRef[uPos]->szName);
-				}
-				else {
-					uWritten += snprintf(szCommand + uWritten, uCommandLength - uWritten, ",%s", psStep->apsRef[uPos]->szName);
-				}
-			}
-			uWritten += snprintf(szCommand + uWritten, uCommandLength - uWritten, "}");
 		}
 	}
 
@@ -300,9 +314,21 @@ void step_print_latex(Step* psStep, Ruleset* psRuleset) {
 			}
 			break;
 			case STEP_IMPLICATION_INTRO: {
-				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\ii{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\by{$\\to$I}{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
 				szCommand = calloc(uCommandLength, sizeof(char));
-				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\ii{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\by{$\\to$I}{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
+			case STEP_BICONDITIONAL_ELIM: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\by{$\\leftrightarrow$E}{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\by{$\\leftrightarrow$E}{%s,%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
+			case STEP_BICONDITIONAL_INTRO: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\by{$\\leftrightarrow$I}{%s-%s,%s-%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\by{$\\leftrightarrow$I}{%s-%s,%s-%s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName, psStep->apsRef[2]->szName, psStep->apsRef[3]->szName);
 			}
 			break;
 			case STEP_DISJUNCTION_ELIM: {
@@ -330,11 +356,9 @@ void step_print_latex(Step* psStep, Ruleset* psRuleset) {
 			}
 			break;
 			case STEP_DISCHARGE: {
-				//uCommandLength = snprintf(NULL, 0, "  \\close\n  \\have {%s} {} \\by{DIS}{}", psStep->szName) + 1;
-				uCommandLength = snprintf(NULL, 0, "  \\close") + 1;
+				uCommandLength = snprintf(NULL, 0, "  \\close\n  %%\\have {%s} {} \\by{DIS}{}", psStep->szName) + 1;
 				szCommand = calloc(uCommandLength, sizeof(char));
-				//snprintf(szCommand, uCommandLength, "  \\close\n  \\have {%s} {} \\by{DIS}{}", psStep->szName);
-				snprintf(szCommand, uCommandLength, "  \\close");
+				snprintf(szCommand, uCommandLength, "  \\close\n  %%\\have {%s} {} \\by{DIS}{}", psStep->szName);
 			}
 			break;
 			case STEP_UNIVERSAL_INTRO: {
@@ -379,15 +403,48 @@ void step_print_latex(Step* psStep, Ruleset* psRuleset) {
 				szCommand[0] = 0;
 			}
 			break;
-			case STEP_REITERATION:
-			case STEP_CONJUNCTION_INTRO:
+			case STEP_REITERATION: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\r{%s}", psStep->szName, szResult, psStep->apsRef[0]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\r{%s}", psStep->szName, szResult, psStep->apsRef[0]->szName);
+			}
+			break;
+			case STEP_CONJUNCTION_INTRO: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\ai{%s, %s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\ai{%s, %s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
 			case STEP_CONJUNCTION_ELIM_LEFT:
-			case STEP_CONJUNCTION_ELIM_RIGHT:
-			case STEP_IMPLICATION_ELIM:
+			// Intentional fall-through
+			case STEP_CONJUNCTION_ELIM_RIGHT: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\ae{%s}", psStep->szName, szResult, psStep->apsRef[0]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\ae{%s}", psStep->szName, szResult, psStep->apsRef[0]->szName);
+			}
+			break;
+			case STEP_IMPLICATION_ELIM: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\by{$\\to$E}{%s, %s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\by{$\\to$E}{%s, %s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
 			case STEP_DISJUNCTION_INTRO_LEFT:
-			case STEP_DISJUNCTION_INTRO_RIGHT:
+			// Intentional fall-through
+			case STEP_DISJUNCTION_INTRO_RIGHT: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\oe{%s}", psStep->szName, szResult, psStep->apsRef[0]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\oe{%s}", psStep->szName, szResult, psStep->apsRef[0]->szName);
+			}
+			break;
+			case STEP_NEGATION_ELIM: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\ne{%s, %s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\ne{%s, %s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
+			}
+			break;
 			case STEP_EXPLOSION:
-			case STEP_NEGATION_ELIM:
+			// Intentional fall-through
 			default: {
 				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s}", psStep->szName, szResult) + 1;
 				szCommand = calloc(uCommandLength, sizeof(char));
