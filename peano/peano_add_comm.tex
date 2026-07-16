@@ -1,0 +1,623 @@
+\documentclass[10pt]{article}
+\usepackage[a4paper, left=1.6cm, right=1.6cm, top=2.5cm, bottom=2.5cm]{geometry}
+\usepackage{longtable}
+\usepackage{fitch}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\title{Addition is commutative in Peano Arithmetic using FOL}
+\author{David Llewellyn-Jones}
+\date{14 July 2026}
+
+\setlength\parskip{1.5ex}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\maketitle
+
+The aim of this is to prove -- using only the Peano axioms in First Order Logic -- that addition is commutative. In other words, we want to show that $y + x = x + y$. Although this sounds like it should be just obvious, it doesn't follow immediately from the axioms (or if it does, I missed it!). So we need to provide a proof.
+
+In order to rigidly follow the tools available from \textit{forall x: Calgary}\footnote{\url{https://forallx.openlogicproject.org/}}, we can't use functions and must formulate this in terms of relations instead. We'll use the following notation for this:
+
+\begin{enumerate}
+\item $S(x, z)$ to mean \textit{``the successor of $x$ is $z$''};
+\item $a(x, y, z)$ to mean \textit{``$x + y = z$''};
+\item $m(x, y, z)$ to mean \textit{``$x \times y = z$''};
+\item $0$ is used as a name like any other.
+\end{enumerate}
+
+With this notation the result we want is therefore that $\forall y \forall x \forall z_1 (a(y, x, z_1) \leftrightarrow a(x, y, z_1))$.
+
+We won't actually need to make use of any multiplication.
+
+\section*{Peano axioms}
+
+Because we don't have access to functions we'll need to re-write the axioms in terms of relations as well. The standard axioms of Peano arithmetic when written using functions in First Order Logic \footnote{\url{https://en.wikipedia.org/wiki/Peano\_axioms\#Peano\_arithmetic_as\_first-order\_theory}} look like this:
+
+\begin{enumerate}
+\item $\forall x (0 \not= S(x))$.
+\item $\forall x \forall y (S(x) = S(y) \to x = y)$.
+\item $\forall x (x + 0 = x)$.
+\item $\forall x \forall y (x + S(y) = S(x + y))$.
+\item $\forall x (x \times 0 = 0)$.
+\item $\forall x (x \times S(y) = (x \times y) + x$.
+\item Schema $\forall \bar{y} \left( \left( \varphi (0, \bar{y}) \land \left( \varphi(x, \bar{y}) \to \varphi(S(x), \bar{y}) \right) \right) \to \forall x \varphi(x, \bar{y}) \right)$.
+\end{enumerate}
+
+Converting the first six of these to use relations rather than functions gives the following:
+
+\begin{enumerate}
+\item $\forall x \neg S(0, x)$.
+\item $\forall x \forall y (\exists z (S(x, z) \land S(y, z)) \to x = y)$.
+\item $\forall x \forall z (a(x, 0, z) \leftrightarrow z = x)$.
+\item $\forall x \forall y \forall z (\exists z_1 (S(y, z_1) \land a(x, z_1, z)) \leftrightarrow \exists z_1 (a(x, y, z_1) \land S(z_1, z)))$.
+\item $\forall x \forall z (m(x, 0, z) \leftrightarrow z = 0)$.
+\item $\forall x \forall y \forall z_1 (\exists z_1 (S(y, z_1) \land m(x, z_1, z)) \leftrightarrow \exists z_1 (m(x, y, z_1) \land a(z_1, x, z)))$.
+\end{enumerate}
+
+However we need some extras in order to ensure that our relations $S, a$ and $m$ act like functions:
+
+\begin{enumerate}
+\setcounter{enumi}{6}
+\item $\forall x \exists z S(x, z)$.
+\item $\forall x \forall z_1 \forall z_2 ((S(x, z_1) \land S(x, z_2)) \to z_1 = z_2)$.
+\item $\forall x \forall y \exists z a(x, y, z)$.
+\item $\forall x \forall y \forall z_1 \forall z_2 ((a(x, y, z_1) \land a(x, y, z_2)) \to z_1 = z_2)$.
+\item $\forall x \forall y \exists z m(x, y, z)$.
+\item $\forall x \forall y \forall z_1 \forall z_2 ((m(x, y, z_1) \land m(x, y, z_2)) \to z_1 = z_2)$.
+\end{enumerate}
+
+Finally we also have the axiom schema for induction converted to use relations as well:
+
+\begin{enumerate}
+\setcounter{enumi}{12}
+\item Schema $\forall y ((\varphi (0, y) \land \forall x \forall z ((\varphi (x, y) \land S(x, z)) \to \varphi (z, y))) \to \forall x \varphi (x, y))$.
+\end{enumerate}
+
+Because the book hasn't given us any notion of `axioms', we'll introduce all of these as premises to the proofs.
+
+\section*{Overview}
+
+The proof is split into three stages. First we prove two lemmas which we will then use in the final proof of the result. All three follow the proof structure needed for induction: first we prove the base case; then we prove the induction step; finally we apply one of the induction axioms to get the result we're after.
+
+Lemma 1 gives us the result that $x + 0 = 0 + x$, which will form the base case for the final proof. Lemma 2 is a little more esoteric and tells us that $S(y) + x = y + S(x)$. This turns out to be useful for the final proof (it may be possible to do it without, but this was just something I needed to find a route through).
+
+In the final proof we get the commutativity result we're after, showing that $y + x = x + y$.
+
+Throughout the proofs we use $x, y, z$ and $z_1, z_2, z_3, \ldots$ for quantifier variables and $a, b, c$ and $c_1, c_2, c_3, \ldots$ for names. We try to map them respectively, but this isn't always possible in practice.
+
+\section*{Lemma 1}
+
+In this lemma we prove the base case, that $x + 0 = 0 + x$. Despite forming the base case for a later induction, this is also proved using induction. The general structure is:
+
+\begin{enumerate}
+\item Base case. We show that $0 + 0 = 0 + 0$.
+\item Inductive step. We assume $x + 0 = 0 + x$ and use it to show that $S(x) + 0 = 0 + S(x)$.
+\end{enumerate}
+
+With these two results we can then apply an axiom from the induction schema to give the result that $\forall z (z + 0 = 0 + z)$.
+
+In the proof below, steps 1-6 are the standard Peano axioms. Steps 8-12 are the additional axioms needed to ensure the relations have the properties of functions. Finally step 13 is the specific induction axiom that we need for the proof.
+
+For this proof the base case is trivial (steps 14-17). The inductive step is more complex (steps 18-75) and takes the following approach:
+$$
+S(x) + 0 \underset{\text{Ax. 3}}{=} S(x) \underset{\text{Ax. 3}}{=} S(x + 0) \underset{\text{Hyp.}}{=} S(0 + x) \underset{\text{Ax. 4}}{=} 0 + S(x).
+$$
+
+Under each equality is indicated how it follows, either from an axiom or by the inductive hypothesis. The fact that we're using relations rather than equality of functions means, regrettably that we must prove this in both directions separately. Steps 76-80 then apply the induction axiom to give the final result.
+
+\begin{fitchproof}[arrayenv=longtable]
+  \hypo {1} {\forall x \neg S(0, x)} \by{PR}{}
+  \hypo {2} {\forall x \forall y (\exists z (S(x, z) \land S(y, z)) \to x = y)} \by{PR}{}
+  \hypo {3} {\forall x \forall z (a(x, 0, z) \leftrightarrow z = x)} \by{PR}{}
+  \hypo {4} {\forall x \forall y \forall z (\exists z_1 (S(y, z_1) \land a(x, z_1, z)) \leftrightarrow \exists z_1 (a(x, y, z_1) \land S(z_1, z)))} \by{PR}{}
+  \hypo {5} {\forall x \forall z (m(x, 0, z) \leftrightarrow z = 0)} \by{PR}{}
+  \hypo {6} {\forall x \forall y \forall z_1 (\exists z_1 (S(y, z_1) \land m(x, z_1, z)) \leftrightarrow \exists z_1 (m(x, y, z_1) \land a(z_1, x, z)))} \by{PR}{}
+  \hypo {7} {\forall x \exists z S(x, z)} \by{PR}{}
+  \hypo {8} {\forall x \forall z_1 \forall z_2 ((S(x, z_1) \land S(x, z_2)) \to z_1 = z_2)} \by{PR}{}
+  \hypo {9} {\forall x \forall y \exists z a(x, y, z)} \by{PR}{}
+  \hypo {10} {\forall x \forall y \forall z_1 \forall z_2 ((a(x, y, z_1) \land a(x, y, z_2)) \to z_1 = z_2)} \by{PR}{}
+  \hypo {11} {\forall x \forall y \exists z m(x, y, z)} \by{PR}{}
+  \hypo {12} {\forall x \forall y \forall z_1 \forall z_2 ((m(x, y, z_1) \land m(x, y, z_2)) \to z_1 = z_2)} \by{PR}{}
+  \hypo {13} {((\forall z_1 (a(0, 0, z_1) \leftrightarrow a(0, 0, z_1)) \land \forall x \forall z ((\forall z_1 (a(x, 0, z_1) \leftrightarrow a(0, x, z_1)) \land S(x, z)) \\ \quad \to \forall z_1 (a(z, 0, z_1) \leftrightarrow a(0, z, z_1)))) \to \forall x \forall z_1 (a(x, 0, z_1) \leftrightarrow a(0, x, z_1)))} \by{PR}{}
+  \open
+  \hypo {14} {a(0, 0, f)} \by{AS}{}
+  \have {15} {a(0, 0, f)} \r{14}
+  \close
+  %\have {16} {} \by{DIS}{}
+  \have {17} {(a(0, 0, f) \leftrightarrow a(0, 0, f))} \by{$\leftrightarrow$I}{14-15,14-15}
+  \have {18} {\forall z_1 (a(0, 0, z_1) \leftrightarrow a(0, 0, z_1))} \Ai{17}
+  \open
+  \hypo {19} {(\forall z_1 (a(a, 0, z_1) \leftrightarrow a(0, a, z_1)) \land S(a, c))} \by{AS}{}
+  \have {20} {\forall z_1 (a(a, 0, z_1) \leftrightarrow a(0, a, z_1))} \ae{19}
+  \have {21} {S(a, c)} \ae{19}
+  \open
+  \hypo {22} {a(c, 0, c_1)} \by{AS}{}
+  \have {23} {\forall z (a(c, 0, z) \leftrightarrow z = c)} \Ae{3}
+  \have {24} {(a(c, 0, c_1) \leftrightarrow c_1 = c)} \Ae{23}
+  \have {25} {c_1 = c} \by{$\leftrightarrow$E}{24,22}
+  \have {26} {S(a, c_1)} \by{=E}{25,21}
+  \have {27} {\forall z (a(a, 0, z) \leftrightarrow z = a)} \Ae{3}
+  \have {28} {(a(a, 0, a) \leftrightarrow a = a)} \Ae{27}
+  \have {29} {a = a} \by{=I}{}
+  \have {30} {a(a, 0, a)} \by{$\leftrightarrow$E}{28,29}
+  \have {31} {(a(a, 0, a) \leftrightarrow a(0, a, a))} \Ae{20}
+  \have {32} {a(0, a, a)} \by{$\leftrightarrow$E}{31,30}
+  \have {33} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(0, z_1, z)) \leftrightarrow \exists z_1 (a(0, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {34} {\forall z (\exists z_1 (S(a, z_1) \land a(0, z_1, z)) \leftrightarrow \exists z_1 (a(0, a, z_1) \land S(z_1, z)))} \Ae{33}
+  \have {35} {(\exists z_1 (S(a, z_1) \land a(0, z_1, c)) \leftrightarrow \exists z_1 (a(0, a, z_1) \land S(z_1, c)))} \Ae{34}
+  \have {36} {(a(0, a, a) \land S(a, c))} \ai{32, 21}
+  \have {37} {\exists z_1 (a(0, a, z_1) \land S(z_1, c))} \Ei{36}
+  \have {38} {\exists z_1 (S(a, z_1) \land a(0, z_1, c))} \by{$\leftrightarrow$E}{35,37}
+  \open
+  \hypo {39} {(S(a, c_2) \land a(0, c_2, c))} \by{AS}{}
+  \have {40} {\forall z_1 \forall z_2 ((S(a, z_1) \land S(a, z_2)) \to z_1 = z_2)} \Ae{8}
+  \have {41} {\forall z_2 ((S(a, c_2) \land S(a, z_2)) \to c_2 = z_2)} \Ae{40}
+  \have {42} {((S(a, c_2) \land S(a, c)) \to c_2 = c)} \Ae{41}
+  \have {43} {S(a, c_2)} \ae{39}
+  \have {44} {(S(a, c_2) \land S(a, c))} \ai{43, 21}
+  \have {45} {c_2 = c} \by{$\to$E}{42, 44}
+  \have {46} {(S(a, c) \land a(0, c, c))} \by{=E}{45,39}
+  \close
+  %\have {47} {} \by{DIS}{}
+  \have {48} {(S(a, c) \land a(0, c, c))} \Ee{38,39-46}
+  \have {49} {a(0, c, c)} \ae{48}
+  \have {50} {a(0, c, c_1)} \by{=E}{25,49}
+  \close
+  %\have {51} {} \by{DIS}{}
+  \open
+  \hypo {52} {a(0, c, c_1)} \by{AS}{}
+  \have {53} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(0, z_1, z)) \leftrightarrow \exists z_1 (a(0, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {54} {\forall z (\exists z_1 (S(a, z_1) \land a(0, z_1, z)) \leftrightarrow \exists z_1 (a(0, a, z_1) \land S(z_1, z)))} \Ae{53}
+  \have {55} {(\exists z_1 (S(a, z_1) \land a(0, z_1, c_1)) \leftrightarrow \exists z_1 (a(0, a, z_1) \land S(z_1, c_1)))} \Ae{54}
+  \have {56} {(S(a, c) \land a(0, c, c_1))} \ai{21, 52}
+  \have {57} {\exists z_1 (S(a, z_1) \land a(0, z_1, c_1))} \Ei{56}
+  \have {58} {\exists z_1 (a(0, a, z_1) \land S(z_1, c_1))} \by{$\leftrightarrow$E}{55,57}
+  \open
+  \hypo {59} {(a(0, a, a_1) \land S(a_1, c_1))} \by{AS}{}
+  \have {60} {a(0, a, a_1)} \ae{59}
+  \have {61} {S(a_1, c_1)} \ae{59}
+  \have {62} {(a(a, 0, a_1) \leftrightarrow a(0, a, a_1))} \Ae{20}
+  \have {63} {a(a, 0, a_1)} \by{$\leftrightarrow$E}{62,60}
+  \have {64} {\forall z (a(a, 0, z) \leftrightarrow z = a)} \Ae{3}
+  \have {65} {(a(a, 0, a_1) \leftrightarrow a_1 = a)} \Ae{64}
+  \have {66} {a_1 = a} \by{$\leftrightarrow$E}{65,63}
+  \have {67} {S(a, c_1)} \by{=E}{66,61}
+  \have {68} {\forall z_1 \forall z_2 ((S(a, z_1) \land S(a, z_2)) \to z_1 = z_2)} \Ae{8}
+  \have {69} {\forall z_2 ((S(a, c_1) \land S(a, z_2)) \to c_1 = z_2)} \Ae{68}
+  \have {70} {((S(a, c_1) \land S(a, c)) \to c_1 = c)} \Ae{69}
+  \have {71} {(S(a, c_1) \land S(a, c))} \ai{67, 21}
+  \have {72} {c_1 = c} \by{$\to$E}{70, 71}
+  \close
+  %\have {73} {} \by{DIS}{}
+  \have {74} {c_1 = c} \Ee{58,59-72}
+  \have {75} {\forall z (a(c, 0, z) \leftrightarrow z = c)} \Ae{3}
+  \have {76} {(a(c, 0, c_1) \leftrightarrow c_1 = c)} \Ae{75}
+  \have {77} {a(c, 0, c_1)} \by{$\leftrightarrow$E}{76,74}
+  \close
+  %\have {78} {} \by{DIS}{}
+  \have {79} {(a(c, 0, c_1) \leftrightarrow a(0, c, c_1))} \by{$\leftrightarrow$I}{22-50,52-77}
+  \have {80} {\forall z_1 (a(c, 0, z_1) \leftrightarrow a(0, c, z_1))} \Ai{79}
+  \close
+  %\have {81} {} \by{DIS}{}
+  \have {82} {((\forall z_1 (a(a, 0, z_1) \leftrightarrow a(0, a, z_1)) \land S(a, c)) \to \forall z_1 (a(c, 0, z_1) \leftrightarrow a(0, c, z_1)))} \by{$\to$I}{19,80}
+  \have {83} {\forall z ((\forall z_1 (a(a, 0, z_1) \leftrightarrow a(0, a, z_1)) \land S(a, z)) \to \forall z_1 (a(z, 0, z_1) \leftrightarrow a(0, z, z_1)))} \Ai{82}
+  \have {84} {\forall x \forall z ((\forall z_1 (a(x, 0, z_1) \leftrightarrow a(0, x, z_1)) \land S(x, z)) \to \forall z_1 (a(z, 0, z_1) \leftrightarrow a(0, z, z_1)))} \Ai{83}
+  \have {85} {(\forall z_1 (a(0, 0, z_1) \leftrightarrow a(0, 0, z_1)) \land \forall x \forall z ((\forall z_1 (a(x, 0, z_1) \leftrightarrow a(0, x, z_1)) \land S(x, z)) \\ \quad \to \forall z_1 (a(z, 0, z_1) \leftrightarrow a(0, z, z_1))))} \ai{18, 84}
+  \have {86} {\forall x \forall z_1 (a(x, 0, z_1) \leftrightarrow a(0, x, z_1))} \by{$\to$E}{13, 85}
+\end{fitchproof}
+
+\section*{Lemma 2}
+
+This second lemma gives us a result we'll need to use in the final proof, that $S(y) + x = y + S(x)$. Once again, the structure follows a standard ``proof by induction'' approach:
+
+\begin{enumerate}
+\item Base case. We show that $S(0) + x = 0 + S(x)$.
+\item Inductive step. We assume that $S(y) + x = y + S(x)$ and use it to show that $S(y) + S(x) = y + S(S(x))$.
+\end{enumerate}
+
+With these two results we can then apply an axiom from the induction schema to give the result that $\forall y \forall x (S(y) + x = y + S(x))$.
+
+In the proof below, steps 1-6 are the standard Peano axioms. Steps 8-12 are the additional axioms needed to ensure the relations have the properties of functions. Finally step 13 is another case taken from the induction schema, the specific instance we need for this particular proof.
+
+The base case is considerably more complex in this case, requiring a pass in both directions (steps 14-72) running through the following equivalences:
+$$
+S(y) + 0 \underset{\text{Ax. 3}}{=} S(y) \underset{\text{Ax. 3}}{=} S(y + 0) \underset{\text{Ax. 4}}{=} y + S(0).
+$$
+
+As with the previous proof, here the inductive step (steps 73-162) also needs a pass in both directions. It uses the following approach:
+$$
+S(y) + S(x) \underset{\text{Ax. 4}}{=} S(S(y) + x) \underset{\text{Hyp.}}{=} S(y + S(x)) \underset{\text{Ax. 4}}{=} y + S(S(x)).
+$$
+
+At the end (steps 163-169) we apply the induction axiom to give the final result.
+
+\begin{fitchproof}[arrayenv=longtable]
+  \hypo {1} {\forall x \neg S(0, x)} \by{PR}{}
+  \hypo {2} {\forall x \forall y (\exists z (S(x, z) \land S(y, z)) \to x = y)} \by{PR}{}
+  \hypo {3} {\forall x \forall z (a(x, 0, z) \leftrightarrow z = x)} \by{PR}{}
+  \hypo {4} {\forall x \forall y \forall z (\exists z_1 (S(y, z_1) \land a(x, z_1, z)) \leftrightarrow \exists z_1 (a(x, y, z_1) \land S(z_1, z)))} \by{PR}{}
+  \hypo {5} {\forall x \forall z (m(x, 0, z) \leftrightarrow z = 0)} \by{PR}{}
+  \hypo {6} {\forall x \forall y \forall z_1 (\exists z_1 (S(y, z_1) \land m(x, z_1, z)) \leftrightarrow \exists z_1 (m(x, y, z_1) \land a(z_1, x, z)))} \by{PR}{}
+  \hypo {7} {\forall x \exists z S(x, z)} \by{PR}{}
+  \hypo {8} {\forall x \forall z_1 \forall z_2 ((S(x, z_1) \land S(x, z_2)) \to z_1 = z_2)} \by{PR}{}
+  \hypo {9} {\forall x \forall y \exists z a(x, y, z)} \by{PR}{}
+  \hypo {10} {\forall x \forall y \forall z_1 \forall z_2 ((a(x, y, z_1) \land a(x, y, z_2)) \to z_1 = z_2)} \by{PR}{}
+  \hypo {11} {\forall x \forall y \exists z m(x, y, z)} \by{PR}{}
+  \hypo {12} {\forall x \forall y \forall z_1 \forall z_2 ((m(x, y, z_1) \land m(x, y, z_2)) \to z_1 = z_2)} \by{PR}{}
+  \hypo {13} {\forall y ((\forall z_1 (\exists z_2 (S(y, z_2) \land a(z_2, 0, z_1)) \leftrightarrow \exists z_2 (a(y, z_2, z_1) \land S(0, z_2))) \\ \quad \land \forall x \forall z ((\forall z_1 (\exists z_2 (S(y, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(y, z_2, z_1) \land S(x, z_2))) \\ \quad \land S(x, z)) \to \forall z_1 (\exists z_2 (S(y, z_2) \land a(z_2, z, z_1)) \leftrightarrow \exists z_2 (a(y, z_2, z_1) \land S(z, z_2))))) \\ \quad \to \forall x \forall z_1 (\exists z_2 (S(y, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(y, z_2, z_1) \land S(x, z_2))))} \by{PR}{}
+  \open
+  \hypo {14} {\exists z_2 (S(b, z_2) \land a(z_2, 0, c_1))} \by{AS}{}
+  \open
+  \hypo {15} {(S(b, c_2) \land a(c_2, 0, c_1))} \by{AS}{}
+  \have {16} {\forall z (a(c_2, 0, z) \leftrightarrow z = c_2)} \Ae{3}
+  \have {17} {(a(c_2, 0, c_1) \leftrightarrow c_1 = c_2)} \Ae{16}
+  \have {18} {a(c_2, 0, c_1)} \ae{15}
+  \have {19} {c_1 = c_2} \by{$\leftrightarrow$E}{17,18}
+  \have {20} {\forall z (a(b, 0, z) \leftrightarrow z = b)} \Ae{3}
+  \have {21} {(a(b, 0, b) \leftrightarrow b = b)} \Ae{20}
+  \have {22} {b = b} \by{=I}{}
+  \have {23} {a(b, 0, b)} \by{$\leftrightarrow$E}{21,22}
+  \have {24} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {25} {\forall z (\exists z_1 (S(0, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, 0, z_1) \land S(z_1, z)))} \Ae{24}
+  \have {26} {(\exists z_1 (S(0, z_1) \land a(b, z_1, c_1)) \leftrightarrow \exists z_1 (a(b, 0, z_1) \land S(z_1, c_1)))} \Ae{25}
+  \have {27} {S(b, c_2)} \ae{15}
+  \have {28} {S(b, c_1)} \by{=E}{19,27}
+  \have {29} {(a(b, 0, b) \land S(b, c_1))} \ai{23, 28}
+  \have {30} {\exists z_1 (a(b, 0, z_1) \land S(z_1, c_1))} \Ei{29}
+  \have {31} {\exists z_1 (S(0, z_1) \land a(b, z_1, c_1))} \by{$\leftrightarrow$E}{26,30}
+  \open
+  \hypo {32} {(S(0, c_3) \land a(b, c_3, c_1))} \by{AS}{}
+  \have {33} {S(0, c_3)} \ae{32}
+  \have {34} {a(b, c_3, c_1)} \ae{32}
+  \have {35} {(a(b, c_3, c_1) \land S(0, c_3))} \ai{34, 33}
+  \have {36} {\exists z_2 (a(b, z_2, c_1) \land S(0, z_2))} \Ei{35}
+  \close
+  %\have {37} {} \by{DIS}{}
+  \have {38} {\exists z_2 (a(b, z_2, c_1) \land S(0, z_2))} \Ee{31,32-36}
+  \close
+  %\have {39} {} \by{DIS}{}
+  \have {40} {\exists z_2 (a(b, z_2, c_1) \land S(0, z_2))} \Ee{14,15-38}
+  \close
+  %\have {41} {} \by{DIS}{}
+  \open
+  \hypo {42} {\exists z_2 (a(b, z_2, c_1) \land S(0, z_2))} \by{AS}{}
+  \have {43} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {44} {\forall z (\exists z_1 (S(0, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, 0, z_1) \land S(z_1, z)))} \Ae{43}
+  \have {45} {(\exists z_1 (S(0, z_1) \land a(b, z_1, c_1)) \leftrightarrow \exists z_1 (a(b, 0, z_1) \land S(z_1, c_1)))} \Ae{44}
+  \open
+  \hypo {46} {(a(b, c_3, c_1) \land S(0, c_3))} \by{AS}{}
+  \have {47} {S(0, c_3)} \ae{46}
+  \have {48} {a(b, c_3, c_1)} \ae{46}
+  \have {49} {(S(0, c_3) \land a(b, c_3, c_1))} \ai{47, 48}
+  \have {50} {\exists z_1 (S(0, z_1) \land a(b, z_1, c_1))} \Ei{49}
+  \close
+  %\have {51} {} \by{DIS}{}
+  \have {52} {\exists z_1 (S(0, z_1) \land a(b, z_1, c_1))} \Ee{42,46-50}
+  \have {53} {\exists z_1 (a(b, 0, z_1) \land S(z_1, c_1))} \by{$\leftrightarrow$E}{45,52}
+  \open
+  \hypo {54} {(a(b, 0, c_3) \land S(c_3, c_1))} \by{AS}{}
+  \have {55} {\forall z (a(b, 0, z) \leftrightarrow z = b)} \Ae{3}
+  \have {56} {(a(b, 0, b) \leftrightarrow b = b)} \Ae{55}
+  \have {57} {b = b} \by{=I}{}
+  \have {58} {a(b, 0, b)} \by{$\leftrightarrow$E}{56,57}
+  \have {59} {a(b, 0, c_3)} \ae{54}
+  \have {60} {S(c_3, c_1)} \ae{54}
+  \have {61} {\forall y \forall z_1 \forall z_2 ((a(b, y, z_1) \land a(b, y, z_2)) \to z_1 = z_2)} \Ae{10}
+  \have {62} {\forall z_1 \forall z_2 ((a(b, 0, z_1) \land a(b, 0, z_2)) \to z_1 = z_2)} \Ae{61}
+  \have {63} {\forall z_2 ((a(b, 0, c_3) \land a(b, 0, z_2)) \to c_3 = z_2)} \Ae{62}
+  \have {64} {((a(b, 0, c_3) \land a(b, 0, b)) \to c_3 = b)} \Ae{63}
+  \have {65} {(a(b, 0, c_3) \land a(b, 0, b))} \ai{59, 58}
+  \have {66} {c_3 = b} \by{$\to$E}{64, 65}
+  \have {67} {(a(b, 0, b) \land S(b, c_1))} \by{=E}{66,54}
+  \close
+  %\have {68} {} \by{DIS}{}
+  \have {69} {(a(b, 0, b) \land S(b, c_1))} \Ee{53,54-67}
+  \have {70} {S(b, c_1)} \ae{69}
+  \have {71} {\forall z (a(c_1, 0, z) \leftrightarrow z = c_1)} \Ae{3}
+  \have {72} {(a(c_1, 0, c_1) \leftrightarrow c_1 = c_1)} \Ae{71}
+  \have {73} {c_1 = c_1} \by{=I}{}
+  \have {74} {a(c_1, 0, c_1)} \by{$\leftrightarrow$E}{72,73}
+  \have {75} {(S(b, c_1) \land a(c_1, 0, c_1))} \ai{70, 74}
+  \have {76} {\exists z_2 (S(b, z_2) \land a(z_2, 0, c_1))} \Ei{75}
+  \close
+  %\have {77} {} \by{DIS}{}
+  \have {78} {(\exists z_2 (S(b, z_2) \land a(z_2, 0, c_1)) \leftrightarrow \exists z_2 (a(b, z_2, c_1) \land S(0, z_2)))} \by{$\leftrightarrow$I}{14-40,42-76}
+  \open
+  \hypo {79} {(\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, a, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(a, z_2))) \land S(a, c))} \by{AS}{}
+  \open
+  \hypo {80} {\exists z_2 (S(b, z_2) \land a(z_2, c, c_1))} \by{AS}{}
+  \have {81} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(c_2, z_1, z)) \leftrightarrow \exists z_1 (a(c_2, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {82} {\forall z (\exists z_1 (S(a, z_1) \land a(c_2, z_1, z)) \leftrightarrow \exists z_1 (a(c_2, a, z_1) \land S(z_1, z)))} \Ae{81}
+  \have {83} {(\exists z_1 (S(a, z_1) \land a(c_2, z_1, c_1)) \leftrightarrow \exists z_1 (a(c_2, a, z_1) \land S(z_1, c_1)))} \Ae{82}
+  \open
+  \hypo {84} {(S(b, c_2) \land a(c_2, c, c_1))} \by{AS}{}
+  \have {85} {a(c_2, c, c_1)} \ae{84}
+  \have {86} {S(a, c)} \ae{79}
+  \have {87} {(S(a, c) \land a(c_2, c, c_1))} \ai{86, 85}
+  \have {88} {\exists z_1 (S(a, z_1) \land a(c_2, z_1, c_1))} \Ei{87}
+  \have {89} {\exists z_1 (a(c_2, a, z_1) \land S(z_1, c_1))} \by{$\leftrightarrow$E}{83,88}
+  \have {90} {\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, a, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(a, z_2)))} \ae{79}
+  \have {91} {(\exists z_2 (S(b, z_2) \land a(z_2, a, c_3)) \leftrightarrow \exists z_2 (a(b, z_2, c_3) \land S(a, z_2)))} \Ae{90}
+  \open
+  \hypo {92} {(a(c_2, a, c_3) \land S(c_3, c_1))} \by{AS}{}
+  \have {93} {S(b, c_2)} \ae{84}
+  \have {94} {a(c_2, a, c_3)} \ae{92}
+  \have {95} {(S(b, c_2) \land a(c_2, a, c_3))} \ai{93, 94}
+  \have {96} {\exists z_2 (S(b, z_2) \land a(z_2, a, c_3))} \Ei{95}
+  \have {97} {\exists z_2 (a(b, z_2, c_3) \land S(a, z_2))} \by{$\leftrightarrow$E}{91,96}
+  \have {98} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {99} {\forall z (\exists z_1 (S(c, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, c, z_1) \land S(z_1, z)))} \Ae{98}
+  \have {100} {(\exists z_1 (S(c, z_1) \land a(b, z_1, c_1)) \leftrightarrow \exists z_1 (a(b, c, z_1) \land S(z_1, c_1)))} \Ae{99}
+  \open
+  \hypo {101} {(a(b, c_4, c_3) \land S(a, c_4))} \by{AS}{}
+  \have {102} {S(a, c_4)} \ae{101}
+  \have {103} {\forall z_1 \forall z_2 ((S(a, z_1) \land S(a, z_2)) \to z_1 = z_2)} \Ae{8}
+  \have {104} {\forall z_2 ((S(a, c_4) \land S(a, z_2)) \to c_4 = z_2)} \Ae{103}
+  \have {105} {((S(a, c_4) \land S(a, c)) \to c_4 = c)} \Ae{104}
+  \have {106} {(S(a, c_4) \land S(a, c))} \ai{102, 86}
+  \have {107} {c_4 = c} \by{$\to$E}{105, 106}
+  \have {108} {a(b, c_4, c_3)} \ae{101}
+  \have {109} {a(b, c, c_3)} \by{=E}{107,108}
+  \have {110} {S(c_3, c_1)} \ae{92}
+  \have {111} {(a(b, c, c_3) \land S(c_3, c_1))} \ai{109, 110}
+  \have {112} {\exists z_1 (a(b, c, z_1) \land S(z_1, c_1))} \Ei{111}
+  \have {113} {\exists z_1 (S(c, z_1) \land a(b, z_1, c_1))} \by{$\leftrightarrow$E}{100,112}
+  \close
+  %\have {114} {} \by{DIS}{}
+  \have {115} {\exists z_1 (S(c, z_1) \land a(b, z_1, c_1))} \Ee{97,101-113}
+  \close
+  %\have {116} {} \by{DIS}{}
+  \have {117} {\exists z_1 (S(c, z_1) \land a(b, z_1, c_1))} \Ee{89,92-115}
+  \close
+  %\have {118} {} \by{DIS}{}
+  \have {119} {\exists z_1 (S(c, z_1) \land a(b, z_1, c_1))} \Ee{80,84-117}
+  \open
+  \hypo {120} {(S(c, c_5) \land a(b, c_5, c_1))} \by{AS}{}
+  \have {121} {S(c, c_5)} \ae{120}
+  \have {122} {a(b, c_5, c_1)} \ae{120}
+  \have {123} {(a(b, c_5, c_1) \land S(c, c_5))} \ai{122, 121}
+  \have {124} {\exists z_2 (a(b, z_2, c_1) \land S(c, z_2))} \Ei{123}
+  \close
+  %\have {125} {} \by{DIS}{}
+  \have {126} {\exists z_2 (a(b, z_2, c_1) \land S(c, z_2))} \Ee{119,120-124}
+  \close
+  %\have {127} {} \by{DIS}{}
+  \open
+  \hypo {128} {\exists z_2 (a(b, z_2, c_1) \land S(c, z_2))} \by{AS}{}
+  \have {129} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {130} {\forall z (\exists z_1 (S(c, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, c, z_1) \land S(z_1, z)))} \Ae{129}
+  \have {131} {(\exists z_1 (S(c, z_1) \land a(b, z_1, c_1)) \leftrightarrow \exists z_1 (a(b, c, z_1) \land S(z_1, c_1)))} \Ae{130}
+  \open
+  \hypo {132} {(a(b, c_2, c_1) \land S(c, c_2))} \by{AS}{}
+  \have {133} {a(b, c_2, c_1)} \ae{132}
+  \have {134} {S(c, c_2)} \ae{132}
+  \have {135} {(S(c, c_2) \land a(b, c_2, c_1))} \ai{134, 133}
+  \have {136} {\exists z_1 (S(c, z_1) \land a(b, z_1, c_1))} \Ei{135}
+  \close
+  %\have {137} {} \by{DIS}{}
+  \have {138} {\exists z_1 (S(c, z_1) \land a(b, z_1, c_1))} \Ee{128,132-136}
+  \have {139} {\exists z_1 (a(b, c, z_1) \land S(z_1, c_1))} \by{$\leftrightarrow$E}{131,138}
+  \have {140} {\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, a, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(a, z_2)))} \ae{79}
+  \have {141} {(\exists z_2 (S(b, z_2) \land a(z_2, a, c_3)) \leftrightarrow \exists z_2 (a(b, z_2, c_3) \land S(a, z_2)))} \Ae{140}
+  \open
+  \hypo {142} {(a(b, c, c_3) \land S(c_3, c_1))} \by{AS}{}
+  \have {143} {S(a, c)} \ae{79}
+  \have {144} {a(b, c, c_3)} \ae{142}
+  \have {145} {(a(b, c, c_3) \land S(a, c))} \ai{144, 143}
+  \have {146} {\exists z_2 (a(b, z_2, c_3) \land S(a, z_2))} \Ei{145}
+  \have {147} {\exists z_2 (S(b, z_2) \land a(z_2, a, c_3))} \by{$\leftrightarrow$E}{141,146}
+  \have {148} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(c_4, z_1, z)) \leftrightarrow \exists z_1 (a(c_4, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {149} {\forall z (\exists z_1 (S(a, z_1) \land a(c_4, z_1, z)) \leftrightarrow \exists z_1 (a(c_4, a, z_1) \land S(z_1, z)))} \Ae{148}
+  \have {150} {(\exists z_1 (S(a, z_1) \land a(c_4, z_1, c_1)) \leftrightarrow \exists z_1 (a(c_4, a, z_1) \land S(z_1, c_1)))} \Ae{149}
+  \open
+  \hypo {151} {(S(b, c_4) \land a(c_4, a, c_3))} \by{AS}{}
+  \have {152} {a(c_4, a, c_3)} \ae{151}
+  \have {153} {S(c_3, c_1)} \ae{142}
+  \have {154} {(a(c_4, a, c_3) \land S(c_3, c_1))} \ai{152, 153}
+  \have {155} {\exists z_1 (a(c_4, a, z_1) \land S(z_1, c_1))} \Ei{154}
+  \have {156} {\exists z_1 (S(a, z_1) \land a(c_4, z_1, c_1))} \by{$\leftrightarrow$E}{150,155}
+  \open
+  \hypo {157} {(S(a, c_5) \land a(c_4, c_5, c_1))} \by{AS}{}
+  \have {158} {S(a, c_5)} \ae{157}
+  \have {159} {a(c_4, c_5, c_1)} \ae{157}
+  \have {160} {\forall z_1 \forall z_2 ((S(a, z_1) \land S(a, z_2)) \to z_1 = z_2)} \Ae{8}
+  \have {161} {\forall z_2 ((S(a, c_5) \land S(a, z_2)) \to c_5 = z_2)} \Ae{160}
+  \have {162} {((S(a, c_5) \land S(a, c)) \to c_5 = c)} \Ae{161}
+  \have {163} {(S(a, c_5) \land S(a, c))} \ai{158, 143}
+  \have {164} {c_5 = c} \by{$\to$E}{162, 163}
+  \have {165} {a(c_4, c, c_1)} \by{=E}{164,159}
+  \have {166} {S(b, c_4)} \ae{151}
+  \have {167} {(S(b, c_4) \land a(c_4, c, c_1))} \ai{166, 165}
+  \have {168} {\exists z_2 (S(b, z_2) \land a(z_2, c, c_1))} \Ei{167}
+  \close
+  %\have {169} {} \by{DIS}{}
+  \have {170} {\exists z_2 (S(b, z_2) \land a(z_2, c, c_1))} \Ee{156,157-168}
+  \close
+  %\have {171} {} \by{DIS}{}
+  \have {172} {\exists z_2 (S(b, z_2) \land a(z_2, c, c_1))} \Ee{147,151-170}
+  \close
+  %\have {173} {} \by{DIS}{}
+  \have {174} {\exists z_2 (S(b, z_2) \land a(z_2, c, c_1))} \Ee{139,142-172}
+  \close
+  %\have {175} {} \by{DIS}{}
+  \have {176} {(\exists z_2 (S(b, z_2) \land a(z_2, c, c_1)) \leftrightarrow \exists z_2 (a(b, z_2, c_1) \land S(c, z_2)))} \by{$\leftrightarrow$I}{80-126,128-174}
+  \have {177} {\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, c, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(c, z_2)))} \Ai{176}
+  \close
+  %\have {178} {} \by{DIS}{}
+  \have {179} {((\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, a, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(a, z_2))) \land S(a, c)) \\ \quad \to \forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, c, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(c, z_2))))} \by{$\to$I}{79,177}
+  \have {180} {\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, 0, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(0, z_2)))} \Ai{78}
+  \have {181} {\forall z ((\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, a, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(a, z_2))) \land S(a, z)) \\ \quad \to \forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, z, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(z, z_2))))} \Ai{179}
+  \have {182} {\forall x \forall z ((\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(x, z_2))) \land S(x, z)) \\ \quad \to \forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, z, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(z, z_2))))} \Ai{181}
+  \have {183} {(\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, 0, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(0, z_2))) \\ \quad \land \forall x \forall z ((\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(x, z_2))) \\ \quad \land S(x, z)) \to \forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, z, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(z, z_2)))))} \ai{180, 182}
+  \have {184} {((\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, 0, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(0, z_2))) \\ \quad \land \forall x \forall z ((\forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(x, z_2))) \\ \quad \land S(x, z)) \to \forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, z, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(z, z_2))))) \\ \quad \to \forall x \forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(x, z_2))))} \Ae{13}
+  \have {185} {\forall x \forall z_1 (\exists z_2 (S(b, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(b, z_2, z_1) \land S(x, z_2)))} \by{$\to$E}{184, 183}
+  \have {186} {\forall y \forall x \forall z_1 (\exists z_2 (S(y, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(y, z_2, z_1) \land S(x, z_2)))} \Ai{185}
+\end{fitchproof}
+
+\section*{Addition commutes}
+
+We've got to the actual proof of the result, which is that $y + x = x + y$. Expressed in terms of relations rather than functions, this is $\forall y \forall x \forall z_1 (a(y, x, z_1) \leftrightarrow a(x, y, z_1))$
+
+We once again see the structure following the standard ``proof by induction'' pattern:
+
+\begin{enumerate}
+\item Base case. We show that $y + 0 = 0 + y$.
+\item Inductive step. We assume that $y + x = x + y$ and use it to show that $y + S(x) = S(x) + y$.
+\end{enumerate}
+
+With these two results we can then apply an axiom from the induction schema to give the result that $\forall y \forall x (y + x = x + y)$.
+
+Once again steps 1-6 are the standard Peano axioms. Steps 8-12 are the additional axioms needed to ensure the relations have the properties of functions. Step 13 is the instance from the induction schema that we need. In addition to all these, we also pull in the results from Lemmas 1 and 2 as steps 14 and 15 respectively.
+
+The base case follows immediately from Lemma 1 (step 16).
+
+The inductive step (steps 17-102) takes the same dual-pass approach as in the previous proofs.. It uses the following approach:
+$$
+y + S(x) \underset{\text{Ax. 4}}{=} S(y + x) \underset{\text{Hyp.}}{=} S(x + y) \underset{\text{Ax. 4}}{=} x + S(y) \underset{\text{Lem. 2}}{=} S(x) + y.
+$$
+
+At the end (steps 103-108) we apply the induction axiom to give the final result.
+
+\begin{fitchproof}[arrayenv=longtable]
+  \hypo {1} {\forall x \neg S(0, x)} \by{PR}{}
+  \hypo {2} {\forall x \forall y (\exists z (S(x, z) \land S(y, z)) \to x = y)} \by{PR}{}
+  \hypo {3} {\forall x \forall z (a(x, 0, z) \leftrightarrow z = x)} \by{PR}{}
+  \hypo {4} {\forall x \forall y \forall z (\exists z_1 (S(y, z_1) \land a(x, z_1, z)) \leftrightarrow \exists z_1 (a(x, y, z_1) \land S(z_1, z)))} \by{PR}{}
+  \hypo {5} {\forall x \forall z (m(x, 0, z) \leftrightarrow z = 0)} \by{PR}{}
+  \hypo {6} {\forall x \forall y \forall z_1 (\exists z_1 (S(y, z_1) \land m(x, z_1, z)) \leftrightarrow \exists z_1 (m(x, y, z_1) \land a(z_1, x, z)))} \by{PR}{}
+  \hypo {7} {\forall x \exists z S(x, z)} \by{PR}{}
+  \hypo {8} {\forall x \forall z_1 \forall z_2 ((S(x, z_1) \land S(x, z_2)) \to z_1 = z_2)} \by{PR}{}
+  \hypo {9} {\forall x \forall y \exists z a(x, y, z)} \by{PR}{}
+  \hypo {10} {\forall x \forall y \forall z_1 \forall z_2 ((a(x, y, z_1) \land a(x, y, z_2)) \to z_1 = z_2)} \by{PR}{}
+  \hypo {11} {\forall x \forall y \exists z m(x, y, z)} \by{PR}{}
+  \hypo {12} {\forall x \forall y \forall z_1 \forall z_2 ((m(x, y, z_1)^ m(x, y, z_2))-> z_1 =} \by{PR}{}
+  \hypo {13} {\forall y ((\forall z_1 (a(y, 0, z_1) \leftrightarrow a(0, y, z_1)) \land \forall x \forall z ((\forall z_1 (a(y, x, z_1) \leftrightarrow a(x, y, z_1)) \land S(x, z)) \\ \quad \to \forall z_1 (a(y, z, z_1) \leftrightarrow a(z, y, z_1)))) \to \forall x \forall z_1 (a(y, x, z_1) \leftrightarrow a(x, y, z_1)))} \by{PR}{}
+  \hypo {14} {\forall x \forall z_1 (a(x, 0, z_1) \leftrightarrow a(0, x, z_1))} \by{LEM1}{}
+  \hypo {15} {\forall y \forall x \forall z_1 (\exists z_2 (S(y, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(y, z_2, z_1) \land S(x, z_2)))} \by{LEM2}{}
+  \have {16} {\forall z_1 (a(b, 0, z_1) \leftrightarrow a(0, b, z_1))} \Ae{14}
+  \open
+  \hypo {17} {(\forall z_1 (a(b, a, z_1) \leftrightarrow a(a, b, z_1)) \land S(a, c))} \by{AS}{}
+  \open
+  \hypo {18} {a(b, c, c_1)} \by{AS}{}
+  \have {19} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {20} {\forall z (\exists z_1 (S(a, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, a, z_1) \land S(z_1, z)))} \Ae{19}
+  \have {21} {(\exists z_1 (S(a, z_1) \land a(b, z_1, c_1)) \leftrightarrow \exists z_1 (a(b, a, z_1) \land S(z_1, c_1)))} \Ae{20}
+  \have {22} {S(a, c)} \ae{17}
+  \have {23} {(S(a, c) \land a(b, c, c_1))} \ai{22, 18}
+  \have {24} {\exists z_1 (S(a, z_1) \land a(b, z_1, c_1))} \Ei{23}
+  \have {25} {\exists z_1 (a(b, a, z_1) \land S(z_1, c_1))} \by{$\leftrightarrow$E}{21,24}
+  \have {26} {\forall z_1 (a(b, a, z_1) \leftrightarrow a(a, b, z_1))} \ae{17}
+  \have {27} {(a(b, a, c_2) \leftrightarrow a(a, b, c_2))} \Ae{26}
+  \open
+  \hypo {28} {(a(b, a, c_2) \land S(c_2, c_1))} \by{AS}{}
+  \have {29} {a(b, a, c_2)} \ae{28}
+  \have {30} {a(a, b, c_2)} \by{$\leftrightarrow$E}{27,29}
+  \have {31} {S(c_2, c_1)} \ae{28}
+  \have {32} {(a(a, b, c_2) \land S(c_2, c_1))} \ai{30, 31}
+  \have {33} {\exists z_1 (a(a, b, z_1) \land S(z_1, c_1))} \Ei{32}
+  \close
+  %\have {34} {} \by{DIS}{}
+  \have {35} {\exists z_1 (a(a, b, z_1) \land S(z_1, c_1))} \Ee{25,28-33}
+  \have {36} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(a, z_1, z)) \leftrightarrow \exists z_1 (a(a, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {37} {\forall z (\exists z_1 (S(b, z_1) \land a(a, z_1, z)) \leftrightarrow \exists z_1 (a(a, b, z_1) \land S(z_1, z)))} \Ae{36}
+  \have {38} {(\exists z_1 (S(b, z_1) \land a(a, z_1, c_1)) \leftrightarrow \exists z_1 (a(a, b, z_1) \land S(z_1, c_1)))} \Ae{37}
+  \have {39} {\exists z_1 (S(b, z_1) \land a(a, z_1, c_1))} \by{$\leftrightarrow$E}{38,35}
+  \have {40} {\forall x \forall z_1 (\exists z_2 (S(a, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(a, z_2, z_1) \land S(x, z_2)))} \Ae{15}
+  \have {41} {\forall z_1 (\exists z_2 (S(a, z_2) \land a(z_2, b, z_1)) \leftrightarrow \exists z_2 (a(a, z_2, z_1) \land S(b, z_2)))} \Ae{40}
+  \have {42} {(\exists z_2 (S(a, z_2) \land a(z_2, b, c_1)) \leftrightarrow \exists z_2 (a(a, z_2, c_1) \land S(b, z_2)))} \Ae{41}
+  \open
+  \hypo {43} {(S(b, c_2) \land a(a, c_2, c_1))} \by{AS}{}
+  \have {44} {S(b, c_2)} \ae{43}
+  \have {45} {a(a, c_2, c_1)} \ae{43}
+  \have {46} {(a(a, c_2, c_1) \land S(b, c_2))} \ai{45, 44}
+  \have {47} {\exists z_2 (a(a, z_2, c_1) \land S(b, z_2))} \Ei{46}
+  \close
+  %\have {48} {} \by{DIS}{}
+  \have {49} {\exists z_2 (a(a, z_2, c_1) \land S(b, z_2))} \Ee{39,43-47}
+  \have {50} {\exists z_2 (S(a, z_2) \land a(z_2, b, c_1))} \by{$\leftrightarrow$E}{42,49}
+  \open
+  \hypo {51} {(S(a, c_2) \land a(c_2, b, c_1))} \by{AS}{}
+  \have {52} {S(a, c_2)} \ae{51}
+  \have {53} {a(c_2, b, c_1)} \ae{51}
+  \have {54} {\forall z_1 \forall z_2 ((S(a, z_1) \land S(a, z_2)) \to z_1 = z_2)} \Ae{8}
+  \have {55} {\forall z_2 ((S(a, c_2) \land S(a, z_2)) \to c_2 = z_2)} \Ae{54}
+  \have {56} {((S(a, c_2) \land S(a, c)) \to c_2 = c)} \Ae{55}
+  \have {57} {(S(a, c_2) \land S(a, c))} \ai{52, 22}
+  \have {58} {c_2 = c} \by{$\to$E}{56, 57}
+  \have {59} {a(c, b, c_1)} \by{=E}{58,53}
+  \close
+  %\have {60} {} \by{DIS}{}
+  \have {61} {a(c, b, c_1)} \Ee{50,51-59}
+  \close
+  %\have {62} {} \by{DIS}{}
+  \open
+  \hypo {63} {a(c, b, c_1)} \by{AS}{}
+  \have {64} {\forall x \forall z_1 (\exists z_2 (S(a, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(a, z_2, z_1) \land S(x, z_2)))} \Ae{15}
+  \have {65} {\forall z_1 (\exists z_2 (S(a, z_2) \land a(z_2, b, z_1)) \leftrightarrow \exists z_2 (a(a, z_2, z_1) \land S(b, z_2)))} \Ae{64}
+  \have {66} {(\exists z_2 (S(a, z_2) \land a(z_2, b, c_1)) \leftrightarrow \exists z_2 (a(a, z_2, c_1) \land S(b, z_2)))} \Ae{65}
+  \have {67} {S(a, c)} \ae{17}
+  \have {68} {(S(a, c) \land a(c, b, c_1))} \ai{67, 63}
+  \have {69} {\exists z_2 (S(a, z_2) \land a(z_2, b, c_1))} \Ei{68}
+  \have {70} {\exists z_2 (a(a, z_2, c_1) \land S(b, z_2))} \by{$\leftrightarrow$E}{66,69}
+  \have {71} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(a, z_1, z)) \leftrightarrow \exists z_1 (a(a, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {72} {\forall z (\exists z_1 (S(b, z_1) \land a(a, z_1, z)) \leftrightarrow \exists z_1 (a(a, b, z_1) \land S(z_1, z)))} \Ae{71}
+  \have {73} {(\exists z_1 (S(b, z_1) \land a(a, z_1, c_1)) \leftrightarrow \exists z_1 (a(a, b, z_1) \land S(z_1, c_1)))} \Ae{72}
+  \open
+  \hypo {74} {(a(a, c_2, c_1) \land S(b, c_2))} \by{AS}{}
+  \have {75} {a(a, c_2, c_1)} \ae{74}
+  \have {76} {S(b, c_2)} \ae{74}
+  \have {77} {(S(b, c_2) \land a(a, c_2, c_1))} \ai{76, 75}
+  \have {78} {\exists z_1 (S(b, z_1) \land a(a, z_1, c_1))} \Ei{77}
+  \close
+  %\have {79} {} \by{DIS}{}
+  \have {80} {\exists z_1 (S(b, z_1) \land a(a, z_1, c_1))} \Ee{70,74-78}
+  \have {81} {\exists z_1 (a(a, b, z_1) \land S(z_1, c_1))} \by{$\leftrightarrow$E}{73,80}
+  \open
+  \hypo {82} {(a(a, b, c_2) \land S(c_2, c_1))} \by{AS}{}
+  \have {83} {a(a, b, c_2)} \ae{82}
+  \have {84} {S(c_2, c_1)} \ae{82}
+  \have {85} {\forall z_1 (a(b, a, z_1) \leftrightarrow a(a, b, z_1))} \ae{17}
+  \have {86} {(a(b, a, c_2) \leftrightarrow a(a, b, c_2))} \Ae{85}
+  \have {87} {a(b, a, c_2)} \by{$\leftrightarrow$E}{86,83}
+  \have {88} {(a(b, a, c_2) \land S(c_2, c_1))} \ai{87, 84}
+  \have {89} {\exists z_1 (a(b, a, z_1) \land S(z_1, c_1))} \Ei{88}
+  \close
+  %\have {90} {} \by{DIS}{}
+  \have {91} {\exists z_1 (a(b, a, z_1) \land S(z_1, c_1))} \Ee{81,82-89}
+  \have {92} {\forall y \forall z (\exists z_1 (S(y, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, y, z_1) \land S(z_1, z)))} \Ae{4}
+  \have {93} {\forall z (\exists z_1 (S(a, z_1) \land a(b, z_1, z)) \leftrightarrow \exists z_1 (a(b, a, z_1) \land S(z_1, z)))} \Ae{92}
+  \have {94} {(\exists z_1 (S(a, z_1) \land a(b, z_1, c_1)) \leftrightarrow \exists z_1 (a(b, a, z_1) \land S(z_1, c_1)))} \Ae{93}
+  \have {95} {\exists z_1 (S(a, z_1) \land a(b, z_1, c_1))} \by{$\leftrightarrow$E}{94,91}
+  \open
+  \hypo {96} {(S(a, c_2) \land a(b, c_2, c_1))} \by{AS}{}
+  \have {97} {S(a, c_2)} \ae{96}
+  \have {98} {a(b, c_2, c_1)} \ae{96}
+  \have {99} {\forall z_1 \forall z_2 ((S(a, z_1) \land S(a, z_2)) \to z_1 = z_2)} \Ae{8}
+  \have {100} {\forall z_2 ((S(a, c_2) \land S(a, z_2)) \to c_2 = z_2)} \Ae{99}
+  \have {101} {((S(a, c_2) \land S(a, c)) \to c_2 = c)} \Ae{100}
+  \have {102} {(S(a, c_2) \land S(a, c))} \ai{97, 67}
+  \have {103} {c_2 = c} \by{$\to$E}{101, 102}
+  \have {104} {a(b, c, c_1)} \by{=E}{103,98}
+  \close
+  %\have {105} {} \by{DIS}{}
+  \have {106} {a(b, c, c_1)} \Ee{95,96-104}
+  \close
+  %\have {107} {} \by{DIS}{}
+  \have {108} {(a(b, c, c_1) \leftrightarrow a(c, b, c_1))} \by{$\leftrightarrow$I}{18-61,63-106}
+  \have {109} {\forall z_1 (a(b, c, z_1) \leftrightarrow a(c, b, z_1))} \Ai{108}
+  \close
+  %\have {110} {} \by{DIS}{}
+  \have {111} {((\forall z_1 (a(b, a, z_1) \leftrightarrow a(a, b, z_1)) \land S(a, c)) \to \forall z_1 (a(b, c, z_1) \leftrightarrow a(c, b, z_1)))} \by{$\to$I}{17,109}
+  \have {112} {\forall z ((\forall z_1 (a(b, a, z_1) \leftrightarrow a(a, b, z_1)) \land S(a, z)) \to \forall z_1 (a(b, z, z_1) \leftrightarrow a(z, b, z_1)))} \Ai{111}
+  \have {113} {\forall x \forall z ((\forall z_1 (a(b, x, z_1) \leftrightarrow a(x, b, z_1)) \land S(x, z)) \to \forall z_1 (a(b, z, z_1) \leftrightarrow a(z, b, z_1)))} \Ai{112}
+  \have {114} {(\forall z_1 (a(b, 0, z_1) \leftrightarrow a(0, b, z_1)) \land \forall x \forall z ((\forall z_1 (a(b, x, z_1) \leftrightarrow a(x, b, z_1)) \land S(x, z)) \\ \quad \to \forall z_1 (a(b, z, z_1) \leftrightarrow a(z, b, z_1))))} \ai{16, 113}
+  \have {115} {((\forall z_1 (a(b, 0, z_1) \leftrightarrow a(0, b, z_1)) \land \forall x \forall z ((\forall z_1 (a(b, x, z_1) \leftrightarrow a(x, b, z_1)) \land S(x, z)) \\ \quad \to \forall z_1 (a(b, z, z_1) \leftrightarrow a(z, b, z_1)))) \to \forall x \forall z_1 (a(b, x, z_1) \leftrightarrow a(x, b, z_1)))} \Ae{13}
+  \have {116} {\forall x \forall z_1 (a(b, x, z_1) \leftrightarrow a(x, b, z_1))} \by{$\to$E}{115, 114}
+  \have {117} {\forall y \forall x \forall z_1 (a(y, x, z_1) \leftrightarrow a(x, y, z_1))} \Ai{116}
+\end{fitchproof}
+
+Mountains and molehills.
+
+\end{document}
