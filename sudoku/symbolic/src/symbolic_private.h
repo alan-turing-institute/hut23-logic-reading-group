@@ -219,7 +219,7 @@ bool ExtractCheckSubstitution (Extract const * psExtract, Operation const * psMa
 
 // Operation Maps
 OperationMap * CreateOperationMap ();
-OperationMap * FreeOperatoinMap (OperationMap * psOperationMap);
+OperationMap * FreeOperationMap (OperationMap * psOperationMap);
 void OperationMapSetFrom (OperationMap * psOperationMap, Operation const * psOp);
 bool OperationMapSetTo (OperationMap * psOperationMap, Operation const * psScrutinee, VarStack * psScrutineeVars);
 Operation const * OperationMapGetFrom (OperationMap const * psOperationMap);
