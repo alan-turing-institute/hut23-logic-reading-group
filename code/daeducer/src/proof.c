@@ -53,7 +53,7 @@ void proof_reset(Proof* psProof) {
 			psProof->szAnnotation = NULL;
 		}
 		if (psProof->apsStep) {
-			for (uPos = 0; uPos < psProof->uStepCount; ++uPos) {
+			for (uPos = 0; uPos < (psProof->uStepCount + psProof->uRedoCount); ++uPos) {
 				step_delete(psProof->apsStep[uPos]);
 				psProof->apsStep[uPos] = NULL;
 			}
@@ -61,6 +61,7 @@ void proof_reset(Proof* psProof) {
 			psProof->apsStep = NULL;
 		}
 		psProof->uStepCount = 0;
+		psProof->uRedoCount = 0;
 		if (psProof->szError) {
 			//free(psProof->szError);
 			psProof->szError = NULL;
@@ -95,6 +96,9 @@ void proof_transfer(Proof* psProof, Proof* psFrom) {
 
 	psProof->psRuleset = psFrom->psRuleset;
 	psFrom->psRuleset = NULL;
+
+	psProof->uRedoCount = psFrom->uRedoCount;
+	psFrom->uRedoCount = 0;
 }
 
 void proof_attach_ruleset(Proof* psProof, Ruleset* psRuleset) {
@@ -1332,7 +1336,7 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 						uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &uSteps);
 					}
 					if (uReadCount == 1) {
-						boError = proof_remove_steps(psProof, uSteps, &szError);
+						boError = proof_undo_steps(psProof, uSteps, &szError);
 						boStep = FALSE;
 					}
 					else {
@@ -1341,6 +1345,26 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 				}
 				else {
 					szError = "The undo command takes either zero or one parameter.";
+				}
+			}
+			break;
+			case STEP_REDO: {
+				size_t uSteps = 1;
+				size_t uReadCount = 1;
+				if (psCommand->uCount <= 1) {
+					if (psCommand->uCount == 1) {
+						uReadCount = sscanf(psCommand->aszParameter[0], "%lu", &uSteps);
+					}
+					if (uReadCount == 1) {
+						boError = proof_redo_steps(psProof, uSteps, &szError);
+						boStep = FALSE;
+					}
+					else {
+						szError = "The parameter to redo must be a number of steps as a non-negative integer.";
+					}
+				}
+				else {
+					szError = "The redo command takes either zero or one parameter.";
 				}
 			}
 			break;
@@ -1365,8 +1389,10 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 
 	if ((!boError) && boStep) {
 		size_t uPos = psProof->uStepCount;
+		proof_allocate_length(psProof, (psProof->uStepCount + 1));
 		psProof->uStepCount += 1;
-		psProof->apsStep = realloc(psProof->apsStep, psProof->uStepCount * sizeof(Step));
+		psProof->uRedoCount = 0;
+		//psProof->apsStep = realloc(psProof->apsStep, psProof->uStepCount * sizeof(Step));
 		psProof->apsStep[uPos] = psStep;
 	}
 	else {
@@ -1542,8 +1568,7 @@ void proof_print_prompt(Proof* psProof) {
 	printf(COL_GREEN "> ");
 }
 
-bool proof_remove_steps(Proof* psProof, size_t uSteps, char** pszError) {
-	size_t uPos;
+bool proof_undo_steps(Proof* psProof, size_t uSteps, char** pszError) {
 	bool boError = TRUE;
 
 	if (psProof->uStepCount >= uSteps) {
@@ -1556,12 +1581,8 @@ bool proof_remove_steps(Proof* psProof, size_t uSteps, char** pszError) {
 			}
 		}
 
-		// Remove the last uSteps steps
-		for (uPos = 0; uPos < uSteps; ++uPos) {
-			step_delete(psProof->apsStep[(psProof->uStepCount - uPos - 1)]);
-		}
 		psProof->uStepCount -= uSteps;
-		psProof->apsStep = realloc(psProof->apsStep, psProof->uStepCount * sizeof(Step));
+		psProof->uRedoCount += uSteps;
 		boError = FALSE;
 	}
 	else {
@@ -1571,3 +1592,37 @@ bool proof_remove_steps(Proof* psProof, size_t uSteps, char** pszError) {
 	return boError;
 }
 
+bool proof_redo_steps(Proof* psProof, size_t uSteps, char** pszError) {
+	bool boError = TRUE;
+
+	if (uSteps <= psProof->uRedoCount) {
+		psProof->uStepCount += uSteps;
+		psProof->uRedoCount -= uSteps;
+		boError = FALSE;
+		if ((psProof->uStepCount > 0) && (psProof->apsStep[(psProof->uStepCount - 1)]->eCommand == STEP_QED)) {
+				psProof->boComplete = TRUE;
+		}
+	}
+	else {
+		*pszError = "There are not enough steps in the redo buffer to restore.";
+	}
+
+	return boError;
+}
+
+void proof_allocate_length(Proof* psProof, size_t uSteps) {
+	size_t uPos;
+
+	// Remove anny excess steps
+	for (uPos = uSteps; uPos < (psProof->uStepCount + psProof->uRedoCount); ++uPos) {
+		if (psProof->apsStep[uPos] != NULL) {
+			step_delete(psProof->apsStep[uPos]);
+			psProof->apsStep[uPos] = NULL;
+		}
+	}
+
+	psProof->apsStep = realloc(psProof->apsStep, uSteps * sizeof(Step));
+	for (uPos = (psProof->uStepCount + psProof->uRedoCount); uPos < uSteps; ++uPos) {
+		psProof->apsStep[uPos] = NULL;
+	}
+}
