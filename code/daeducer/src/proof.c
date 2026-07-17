@@ -1547,6 +1547,15 @@ bool proof_remove_steps(Proof* psProof, size_t uSteps, char** pszError) {
 	bool boError = TRUE;
 
 	if (psProof->uStepCount >= uSteps) {
+		if (psProof->boComplete) {
+			// If the last step was QED, mark the proof as incomplete
+			if (uSteps > 0) {
+				if (psProof->apsStep[(psProof->uStepCount - 1)]->eCommand == STEP_QED) {
+					psProof->boComplete = FALSE;
+				}
+			}
+		}
+
 		// Remove the last uSteps steps
 		for (uPos = 0; uPos < uSteps; ++uPos) {
 			step_delete(psProof->apsStep[(psProof->uStepCount - uPos - 1)]);
