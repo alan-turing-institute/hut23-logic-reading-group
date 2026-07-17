@@ -79,7 +79,7 @@ Extract * FreeExtract (Extract * psExtract) {
     if (psExtract) {
         if (psExtract->apsOps) {
             for (nPos = 0; nPos < psExtract->nCount; ++nPos) {
-                psExtract->apsOps[nPos] = FreeOperatoinMap(psExtract->apsOps[nPos]);
+                psExtract->apsOps[nPos] = FreeOperationMap(psExtract->apsOps[nPos]);
             }
 
             PropFree (psExtract->apsOps);
@@ -980,7 +980,7 @@ Extract * ExtractPatternCheck (Operation * psPattern) {
 }
 
 Extract * ExtractPatternManyCheck (Operation ** apsPattern, int nCount) {
-    Extract * psExtract;
+    Extract * psExtract = NULL;
     bool boResult;
     int nRelationCount;
     int nPos;
@@ -1041,15 +1041,17 @@ Extract * ExtractPatternManyCheck (Operation ** apsPattern, int nCount) {
 bool ExtractPatternMappingUnique (Operation ** apsPattern, int nCount) {
     Extract * psExtract;
     int nPos;
-    bool boSuccess;
+    bool boSuccess = FALSE;
 
     psExtract = ExtractPatternManyCheck (apsPattern, nCount);
 
-    boSuccess = TRUE;
-    for (nPos = 0; boSuccess && (nPos < psExtract->nCount); ++nPos) {
-	    boSuccess = OperationMapVarMappingUnique (psExtract->apsOps[nPos]);
+    if (psExtract) {
+        boSuccess = TRUE;
+        for (nPos = 0; boSuccess && (nPos < psExtract->nCount); ++nPos) {
+	        boSuccess = OperationMapVarMappingUnique (psExtract->apsOps[nPos]);
+        }
+        psExtract = FreeExtract (psExtract);
     }
-    psExtract = FreeExtract (psExtract);
 
     return boSuccess;
 }

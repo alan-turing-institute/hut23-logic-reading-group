@@ -59,7 +59,7 @@ OperationMap * CreateOperationMap () {
     return psOperationMap;
 }
 
-OperationMap * FreeOperatoinMap (OperationMap * psOperationMap) {
+OperationMap * FreeOperationMap (OperationMap * psOperationMap) {
     if (psOperationMap) {
         if (psOperationMap->psFrom) {
             FreeRecursive(psOperationMap->psFrom);
