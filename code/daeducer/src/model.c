@@ -416,7 +416,7 @@ void model_get_prompt(Model* psModel, String* psPrompt) {
 Model* model_initialise() {
 	Model* psModel;
 	char const* szModelPath = "./models/" MODEL_FILE;
-	char const* szGrammarPath = "inputs/tfl-grammar-precise.txt";
+	char const* szGrammarPath = "inputs/fol-grammar-precise.txt";
 
 	psModel = model_new();
 	model_load(psModel, szModelPath);
