@@ -11,7 +11,7 @@ premise forall x forall z_1 forall z_2 ((S(x, z_1) ^ S(x, z_2)) -> z_1 = z_2)
 premise forall x forall y exists z a(x, y, z)
 premise forall x forall y forall z_1 forall z_2 ((a(x, y, z_1) ^ a(x, y, z_2)) -> z_1 = z_2)
 premise forall x forall y exists z m(x, y, z)
-premise forall x forall y forall z_1 forall z_2 ((m(x, y, z_1)^ m(x, y, z_2))-> z_1 =
+premise forall x forall y forall z_1 forall z_2 ((m(x, y, z_1) ^ m(x, y, z_2)) -> z_1 = z_2)
 premise forall y ((forall z_1 (a(y, 0, z_1) <-> a(0, y, z_1)) ^ forall x forall z ((forall z_1 (a(y, x, z_1) <-> a(x, y, z_1)) ^ S(x, z)) -> forall z_1 (a(y, z, z_1) <-> a(z, y, z_1)))) -> forall x forall z_1 (a(y, x, z_1) <-> a(x, y, z_1)))
 premise forall x forall z_1 (a(x, 0, z_1) <-> a(0, x, z_1))
 premise forall y forall x forall z_1 (exists z_2 (S(y, z_2) ^ a(z_2, x, z_1)) <-> exists z_2 (a(y, z_2, z_1) ^ S(x, z_2)))
