@@ -492,7 +492,7 @@ At the end (steps 103-108) we apply the induction axiom to give the final result
   \hypo {9} {\forall x \forall y \exists z a(x, y, z)} \by{PR}{}
   \hypo {10} {\forall x \forall y \forall z_1 \forall z_2 ((a(x, y, z_1) \land a(x, y, z_2)) \to z_1 = z_2)} \by{PR}{}
   \hypo {11} {\forall x \forall y \exists z m(x, y, z)} \by{PR}{}
-  \hypo {12} {\forall x \forall y \forall z_1 \forall z_2 ((m(x, y, z_1)^ m(x, y, z_2))-> z_1 =} \by{PR}{}
+  \hypo {12} {\forall x \forall y \forall z_1 \forall z_2 ((m(x, y, z_1) \land m(x, y, z_2)) \to z_1 = z_2)} \by{PR}{}
   \hypo {13} {\forall y ((\forall z_1 (a(y, 0, z_1) \leftrightarrow a(0, y, z_1)) \land \forall x \forall z ((\forall z_1 (a(y, x, z_1) \leftrightarrow a(x, y, z_1)) \land S(x, z)) \\ \quad \to \forall z_1 (a(y, z, z_1) \leftrightarrow a(z, y, z_1)))) \to \forall x \forall z_1 (a(y, x, z_1) \leftrightarrow a(x, y, z_1)))} \by{PR}{}
   \hypo {14} {\forall x \forall z_1 (a(x, 0, z_1) \leftrightarrow a(0, x, z_1))} \by{LEM1}{}
   \hypo {15} {\forall y \forall x \forall z_1 (\exists z_2 (S(y, z_2) \land a(z_2, x, z_1)) \leftrightarrow \exists z_2 (a(y, z_2, z_1) \land S(x, z_2)))} \by{LEM2}{}
