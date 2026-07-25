@@ -17,6 +17,7 @@ typedef struct _Config {
 	llama_token uThinkingEndToken;
 
 	int nContextSize;
+	bool boMonologue;
 } Config;
 
 Config* config_new();

@@ -297,6 +297,14 @@ void generate(Config* psConfig, char const* szPrompt, String* psResponse, Sample
 				GGML_ABORT("failed to convert token to piece\n");
 			}
 			szPiece = strndup(szBuffer, nPieceLength);
+			if (psConfig->boMonologue) {
+				if (llama_vocab_is_eog(psConfig->psVocab, nNewTokenId)) {
+					printf("\n");
+				}
+				else {
+					printf("%s", szPiece);
+				}
+			}
 
 			if ((nNewTokenId != psConfig->uThinkingStartToken) && (nNewTokenId != psConfig->uThinkingEndToken)) {
 				if (sampler_apply_grammar(psSampler)) {
@@ -306,10 +314,18 @@ void generate(Config* psConfig, char const* szPrompt, String* psResponse, Sample
 							if (boProofValid) {
 								proof_process_step(psProofGenerated, NULL, psCommand);
 								boProofValid = !proof_error(psProofGenerated, &szError);
-								if (!boProofValid) {
+								if (boProofValid) {
+									if (psConfig->boMonologue) {
+										proof_print_last_step(psProofGenerated);
+									}
+								}
+								else {
 									// ERROR: invalid proof step
 									psOutcome->eOutcome = OUTCOME_ERROR_LOGIC;
 									string_append(psOutcome->psError, szError);
+									if (psConfig->boMonologue) {
+										printf("Error: %s\n", szError);
+									}
 								}
 							}
 							else {
@@ -317,7 +333,12 @@ void generate(Config* psConfig, char const* szPrompt, String* psResponse, Sample
 								psOutcome->eOutcome = OUTCOME_ERROR_COMMAND;
 							}
 						}
-						string_clear(psOutput);
+						if (psConfig->boMonologue) {
+							printf("\n");
+						}
+						else {
+							string_clear(psOutput);
+						}
 						command_reset(psCommand);
 					}
 					else {
@@ -332,8 +353,10 @@ void generate(Config* psConfig, char const* szPrompt, String* psResponse, Sample
 					}
 				}
 				else {
-					proof_print_prompt(psProofGenerated);
-					sampler_output_progress(psSampler);
+					if (!psConfig->boMonologue) {
+						proof_print_prompt(psProofGenerated);
+						sampler_output_progress(psSampler);
+					}
 				}
 			}
 			fflush(stdout);
@@ -454,12 +477,17 @@ void model_success_complete(Proof* psProof, Proof* psProofGenerated) {
 			psCommand->eCommand = psStep->eCommand;
 			psCommand->szCommand = strdup(aszCommand[psCommand->eCommand]);
 
-			psCommand->uCount = psStep->uRefCount + psStep->uInputCount;
+			psCommand->uCount = psStep->uRefCount + psStep->uVarCount + psStep->uInputCount;
 			psCommand->aszParameter = calloc(psCommand->uCount, sizeof(char*));
 			uCount = 0;
 
 			for (uPos = 0; uPos < psStep->uRefCount; ++uPos) {
 				psCommand->aszParameter[uCount] = strdup(psStep->apsRef[uPos]->szName);
+				uCount += 1;
+			}
+
+			for (uPos = 0; uPos < psStep->uVarCount; ++uPos) {
+				psCommand->aszParameter[uCount] = strdup(psStep->aszVar[uPos]);
 				uCount += 1;
 			}
 
