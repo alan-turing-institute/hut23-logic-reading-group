@@ -42,6 +42,21 @@
 // will finish
 #define VARIABLE_CHARS "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 
+// The string to use for escaping LaTeX commands
+// Usually a single or double backslash (i.e. "\\" or "\\\\") depending on whether
+// the backslash should be escaped in output or not.
+#define BACKSLASH_STRING "\\"
+
+// The LaTeX symbol to use for "TRUE" or "Tautology"
+#define CONTRADICTION BACKSLASH_STRING "bot"
+
+// The LaTeX symbol to use for "FALSE" or "Contradiction"
+#define TAUTOLOGY BACKSLASH_STRING "top"
+
+// LaTeX characters that should be stripped from the input/ignored during parsing
+// from string to operation
+#define IGNORE_CHARS "$"
+
 //////////////////////////////////////////////////////////////////
 // Structures
 
@@ -50,22 +65,22 @@
 
 // Textual equivalents of the unary operations
 static char const aszOpUnaryLatex[OPUNARY_NUM][7] = {
-	"\\\\neg",
+	BACKSLASH_STRING "neg",
 };
 
 // Textual equivalents of the binary operations
 static char const aszOpBinaryLatex[OPBINARY_NUM][17] = {
-	"\\\\land",
-	"\\\\lor",
-	"\\\\to",
-	"\\\\leftrightarrow",
-	"\\\\nleftrightarrow",
+	BACKSLASH_STRING "land",
+	BACKSLASH_STRING "lor",
+	BACKSLASH_STRING "to",
+	BACKSLASH_STRING "leftrightarrow",
+	BACKSLASH_STRING "nleftrightarrow",
 };
 
 // Textual equivalents of the quantifiers
-static char const aszQuantifier[QUANTIFIER_NUM][9] = {
-	"\\\\forall",
-	"\\\\exists",
+static char const aszQuantifierLatex[QUANTIFIER_NUM][9] = {
+	BACKSLASH_STRING "forall",
+	BACKSLASH_STRING "exists",
 };
 
 //////////////////////////////////////////////////////////////////
@@ -129,11 +144,11 @@ char * RecurseToStringLatex (Operation * psOp, int nStrLen) {
 			case OPTYPE_TRUTHVALUE:
 				// Truth values
 				if (psOp->Vars.boTruth) {
-					snprintf (szReturn, nStrLen, "\\\\top");
+					snprintf (szReturn, nStrLen, TAUTOLOGY);
 					szReturn[nStrLen - 1] = 0;
 				}
 				else {
-					snprintf (szReturn, nStrLen, "\\\\bot");
+					snprintf (szReturn, nStrLen, CONTRADICTION);
 					szReturn[nStrLen - 1] = 0;
 				}
 				break;
@@ -195,7 +210,7 @@ char * RecurseToStringLatex (Operation * psOp, int nStrLen) {
 					case QUANTIFIER_UNIVERSAL:
 					case QUANTIFIER_EXISTENTIAL:
 						// These operations are of the form "forall x a" (variable x, operation a)
-						snprintf (szReturn, nStrLen, "%s %s %s", aszQuantifier[psOp->Vars.psQuantifier->eQuType], psOp->Vars.psQuantifier->szVar, szVar1);
+						snprintf (szReturn, nStrLen, "%s %s %s", aszQuantifierLatex[psOp->Vars.psQuantifier->eQuType], psOp->Vars.psQuantifier->szVar, szVar1);
 						szReturn[nStrLen - 1] = 0;
 						break;
 					default:
@@ -264,12 +279,12 @@ int RecurseToStringLengthLatex (Operation * psOp) {
 			case OPTYPE_TRUTHVALUE:
 				// TRUE or FALSE
 				if (psOp->Vars.boTruth) {
-					//snprintf (NULL, 0, "\\\\top");
-					nReturn = 5;
+					//snprintf (NULL, 0, TAUTOLOGY);
+					nReturn = sizeof (TAUTOLOGY);
 				}
 				else {
-					//snprintf (NULL, 0, "\\\\bot");
-					nReturn = 5;
+					//snprintf (NULL, 0, CONTRADICTION);
+					nReturn = sizeof (CONTRADICTION);
 				}
 				break;
 			case OPTYPE_VARIABLE:
@@ -320,8 +335,8 @@ int RecurseToStringLengthLatex (Operation * psOp) {
 					case QUANTIFIER_UNIVERSAL:
 					case QUANTIFIER_EXISTENTIAL:
 						// These operations are of the form "forall x a" (variable x, operation a)
-						// nReturn = snprintf (szReturn, nStrLen, "%s %s %s", aszQuantifier[psOp->Vars.psQuantifier->eQuType], psOp->Vars.psQuantifier->szVar, szVar1);
-						nReturn = strlen (aszQuantifier[psOp->Vars.psQuantifier->eQuType]) + strlen (psOp->Vars.psQuantifier->szVar) + nVar1 + 2;
+						// nReturn = snprintf (szReturn, nStrLen, "%s %s %s", aszQuantifierLatexc[psOp->Vars.psQuantifier->eQuType], psOp->Vars.psQuantifier->szVar, szVar1);
+						nReturn = strlen (aszQuantifierLatex[psOp->Vars.psQuantifier->eQuType]) + strlen (psOp->Vars.psQuantifier->szVar) + nVar1 + 2;
 						break;
 					default:
 						// Whoa there, we don't know how to handle that
@@ -366,20 +381,40 @@ Operation * StringToOperationLatex (char const * szString) {
 	char * szNoSpaces;
 	int nStrPos;
 	int nNoSpacePos;
+	bool boCompacting;
 
 	// Establish the length of the string
 	nStrLen = (int)strlen (szString);
 
-	// Remove all spaces, newlines and dollar symbols
+
+	// Combine consecutive whitespace into a single space
 	szNoSpaces = (char *)PropMalloc (nStrLen + 1);
 	nNoSpacePos = 0;
+	boCompacting = TRUE;
 	for (nStrPos = 0; nStrPos < nStrLen; nStrPos++) {
-		// Check whether this is a character to skip
-		if (strchr (" \n\r\t$", szString[nStrPos]) == NULL) {
-			// If not, shift characters down in memory
-			szNoSpaces[nNoSpacePos] = szString[nStrPos];
-			// Move the copy-to position onwards if we write a character
-			nNoSpacePos++;
+		if (strchr (IGNORE_CHARS, szString[nStrPos]) == NULL) {
+			// Check whether this is a character to skip
+			if (strchr (WHITESPACE_CHARS, szString[nStrPos]) == NULL) {
+				// If not, shift characters down in memory
+				szNoSpaces[nNoSpacePos] = szString[nStrPos];
+				// Move the copy-to position onwards if we write a character
+				nNoSpacePos++;
+				if (strchr ("()", szString[nStrPos]) == NULL) {
+					boCompacting = FALSE;
+				}
+				else {
+					boCompacting = TRUE;
+				}
+			}
+			else {
+				if (!boCompacting) {
+					// This is the first in a potential sequence of whitespace
+					szNoSpaces[nNoSpacePos] = ' ';
+					// Move the copy-to position onwards if we write a character
+					nNoSpacePos++;
+					boCompacting = TRUE;
+				}
+			}
 		}
 	}
 	// Ensure we terminate the string
@@ -514,6 +549,9 @@ Operation * RecurseToOperationLatex (char const * szString, int nStrLen) {
 		// Split into two pieces and recurse
 		eBinary = (OPBINARY)((int)eBinary - 1);
 		nRightStart = nPos + (int)strlen(aszOpBinaryLatex[eBinary]) - 1;
+		if (szString[nRightStart] == ' ') {
+			nRightStart += 1;
+		}
 
 		psReturnOp = CreateBinary (eBinary, RecurseToOperationLatex (szString, nPos - 1), RecurseToOperationLatex (szString + nRightStart, nStrLen - nRightStart));
 	}
@@ -537,16 +575,19 @@ Operation * RecurseToOperationLatex (char const * szString, int nStrLen) {
 			// Recurse on whatever is left
 			eUnary = (OPUNARY)((int)eUnary - 1);
 			nRightStart = (int)strlen(aszOpUnaryLatex[eUnary]);
+			if (szString[nRightStart] == ' ') {
+				nRightStart += 1;
+			}
 			psReturnOp = CreateUnary (eUnary, RecurseToOperationLatex (szString + nRightStart, nStrLen - nRightStart));
 		}
 		else {
 			// Check if it's a quantifier
 			eQuantifier = (QUANTIFIER)((int)QUANTIFIER_INVALID + 1);
 			while ((!boMatch) && (eQuantifier < QUANTIFIER_NUM)) {
-				nLength = (int)strlen (aszQuantifier[eQuantifier]);
+				nLength = (int)strlen (aszQuantifierLatex[eQuantifier]);
 				if (nStrLen > nLength) {
 					// String compare with the possible quantifiers
-					if (strncmp (aszQuantifier[eQuantifier], szString, nLength) == 0) {
+					if (strncmp (aszQuantifierLatex[eQuantifier], szString, nLength) == 0) {
 						boMatch = TRUE;
 					}
 				}
@@ -610,16 +651,16 @@ bool TryStringToTruthLatex (char const * const szString, int const nStrLen, bool
 	bool boResult = FALSE;
 	int nMin;
 
-	nMin = nStrLen < 5 ? nStrLen : 5;
-	if ((nStrLen >= 5) && (strncmp ("\\\\top", szString, nMin) == 0)) {
+	nMin = nStrLen < sizeof (TAUTOLOGY) ? nStrLen : sizeof (TAUTOLOGY);
+	if ((nStrLen >= sizeof (TAUTOLOGY)) && (strncmp (TAUTOLOGY, szString, nMin) == 0)) {
 		if (pboTruth) {
 			*pboTruth = TRUE;
 		}
 		boResult = TRUE;
 	}
 	else {
-		nMin = nStrLen < 5 ? nStrLen : 5;
-		if ((nStrLen >= 5) && (strncmp ("\\\\bot", szString, nMin) == 0)) {
+		nMin = nStrLen < sizeof (CONTRADICTION) ? nStrLen : sizeof (CONTRADICTION);
+		if ((nStrLen >= sizeof (CONTRADICTION)) && (strncmp (CONTRADICTION, szString, nMin) == 0)) {
 			if (pboTruth) {
 				*pboTruth = FALSE;
 			}
