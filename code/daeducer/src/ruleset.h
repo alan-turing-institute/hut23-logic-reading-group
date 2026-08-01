@@ -6,6 +6,8 @@
 #ifndef _RULESET_H
 #define _RULESET_H
 
+#include "vector.h"
+
 #include "daeducer.h"
 
 Ruleset* ruleset_new();
@@ -16,6 +18,7 @@ bool ruleset_get_command_index_start(Ruleset* psRuleset, char const* szCommand, 
 Lemma* ruleset_get_lemma(Ruleset* psRuleset, size_t uIndex);
 void ruleset_print_help_line(Ruleset* psRuleset, size_t uIndex);
 size_t ruleset_get_lemma_num(Ruleset* psRuleset);
+bool ruleset_get_command_name(Ruleset* psRuleset, size_t uIndex, String* psString);
 
 #endif // _RULESET_H
 

@@ -15,6 +15,7 @@
 #include "proof.h"
 #include "step.h"
 #include "command.h"
+#include "ruleset.h"
 #include "symbolic.h"
 
 #include "model.h"
@@ -457,6 +458,7 @@ void model_success_complete(Proof* psProof, Proof* psProofGenerated) {
 	Step* psStep;
 	int nLength;
 	char* szError;
+	String* psCommandName;
 
 	printf("\r");
 
@@ -474,36 +476,52 @@ void model_success_complete(Proof* psProof, Proof* psProofGenerated) {
 		else {
 			command_reset(psCommand);
 			psStep = psProofGenerated->apsStep[uStep];
-			psCommand->eCommand = psStep->eCommand;
-			psCommand->szCommand = strdup(aszCommand[psCommand->eCommand]);
-
-			psCommand->uCount = psStep->uRefCount + psStep->uVarCount + psStep->uInputCount;
-			psCommand->aszParameter = calloc(psCommand->uCount, sizeof(char*));
-			uCount = 0;
-
-			for (uPos = 0; uPos < psStep->uRefCount; ++uPos) {
-				psCommand->aszParameter[uCount] = strdup(psStep->apsRef[uPos]->szName);
-				uCount += 1;
+			if (psStep->eCommand < STEP_CONTROL) {
+				psCommand->eCommand = psStep->eCommand;
+			}
+			else {
+				psCommand->eCommand = STEP_INVALID;
 			}
 
-			for (uPos = 0; uPos < psStep->uVarCount; ++uPos) {
-				psCommand->aszParameter[uCount] = strdup(psStep->aszVar[uPos]);
-				uCount += 1;
+			psCommandName = string_new();
+			boOkay = ruleset_get_command_name(psProof->psRuleset, psStep->eCommand, psCommandName);
+			if (boOkay) {
+				psCommand->szCommand = string_data_detach(psCommandName);
+				string_delete(psCommandName);
+				psCommandName = NULL;
+
+				psCommand->uCount = psStep->uRefCount + psStep->uVarCount + psStep->uInputCount;
+				psCommand->aszParameter = calloc(psCommand->uCount, sizeof(char*));
+				uCount = 0;
+
+				for (uPos = 0; uPos < psStep->uRefCount; ++uPos) {
+					psCommand->aszParameter[uCount] = strdup(psStep->apsRef[uPos]->szName);
+					uCount += 1;
+				}
+
+				for (uPos = 0; uPos < psStep->uVarCount; ++uPos) {
+					psCommand->aszParameter[uCount] = strdup(psStep->aszVar[uPos]);
+					uCount += 1;
+				}
+
+				for (uPos = 0; uPos < psStep->uInputCount; ++uPos) {
+					nLength = OperationToStringLength(psStep->apsInput[uPos]) + 1;
+					psCommand->aszParameter[uCount] = malloc(nLength);
+					OperationToString(psStep->apsInput[uPos], psCommand->aszParameter[uCount], nLength);
+					uCount += 1;
+				}
+
+				proof_print_prompt(psProof);
+				command_print_generated(psCommand);
+
+				proof_process_step(psProof, NULL, psCommand);
+
+				boOkay = !proof_error(psProof, &szError);
+			}
+			else {
+				szError = "Command or lemma could not be identified.";
 			}
 
-			for (uPos = 0; uPos < psStep->uInputCount; ++uPos) {
-				nLength = OperationToStringLength(psStep->apsInput[uPos]) + 1;
-				psCommand->aszParameter[uCount] = malloc(nLength);
-				OperationToString(psStep->apsInput[uPos], psCommand->aszParameter[uCount], nLength);
-				uCount += 1;
-			}
-
-			proof_print_prompt(psProof);
-			command_print_generated(psCommand);
-
-			proof_process_step(psProof, NULL, psCommand);
-
-			boOkay = !proof_error(psProof, &szError);
 			if (boOkay) {
 				if (!proof_complete(psProof)) {
 					proof_print_last_step(psProof);
