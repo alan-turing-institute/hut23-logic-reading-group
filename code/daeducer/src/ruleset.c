@@ -222,3 +222,28 @@ size_t ruleset_get_lemma_num(Ruleset* psRuleset) {
 	return uLemmaNum;
 }
 
+bool ruleset_get_command_name(Ruleset* psRuleset, size_t uIndex, String* psString) {
+	Lemma* psLemma;
+	char const* szCommand;
+	bool boSuccess = FALSE;
+
+	if (psRuleset) {
+		szCommand = NULL;
+		psLemma = ruleset_get_lemma(psRuleset, uIndex);
+		if (psLemma) {
+			szCommand = psLemma->szCommand;
+		}
+		else {
+			if (((long long int)uIndex > STEP_INVALID) && (long long int)(uIndex < STEP_CONTROL)) {
+				szCommand = aszCommand[uIndex];
+			}
+		}
+		if (szCommand) {
+			string_append_sprintf(psString, "%s", szCommand);
+			boSuccess = TRUE;
+		}
+	}
+
+	return boSuccess;
+}
+

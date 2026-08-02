@@ -7,6 +7,8 @@
 #include <string.h>
 #include <assert.h>
 
+#include "symbolic.h"
+
 #include "config.h"
 
 #define THINK_START "<think>"
@@ -16,6 +18,7 @@ Config* config_new() {
 	Config* psConfig;
 
 	psConfig = calloc(1, sizeof(Config));
+	psConfig->boMonologue = FALSE;
 
 	return psConfig;
 }

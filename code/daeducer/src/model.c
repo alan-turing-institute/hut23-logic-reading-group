@@ -15,6 +15,7 @@
 #include "proof.h"
 #include "step.h"
 #include "command.h"
+#include "ruleset.h"
 #include "symbolic.h"
 
 #include "model.h"
@@ -297,6 +298,14 @@ void generate(Config* psConfig, char const* szPrompt, String* psResponse, Sample
 				GGML_ABORT("failed to convert token to piece\n");
 			}
 			szPiece = strndup(szBuffer, nPieceLength);
+			if (psConfig->boMonologue) {
+				if (llama_vocab_is_eog(psConfig->psVocab, nNewTokenId)) {
+					printf("\n");
+				}
+				else {
+					printf("%s", szPiece);
+				}
+			}
 
 			if ((nNewTokenId != psConfig->uThinkingStartToken) && (nNewTokenId != psConfig->uThinkingEndToken)) {
 				if (sampler_apply_grammar(psSampler)) {
@@ -306,10 +315,18 @@ void generate(Config* psConfig, char const* szPrompt, String* psResponse, Sample
 							if (boProofValid) {
 								proof_process_step(psProofGenerated, NULL, psCommand);
 								boProofValid = !proof_error(psProofGenerated, &szError);
-								if (!boProofValid) {
+								if (boProofValid) {
+									if (psConfig->boMonologue) {
+										proof_print_last_step(psProofGenerated);
+									}
+								}
+								else {
 									// ERROR: invalid proof step
 									psOutcome->eOutcome = OUTCOME_ERROR_LOGIC;
 									string_append(psOutcome->psError, szError);
+									if (psConfig->boMonologue) {
+										printf("Error: %s\n", szError);
+									}
 								}
 							}
 							else {
@@ -317,7 +334,12 @@ void generate(Config* psConfig, char const* szPrompt, String* psResponse, Sample
 								psOutcome->eOutcome = OUTCOME_ERROR_COMMAND;
 							}
 						}
-						string_clear(psOutput);
+						if (psConfig->boMonologue) {
+							printf("\n");
+						}
+						else {
+							string_clear(psOutput);
+						}
 						command_reset(psCommand);
 					}
 					else {
@@ -332,8 +354,10 @@ void generate(Config* psConfig, char const* szPrompt, String* psResponse, Sample
 					}
 				}
 				else {
-					proof_print_prompt(psProofGenerated);
-					sampler_output_progress(psSampler);
+					if (!psConfig->boMonologue) {
+						proof_print_prompt(psProofGenerated);
+						sampler_output_progress(psSampler);
+					}
 				}
 			}
 			fflush(stdout);
@@ -416,7 +440,7 @@ void model_get_prompt(Model* psModel, String* psPrompt) {
 Model* model_initialise() {
 	Model* psModel;
 	char const* szModelPath = "./models/" MODEL_FILE;
-	char const* szGrammarPath = "inputs/tfl-grammar-precise.txt";
+	char const* szGrammarPath = "inputs/fol-grammar-precise.txt";
 
 	psModel = model_new();
 	model_load(psModel, szModelPath);
@@ -434,6 +458,7 @@ void model_success_complete(Proof* psProof, Proof* psProofGenerated) {
 	Step* psStep;
 	int nLength;
 	char* szError;
+	String* psCommandName;
 
 	printf("\r");
 
@@ -451,31 +476,52 @@ void model_success_complete(Proof* psProof, Proof* psProofGenerated) {
 		else {
 			command_reset(psCommand);
 			psStep = psProofGenerated->apsStep[uStep];
-			psCommand->eCommand = psStep->eCommand;
-			psCommand->szCommand = strdup(aszCommand[psCommand->eCommand]);
-
-			psCommand->uCount = psStep->uRefCount + psStep->uInputCount;
-			psCommand->aszParameter = calloc(psCommand->uCount, sizeof(char*));
-			uCount = 0;
-
-			for (uPos = 0; uPos < psStep->uRefCount; ++uPos) {
-				psCommand->aszParameter[uCount] = strdup(psStep->apsRef[uPos]->szName);
-				uCount += 1;
+			if (psStep->eCommand < STEP_CONTROL) {
+				psCommand->eCommand = psStep->eCommand;
+			}
+			else {
+				psCommand->eCommand = STEP_INVALID;
 			}
 
-			for (uPos = 0; uPos < psStep->uInputCount; ++uPos) {
-				nLength = OperationToStringLength(psStep->apsInput[uPos]) + 1;
-				psCommand->aszParameter[uCount] = malloc(nLength);
-				OperationToString(psStep->apsInput[uPos], psCommand->aszParameter[uCount], nLength);
-				uCount += 1;
+			psCommandName = string_new();
+			boOkay = ruleset_get_command_name(psProof->psRuleset, psStep->eCommand, psCommandName);
+			if (boOkay) {
+				psCommand->szCommand = string_data_detach(psCommandName);
+				string_delete(psCommandName);
+				psCommandName = NULL;
+
+				psCommand->uCount = psStep->uRefCount + psStep->uVarCount + psStep->uInputCount;
+				psCommand->aszParameter = calloc(psCommand->uCount, sizeof(char*));
+				uCount = 0;
+
+				for (uPos = 0; uPos < psStep->uRefCount; ++uPos) {
+					psCommand->aszParameter[uCount] = strdup(psStep->apsRef[uPos]->szName);
+					uCount += 1;
+				}
+
+				for (uPos = 0; uPos < psStep->uVarCount; ++uPos) {
+					psCommand->aszParameter[uCount] = strdup(psStep->aszVar[uPos]);
+					uCount += 1;
+				}
+
+				for (uPos = 0; uPos < psStep->uInputCount; ++uPos) {
+					nLength = OperationToStringLength(psStep->apsInput[uPos]) + 1;
+					psCommand->aszParameter[uCount] = malloc(nLength);
+					OperationToString(psStep->apsInput[uPos], psCommand->aszParameter[uCount], nLength);
+					uCount += 1;
+				}
+
+				proof_print_prompt(psProof);
+				command_print_generated(psCommand);
+
+				proof_process_step(psProof, NULL, psCommand);
+
+				boOkay = !proof_error(psProof, &szError);
+			}
+			else {
+				szError = "Command or lemma could not be identified.";
 			}
 
-			proof_print_prompt(psProof);
-			command_print_generated(psCommand);
-
-			proof_process_step(psProof, NULL, psCommand);
-
-			boOkay = !proof_error(psProof, &szError);
 			if (boOkay) {
 				if (!proof_complete(psProof)) {
 					proof_print_last_step(psProof);

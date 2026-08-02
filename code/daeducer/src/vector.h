@@ -24,6 +24,7 @@ size_t string_capacity(String *psString);
 size_t string_replace(String* psString, char const* szSearch, char const* szReplace);
 size_t string_sprintf(String* psString, char const* szFormat, ...);
 size_t string_append_sprintf(String* psString, char const* szFormat, ...);
+char* string_data_detach(String* psString);
 
 #define VECTOR_SIGS(TYPE) \
 typedef struct _Vector_ ## TYPE Vector_ ## TYPE; \

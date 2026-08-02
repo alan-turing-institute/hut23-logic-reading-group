@@ -185,4 +185,12 @@ size_t string_append_sprintf(String* psString, char const* szFormat, ...) {
 	return uSize;
 }
 
+char* string_data_detach(String* psString) {
+	char* szData = psString->szData;
 
+	psString->uAllocated = CHUNK_SIZE;
+	psString->szData = calloc(CHUNK_SIZE, sizeof(char));
+	psString->uLength = 0;
+
+	return szData;
+}
