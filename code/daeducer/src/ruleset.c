@@ -117,7 +117,7 @@ void ruleset_load_recursive(Ruleset* psRuleset, char const* szDirectory) {
 						}
 						break;
 						case S_IFREG: {
-							psProof = proof_load(psRuleset, szPath);
+							psProof = proof_load(psRuleset, szPath, NULL);
 							if (psProof) {
 								psLemma = lemma_from_proof(psProof);
 								proof_delete(psProof);

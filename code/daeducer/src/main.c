@@ -20,12 +20,12 @@ int main() {
 	bool boContinue = TRUE;
 	Proof* psProof;
 	Ruleset* psRuleset;
-	char* szError;
+	char const* szError;
 	Command* psCommand;
 	bool boResult;
 	Model* psModel;
 
-	printf("Welcome to Daeducer, a simple TFL proof constructor that follows the approach in Chapter 17 of the Forall x: Calgary book on formal logic.\n");
+	printf("Welcome to Daeducer, a simple First Order Logic proof constructor that follows the approach of Forall x: Calgary.\n");
 	printf("Loading model...\n");
 	psModel = model_initialise();
 	printf("\n");

@@ -336,7 +336,7 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 	Operation* psPattern;
 	Extract* psExtract;
 	bool boError;
-	char * szError = "Unknown error.";
+	char const* szError = "Unknown error.";
 	bool boContinue;
 	bool boStep;
 	bool boFound;
@@ -1253,7 +1253,7 @@ void proof_process_step(Proof* psProof, Model* psModel, Command* psCommand) {
 			break;
 			case STEP_LOAD: {
 				if (psCommand->uCount == 1) {
-					psLoad = proof_load(psProof->psRuleset, psCommand->aszParameter[0]);
+					psLoad = proof_load(psProof->psRuleset, psCommand->aszParameter[0], &szError);
 					if (psLoad) {
 						boError = FALSE;
 						proof_transfer(psProof, psLoad);
@@ -1426,7 +1426,7 @@ bool proof_complete(Proof* psProof) {
 	return psProof->boComplete;
 }
 
-bool proof_error(Proof* psProof, char** pszError) {
+bool proof_error(Proof* psProof, char const** pszError) {
 	if (psProof->boError) {
 		if (pszError) {
 			*pszError = psProof->szError;
@@ -1448,7 +1448,7 @@ size_t proof_indent(Proof* psProof) {
 	return uIndent;
 }
 
-Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
+Proof* proof_load(Ruleset* psRuleset, char const* szFilename, char const** pszError) {
 	Proof* psProof;
 	FILE* fhFile;
 	char* szLine;
@@ -1457,7 +1457,7 @@ Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
 	bool boSuccess;
 	size_t uLine;
 	bool boComplete;
-	char* szError;
+	char const* szError;
 	Command* psCommand;
 
 	psProof = proof_new();
@@ -1514,12 +1514,13 @@ Proof* proof_load(Ruleset* psRuleset, char const* szFilename) {
 		psProof->uStepCount = uLine - 2;
 	}
 	else {
+		szError = NULL;
 		proof_error(psProof, &szError);
 		if (szError) {
-			printf("Error loading proof %s: %s\n", psProof->szCommand, szError);
+			printf("Error loading file %s: %s\n", psProof->szCommand, szError);
 		}
-		else {
-			printf("Error loading proof: %s\n", szFilename);
+		if (pszError) {
+			*pszError = "Error Loading proof.";
 		}
 		proof_delete(psProof);
 		psProof = NULL;
@@ -1568,7 +1569,7 @@ void proof_print_prompt(Proof* psProof) {
 	printf(COL_GREEN "> ");
 }
 
-bool proof_undo_steps(Proof* psProof, size_t uSteps, char** pszError) {
+bool proof_undo_steps(Proof* psProof, size_t uSteps, char const** pszError) {
 	bool boError = TRUE;
 
 	if (psProof->uStepCount >= uSteps) {
@@ -1592,7 +1593,7 @@ bool proof_undo_steps(Proof* psProof, size_t uSteps, char** pszError) {
 	return boError;
 }
 
-bool proof_redo_steps(Proof* psProof, size_t uSteps, char** pszError) {
+bool proof_redo_steps(Proof* psProof, size_t uSteps, char const** pszError) {
 	bool boError = TRUE;
 
 	if (uSteps <= psProof->uRedoCount) {

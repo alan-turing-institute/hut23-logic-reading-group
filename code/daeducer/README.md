@@ -1,6 +1,6 @@
 # Daeducer
 
-A simple TFL proof constructor that follows the approach in Chapter 17 of the Forall x: Calgary book on formal logic.
+A simple First Order Logic proof constructor that follows the approach in Chapter 17 of the Forall x: Calgary book on formal logic.
 
 Daeducer is an interactive terminal application.
 Once executed you can enter commands to build up valid proofs in the style of those from the Forall x: Calgary book.

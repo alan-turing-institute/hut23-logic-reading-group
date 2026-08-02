@@ -26,14 +26,14 @@ struct _Proof {
 	Step** apsStep;
 	bool boError;
 	bool boComplete;
-	char* szError;
+	char const* szError;
 	Ruleset* psRuleset;
 	size_t uRedoCount;
 };
 
 Proof* proof_new();
 void proof_delete(Proof* psProof);
-Proof* proof_load(Ruleset* psRuleset, char const* szFilename);
+Proof* proof_load(Ruleset* psRuleset, char const* szFilename, char const** pszError);
 void proof_attach_ruleset(Proof* psProof, Ruleset* psRuleset);
 Ruleset* proof_detach_ruleset(Proof* psProof);
 bool proof_find_step_index(Proof* psProof, char const* szName, size_t* puStep);
@@ -48,15 +48,15 @@ void proof_print_last_step(Proof* psProof);
 size_t proof_indent(Proof* psProof);
 bool proof_step_scoped(Proof* psProof, size_t uStep);
 bool proof_complete(Proof* psProof);
-bool proof_error(Proof* psProof, char** pszError);
+bool proof_error(Proof* psProof, char const** pszError);
 void proof_print(Proof* psProof);
 void proof_print_latex(Proof* psProof);
 bool proof_save(Proof* psProof, char const* szFilenzme, char const* szCommand, char const* szAnnotation);
 void proof_reset(Proof* psProof);
 void proof_clear(Proof* psProof);
 void proof_print_prompt(Proof* psProof);
-bool proof_undo_steps(Proof* psProof, size_t uSteps, char** pszError);
-bool proof_redo_steps(Proof* psProof, size_t uSteps, char** pszError);
+bool proof_undo_steps(Proof* psProof, size_t uSteps, char const** pszError);
+bool proof_redo_steps(Proof* psProof, size_t uSteps, char const** pszError);
 void proof_allocate_length(Proof* psProof, size_t uSteps);
 
 #endif // _PROOF_H
