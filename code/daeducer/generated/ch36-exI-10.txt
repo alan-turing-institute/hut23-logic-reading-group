@@ -1,0 +1,7 @@
+ch36-exI-10
+CH36EXI
+premise (exists x M(x) -> exists x N(x))
+premise !exists x N(x)
+modus_tollens 1, 2
+conv_not_exists 3
+qed

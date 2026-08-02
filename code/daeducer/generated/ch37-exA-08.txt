@@ -1,0 +1,8 @@
+ch37-exA-08
+CH37EXA
+assumption A(x)
+exists_intro 1, A(y)
+discharge
+imp_intro 1, 2
+forall_intro 4, x, x
+qed

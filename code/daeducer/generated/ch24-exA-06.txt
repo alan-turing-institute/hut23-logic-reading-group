@@ -1,0 +1,17 @@
+ch24-exA-06
+CH24EXA
+premise forall x (F(x) -> !G(x))
+premise forall x (H(x) -> G(x))
+assumption H(a)
+forall_elim 2, a
+imp_elim 4, 3
+forall_elim 1, a
+assumption F(a)
+imp_elim 6, 7
+not_elim 8, 5
+discharge
+not_intro 7, 9
+discharge
+imp_intro 3, 11
+forall_intro 13, a, x
+qed

@@ -1,0 +1,17 @@
+ch39-exA-07
+CH39EXA
+premise forall x (x = n <-> M(x))
+premise forall x (O(x) v !M(x))
+forall_elim 2, n
+forall_elim 1, n
+id_intro n
+bi_elim 4, 5
+assumption O(n)
+reiteration 7
+discharge
+assumption !M(n)
+not_elim 10, 6
+explosion 11, O(n)
+discharge
+or_elim 3, 7, 8, 10, 12
+qed

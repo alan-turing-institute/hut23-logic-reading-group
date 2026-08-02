@@ -1,0 +1,14 @@
+ch36-exG-01a
+CH36EXG
+premise forall x (A(x) -> !B(x))
+forall_elim 1, x
+assumption (A(x) ^ B(x))
+and_elim_left 3
+and_elim_right 3
+imp_elim 2, 4
+not_elim 6, 5
+discharge
+not_intro 3, 7
+forall_intro 9, x, x
+conv_forall_not 10
+qed

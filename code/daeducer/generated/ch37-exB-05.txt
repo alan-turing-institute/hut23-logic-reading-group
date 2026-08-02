@@ -1,0 +1,17 @@
+ch37-exB-05
+CH37EXB
+assumption exists x forall y (A(x, y) <-> !A(y, y))
+assumption forall y (A(a, y) <-> !A(y, y))
+forall_elim 2, a
+assumption A(a, a)
+bi_elim 3, 4
+not_elim 5, 4
+discharge
+not_intro 4, 6
+bi_elim 3, 8
+not_elim 8, 9
+discharge
+exists_elim 1, 2, 10
+discharge
+not_intro 1, 12
+qed

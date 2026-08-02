@@ -1,0 +1,13 @@
+ch36-exE-07
+CH36EXE
+premise (N(a) -> forall x (M(x) <-> M(a)))
+premise M(a)
+premise !M(b)
+assumption N(a)
+imp_elim 1, 4
+forall_elim 5, b
+bi_elim 6, 2
+not_elim 3, 7
+discharge
+not_intro 4, 8
+qed

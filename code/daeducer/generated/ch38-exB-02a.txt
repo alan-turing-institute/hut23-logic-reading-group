@@ -1,0 +1,17 @@
+ch38-exB-02a
+CH38EXB
+premise forall x (!A(x) -> B(d))
+assumption B(d)
+or_intro_right 2, forall x A(x)
+discharge
+imp_intro 2, 3
+assumption !B(d)
+forall_elim 1, a
+modus_tollens 7, 6
+double_not_elim 8
+forall_intro 9, a, x
+or_intro_left 10, B(d)
+discharge
+imp_intro 6, 11
+excluded_middle 5, 13
+qed

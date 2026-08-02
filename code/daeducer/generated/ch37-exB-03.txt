@@ -1,0 +1,21 @@
+ch37-exB-03
+CH37EXB
+premise forall x forall y forall z ((R(x, y) ^ R(y, z)) -> R(x, z))
+premise forall x forall y (R(x, y) -> R(y, x))
+forall_elim 1, b
+forall_elim 3, a
+forall_elim 4, c
+forall_elim 2, a
+forall_elim 6, b
+assumption (R(a, b) ^ R(a, c))
+and_elim_left 8
+and_elim_right 8
+imp_elim 7, 9
+and_intro 11, 10
+imp_elim 5, 12
+discharge
+imp_intro 8, 13
+forall_intro 15, c, z
+forall_intro 16, b, y
+forall_intro 17, a, x
+qed

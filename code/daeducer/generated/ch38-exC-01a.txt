@@ -1,0 +1,9 @@
+ch38-exC-01a
+CH38EXC
+premise forall x (F(x) ^ G(a))
+forall_elim 1, y
+and_elim_left 2
+forall_intro 3, y, x
+and_elim_right 2
+and_intro 4, 5
+qed

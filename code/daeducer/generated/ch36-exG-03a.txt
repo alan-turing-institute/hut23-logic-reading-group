@@ -1,0 +1,10 @@
+ch36-exG-03a
+CH36EXG
+premise (exists x P(x) -> Q(c))
+assumption P(a)
+exists_intro 2, P(x)
+imp_elim 1, 3
+discharge
+imp_intro 2, 4
+forall_intro 6, a, x
+qed

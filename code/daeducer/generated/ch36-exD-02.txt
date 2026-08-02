@@ -1,0 +1,16 @@
+ch36-exD-02
+CH36EXD
+premise exists x H(x)
+premise forall x (G(x) -> !F(x))
+premise exists x (H(x) -> G(x))
+assumption (H(c) -> G(c))
+forall_elim 2, c
+assumption H(c)
+imp_elim 4, 6
+imp_elim 5, 7
+discharge
+imp_intro 6, 8
+exists_intro 10, (H(x) -> !F(x))
+discharge
+exists_elim 3, 4, 11
+qed

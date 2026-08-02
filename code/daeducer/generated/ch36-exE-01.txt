@@ -1,0 +1,9 @@
+ch36-exE-01
+CH36EXE
+assumption forall x F(x)
+forall_elim 1, y
+and_intro 2, 2
+forall_intro 3, y, y
+discharge
+imp_intro 1, 4
+qed

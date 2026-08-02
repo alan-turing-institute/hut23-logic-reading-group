@@ -1,0 +1,10 @@
+ch38-exC-03b
+CH38EXC
+premise (G(a) -> forall x F(x))
+assumption G(a)
+imp_elim 1, 2
+forall_elim 3, y
+discharge
+imp_intro 2, 4
+forall_intro 6, y, x
+qed

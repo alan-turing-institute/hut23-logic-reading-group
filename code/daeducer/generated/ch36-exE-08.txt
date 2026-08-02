@@ -1,0 +1,17 @@
+ch36-exE-08
+CH36EXE
+premise forall x forall y (G(x, y) -> G(y, x))
+forall_elim 1, a
+forall_elim 2, b
+assumption G(a, b)
+imp_elim 3, 4
+discharge
+forall_elim 1, b
+forall_elim 7, a
+assumption G(b, a)
+imp_elim 8, 9
+discharge
+bi_intro 4, 5, 9, 10
+forall_intro 12, b, y
+forall_intro 13, a, x
+qed

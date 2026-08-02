@@ -1,0 +1,15 @@
+ch36-exF
+ch36EXF
+premise exists x forall y forall z ((L(x, y) -> L(z, y)) <-> L(y, z))
+assumption forall y forall z ((L(a, y) -> L(z, y)) <-> L(y, z))
+forall_elim 2, a
+forall_elim 3, a
+assumption L(a, a)
+reiteration 5
+discharge
+imp_intro 5, 6
+bi_elim 4, 8
+exists_intro 9, L(x, x)
+discharge
+exists_elim 1, 2, 10
+qed

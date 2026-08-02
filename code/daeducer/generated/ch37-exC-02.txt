@@ -1,0 +1,26 @@
+ch37-exC-02
+CH37EXC
+premise (A -> exists x B(x))
+assumption A
+imp_elim 1, 2
+assumption B(c)
+assumption A
+reiteration 4
+discharge
+imp_intro 5, 6
+exists_intro 8, (A -> B(x))
+discharge
+exists_elim 3, 4, 9
+discharge
+imp_intro 2, 11
+assumption !A
+assumption A
+not_elim 14, 15
+explosion 16, B(c)
+discharge
+imp_intro 15, 17
+exists_intro 19, (A -> B(x))
+discharge
+imp_intro 14, 20
+excluded_middle 13, 22
+qed
