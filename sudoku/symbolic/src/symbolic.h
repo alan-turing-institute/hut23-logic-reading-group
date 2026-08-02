@@ -213,8 +213,8 @@ Operation const * ExtractValue (Extract const * psExtract, Operation const * con
 Operation * ExtractSubstitute (Extract const * psExtract, Operation * psMain);
 int ExtractCompareOperationsMany (Extract const * psExtract, Operation const * psMain, VarStack const * psVarStack);
 void ExtractPerformSubstitution (Extract const * psExtract, Operation ** psFrom, int nFind);
-bool ExtractSubstituteValidate (Extract const * psExtract, Operation const * psMain, char** pszError);
-bool ExtractSubstituteCheckValidate (Extract const * psExtract, Operation const * psMain, char** pszError);
+bool ExtractSubstituteValidate (Extract const * psExtract, Operation const * psMain, char const** pszError);
+bool ExtractSubstituteCheckValidate (Extract const * psExtract, Operation const * psMain, char const** pszError);
 Extract * ExtractPatternCheck (Operation * psPattern);
 Extract * ExtractPatternManyCheck (Operation ** apsPattern, int nCount);
 bool ExtractPatternMappingUnique (Operation ** apsPattern, int nCount);
