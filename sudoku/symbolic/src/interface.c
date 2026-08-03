@@ -89,7 +89,7 @@ int main (int argc, char * * argv) {
 	char const * szVarFrom;
 	char const * szVarTo;
 	bool boSuccess;
-	char * szError;
+	char const * szError;
 
 	// If we don't do this we get unused variable warnings
 	argc = argc;

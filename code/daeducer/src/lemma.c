@@ -79,7 +79,7 @@ Lemma* lemma_compile(char const* szCommand, char const* szAnnotation, size_t uRe
 	return psLemma;
 }
 
-bool lemma_apply(Proof *psProof, Command* psCommand, size_t uRefNum, size_t uOpNum, char const** aszPattern, char const* szResult, Step* psStep, char** pszError) {
+bool lemma_apply(Proof *psProof, Command* psCommand, size_t uRefNum, size_t uOpNum, char const** aszPattern, char const* szResult, Step* psStep, char const** pszError) {
 	bool boSuccess = FALSE;
 	Lemma* psLemma;
 
@@ -90,7 +90,7 @@ bool lemma_apply(Proof *psProof, Command* psCommand, size_t uRefNum, size_t uOpN
 	return boSuccess;
 }
 
-bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, Step* psStep, char** pszError) {
+bool lemma_apply_compiled(Lemma* psLemma, Proof *psProof, Command* psCommand, Step* psStep, char const** pszError) {
 	bool boSuccess = FALSE;
 	size_t* auRef;
 	size_t uPos;

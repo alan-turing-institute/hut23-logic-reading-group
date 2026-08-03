@@ -505,7 +505,7 @@ int OperationInputListRecurse (Operation const * psOp, VarStack * psVarStack, Va
     return nArity;
 }
 
-bool ExtractSubstituteValidate (Extract const * psExtract, Operation const * psMain, char** pszError) {
+bool ExtractSubstituteValidate (Extract const * psExtract, Operation const * psMain, char const** pszError) {
     bool boSuccess = TRUE;
     int nFind;
 
@@ -526,7 +526,7 @@ bool ExtractSubstituteValidate (Extract const * psExtract, Operation const * psM
     return boSuccess;
 }
 
-bool ExtractSubstituteCheckValidate (Extract const * psExtract, Operation const * psMain, char** pszError) {
+bool ExtractSubstituteCheckValidate (Extract const * psExtract, Operation const * psMain, char const** pszError) {
     bool boSuccess = TRUE;
     int nFind;
     int nUnbound;

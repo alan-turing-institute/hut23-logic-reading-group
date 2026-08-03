@@ -238,7 +238,7 @@ void generate(Config* psConfig, char const* szPrompt, String* psResponse, Sample
 	char* szPiece = NULL;
 	bool const boIsFirst = llama_memory_seq_pos_max(llama_get_memory(psConfig->psContext), 0) == -1;
 	bool boProofValid;
-	char* szError;
+	char const* szError;
 	Command* psCommand;
 	String* psOutput;
 	Operation* psResult;
@@ -457,7 +457,7 @@ void model_success_complete(Proof* psProof, Proof* psProofGenerated) {
 	size_t uPos;
 	Step* psStep;
 	int nLength;
-	char* szError;
+	char const* szError;
 	String* psCommandName;
 
 	printf("\r");

@@ -443,7 +443,12 @@ void step_print_latex(Step* psStep, Ruleset* psRuleset) {
 				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\ne{%s, %s}", psStep->szName, szResult, psStep->apsRef[0]->szName, psStep->apsRef[1]->szName);
 			}
 			break;
-			case STEP_EXPLOSION:
+			case STEP_EXPLOSION: {
+				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s} \\by{X}{%s}", psStep->szName, szResult, psStep->apsRef[0]->szName) + 1;
+				szCommand = calloc(uCommandLength, sizeof(char));
+				snprintf(szCommand, uCommandLength, "  \\have {%s} {%s} \\by{X}{%s}", psStep->szName, szResult, psStep->apsRef[0]->szName);
+			}
+			break;
 			// Intentional fall-through
 			default: {
 				uCommandLength = snprintf(NULL, 0, "  \\have {%s} {%s}", psStep->szName, szResult) + 1;
