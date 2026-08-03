@@ -1,0 +1,14 @@
+ch36-exB-02
+CH36EXB
+premise forall x (exists y L(x, y) -> forall z L(z, x))
+premise L(a, b)
+forall_elim 1, a
+exists_intro 2, L(a, y)
+imp_elim 3, 4
+forall_elim 5, x
+exists_intro 6, L(x, y)
+forall_elim 1, x
+imp_elim 8, 7
+forall_elim 9, x
+forall_intro 10, x, x
+qed

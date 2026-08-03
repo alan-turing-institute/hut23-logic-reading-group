@@ -1,0 +1,16 @@
+ch38-exC-02b
+CH38EXC
+premise (exists x F(x) v G(a))
+assumption exists x F(x)
+assumption F(y)
+or_intro_left 3, G(a)
+exists_intro 4, (F(x) v G(a))
+discharge
+exists_elim 2, 3, 5
+discharge
+assumption G(a)
+or_intro_right 9, F(a)
+exists_intro 10, (F(x) v G(a))
+discharge
+or_elim 1, 2, 7, 9, 11
+qed

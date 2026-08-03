@@ -1,0 +1,9 @@
+ch36-exE-03
+CH36EXE
+premise forall x (M(x) <-> N(x))
+premise (M(a) ^ exists x R(x, a))
+and_elim_left 2
+forall_elim 1, a
+bi_elim 4, 3
+exists_intro 5, N(x)
+qed

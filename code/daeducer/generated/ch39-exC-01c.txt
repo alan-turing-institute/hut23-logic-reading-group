@@ -1,0 +1,24 @@
+ch39-exC-01c
+CH39EXC
+premise exists x forall y (F(y) <-> x = y)
+assumption forall y (F(y) <-> c = y)
+forall_elim 2, c
+id_intro c
+bi_elim 3, 4
+exists_intro 5, F(x)
+assumption (F(a) ^ F(b))
+and_elim_left 7
+and_elim_right 7
+forall_elim 2, a
+bi_elim 10, 8
+forall_elim 2, b
+bi_elim 12, 9
+id_elim 11, 13, a = b
+discharge
+imp_intro 7, 14
+forall_intro 16, b, y
+forall_intro 17, a, x
+and_intro 6, 18
+discharge
+exists_elim 1, 2, 19
+qed

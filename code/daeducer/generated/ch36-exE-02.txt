@@ -1,0 +1,11 @@
+ch36-exE-02
+CH36EXE
+premise forall x (A(x) -> B(x))
+premise exists x A(x)
+assumption A(a)
+forall_elim 1, a
+imp_elim 4, 3
+exists_intro 5, B(x)
+discharge
+exists_elim 2, 3, 6
+qed

@@ -1,0 +1,10 @@
+ch37-exA-01
+CH37EXA
+premise (A -> forall x B(x))
+assumption A
+imp_elim 1, 2
+forall_elim 3, x
+discharge
+imp_intro 2, 4
+forall_intro 6, x, x
+qed

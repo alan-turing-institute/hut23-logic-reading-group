@@ -1,0 +1,22 @@
+ch37-exA-03
+CH37EXA
+assumption forall x (A(x) ^ B(x))
+forall_elim 1, a
+and_elim_left 2
+forall_intro 3, a, x
+and_elim_right 2
+forall_intro 5, a, x
+and_intro 4, 6
+discharge
+imp_intro 1, 7
+assumption (forall x A(x) ^ forall x B(x))
+and_elim_left 10
+and_elim_right 10
+forall_elim 11, a
+forall_elim 12, a
+and_intro 13, 14
+forall_intro 15, a, x
+discharge
+imp_intro 10, 16
+bi_intro 1, 7, 10, 16
+qed

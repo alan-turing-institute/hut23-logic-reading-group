@@ -1,0 +1,24 @@
+ch37-exC-05
+CH37EXC
+assumption exists y A(y)
+assumption A(a)
+assumption exists y A(y)
+reiteration 2
+discharge
+imp_intro 3, 4
+exists_intro 6, (exists y A(y) -> A(x))
+discharge
+exists_elim 1, 2, 7
+discharge
+imp_intro 1, 9
+assumption !exists y A(y)
+assumption exists y A(y)
+not_elim 12, 13
+explosion 14, A(b)
+discharge
+imp_intro 13, 15
+exists_intro 17, (exists y A(y) -> A(x))
+discharge
+imp_intro 12, 18
+excluded_middle 11, 20
+qed

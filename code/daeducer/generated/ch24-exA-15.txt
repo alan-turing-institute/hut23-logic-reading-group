@@ -1,0 +1,18 @@
+ch24-exA-15
+CH24EXA
+premise forall x (F(x) -> !G(x))
+premise exists x (G(x) ^ H(x))
+assumption (G(a) ^ H(a))
+and_elim_left 3
+and_elim_right 3
+forall_elim 1, a
+assumption F(a)
+imp_elim 6, 7
+not_elim 8, 4
+discharge
+not_intro 7, 9
+and_intro 5, 11
+exists_intro 12, (H(x) ^ !F(x))
+discharge
+exists_elim 2, 3, 13
+qed

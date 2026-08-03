@@ -1,0 +1,16 @@
+ch37-exC-03
+CH37EXC
+premise forall x (A v B(x))
+assumption A
+or_intro_left 2, forall x B(x)
+discharge
+imp_intro 2, 3
+assumption !A
+forall_elim 1, c
+or_syllogism_left 7, 6
+forall_intro 8, c, x
+or_intro_right 9, A
+discharge
+imp_intro 6, 10
+excluded_middle 5, 12
+qed

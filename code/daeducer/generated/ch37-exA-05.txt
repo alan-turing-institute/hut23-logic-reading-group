@@ -1,0 +1,14 @@
+ch37-exA-05
+CH37EXA
+premise (A v forall x B(x))
+assumption A
+or_intro_left 2, B(y)
+forall_intro 3, y, x
+discharge
+assumption forall x B(x)
+forall_elim 6, y
+or_intro_right 7, A
+forall_intro 8, y, x
+discharge
+or_elim 1, 2, 4, 6, 9
+qed

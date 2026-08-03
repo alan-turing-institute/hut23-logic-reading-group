@@ -1,0 +1,9 @@
+ch36-exE-06
+CH36EXE
+assumption Q(a)
+reiteration 1
+discharge
+imp_intro 1, 2
+exists_intro 4, (Q(a) -> Q(x))
+forall_intro 5, a, y
+qed

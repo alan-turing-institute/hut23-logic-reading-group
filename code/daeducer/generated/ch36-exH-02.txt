@@ -1,0 +1,8 @@
+ch36-exH-02
+CH36EXH
+premise forall x forall y forall z B(x, y, z)
+forall_elim 1, x
+forall_elim 2, x
+forall_elim 3, x
+forall_intro 4, x, x
+qed

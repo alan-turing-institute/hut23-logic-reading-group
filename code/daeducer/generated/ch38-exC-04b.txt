@@ -1,0 +1,10 @@
+ch38-exC-04b
+CH38EXC
+premise (exists x F(x) -> G(a))
+assumption F(y)
+exists_intro 2, F(x)
+imp_elim 1, 3
+discharge
+imp_intro 2, 4
+forall_intro 6, y, x
+qed

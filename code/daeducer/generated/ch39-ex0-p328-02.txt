@@ -1,0 +1,14 @@
+ch39-ex0-p328-02
+CH39EX0
+assumption (x = y ^ y = z)
+and_elim_left 1
+and_elim_right 1
+id_intro x
+id_elim 2, 4, y = x
+id_elim 5, 3, x = z
+discharge
+imp_intro 1, 6
+forall_intro 8, z, z
+forall_intro 9, y, y
+forall_intro 10, x, x
+qed

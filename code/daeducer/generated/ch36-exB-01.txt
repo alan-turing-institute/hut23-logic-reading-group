@@ -1,0 +1,12 @@
+ch36-exB-01
+CH36EXB
+premise forall x exists y (R(x, y) v R(y, x))
+premise forall x !R(m, x)
+forall_elim 1, m
+assumption (R(m, a) v R(a, m))
+forall_elim 2, a
+or_syllogism_left 4, 5
+exists_intro 6, R(x, m)
+discharge
+exists_elim 3, 4, 7
+qed

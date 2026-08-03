@@ -1,0 +1,13 @@
+ch36-exH-05a
+CH36EXH
+premise forall x (R(c, a) <-> R(x, a))
+assumption R(c, a)
+forall_elim 1, y
+bi_elim 3, 2
+forall_intro 4, y, x
+discharge
+assumption forall x R(x, a)
+forall_elim 7, c
+discharge
+bi_intro 2, 5, 7, 8
+qed

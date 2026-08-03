@@ -1,0 +1,10 @@
+ch37-ex0-p320
+CH37EX0
+premise (exists x A(x) -> B)
+assumption A(a)
+exists_intro 2, A(x)
+imp_elim 1, 3
+discharge
+imp_intro 2, 4
+forall_intro 6, a, x
+qed
