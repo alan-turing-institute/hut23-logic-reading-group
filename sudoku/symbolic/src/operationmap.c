@@ -60,6 +60,8 @@ OperationMap * CreateOperationMap () {
 }
 
 OperationMap * FreeOperationMap (OperationMap * psOperationMap) {
+    size_t uPos;
+
     if (psOperationMap) {
         if (psOperationMap->psFrom) {
             FreeRecursive(psOperationMap->psFrom);
@@ -68,6 +70,22 @@ OperationMap * FreeOperationMap (OperationMap * psOperationMap) {
         if (psOperationMap->psTo) {
             FreeRecursive(psOperationMap->psTo);
             psOperationMap->psTo = NULL;
+        }
+
+        if (psOperationMap->aaboVarOrigin) {
+            PropFree(psOperationMap->aaboVarOrigin);
+            psOperationMap->aaboVarOrigin = NULL;
+        }
+
+        if (psOperationMap->aszUnbound) {
+            for (uPos = 0; uPos < psOperationMap->nArityTo; ++uPos) {
+                if (psOperationMap->aszUnbound[uPos]) {
+                    PropFree(psOperationMap->aszUnbound[uPos]);
+                    psOperationMap->aszUnbound[uPos] = NULL;
+                }
+            }
+            PropFree(psOperationMap->aszUnbound);
+            psOperationMap->aszUnbound = NULL;
         }
 
         PropFree(psOperationMap);
