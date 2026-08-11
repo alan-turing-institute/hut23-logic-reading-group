@@ -803,7 +803,7 @@ void ReplaceUnboundRecurseMany (Operation * psOp, VarStack const * const psVarsF
             case OPTYPE_QUANTIFIER:
                 VarStackPush (psVarStack, psOp->Vars.psQuantifier->szVar);
                 ReplaceUnboundRecurseMany (psOp->Vars.psQuantifier->psVar1, psVarsFrom, psVarsTo, psVarStack);
-                VarStackPop (psVarStack);
+                VarStackDrop (psVarStack);
                 break;
             case OPTYPE_RELATION:
                 for (nVar = 0; nVar < psOp->Vars.psRelation->nArity; ++nVar) {

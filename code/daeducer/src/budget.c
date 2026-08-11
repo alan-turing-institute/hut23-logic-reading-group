@@ -22,7 +22,7 @@ typedef struct _TokenMatcher {
 TokenMatcher* token_matcher_new() {
 	TokenMatcher* psTokenMatcher;
 
-	psTokenMatcher = calloc(1, sizeof(psTokenMatcher));
+	psTokenMatcher = calloc(1, sizeof(TokenMatcher));
 
 	psTokenMatcher->psTokens = vector_new_llama_token();
 	psTokenMatcher->uPos = 0;

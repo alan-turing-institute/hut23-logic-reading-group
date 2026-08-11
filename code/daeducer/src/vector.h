@@ -47,7 +47,7 @@ struct _Vector_ ## TYPE { \
 \
 Vector_ ## TYPE* vector_new_ ## TYPE() { \
 	Vector_ ## TYPE* psVector; \
-	psVector = calloc(1, sizeof(TYPE)); \
+	psVector = calloc(1, sizeof(Vector_ ## TYPE)); \
 	psVector->uAllocated = CHUNK_SIZE; \
 	psVector->asData = calloc(CHUNK_SIZE, sizeof(TYPE)); \
 	return psVector; \

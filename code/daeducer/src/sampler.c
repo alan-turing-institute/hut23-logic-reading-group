@@ -60,6 +60,16 @@ void sampler_delete(Sampler* psSampler) {
 			psSampler->psCur = NULL;
 		}
 
+		if (psSampler->psReasoningBudget) {
+			llama_sampler_free(psSampler->psReasoningBudget);
+			psSampler->psReasoningBudget = NULL;
+		}
+
+		if (psSampler->psGrammar) {
+			llama_sampler_free(psSampler->psGrammar);
+			psSampler->psGrammar = NULL;
+		}
+
 		free(psSampler);
 		psSampler = NULL;
 	}
