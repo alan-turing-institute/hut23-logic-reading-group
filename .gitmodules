@@ -1,3 +1,6 @@
 [submodule "code/daeducer"]
 	path = code/daeducer
 	url = https://codeberg.org/flypig/daeducer.git
+[submodule "sudoku/symbolic"]
+	path = sudoku/symbolic
+	url = https://codeberg.org/flypig/symbolic.git
