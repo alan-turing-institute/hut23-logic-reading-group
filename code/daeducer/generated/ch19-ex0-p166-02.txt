@@ -1,9 +1,0 @@
-ch19-ex0-p166-02
-ARG
-premise (A -> !A)
-assumption A
-imp_elim 1, 2
-not_elim 3, 2
-discharge
-not_intro 2, 4
-qed

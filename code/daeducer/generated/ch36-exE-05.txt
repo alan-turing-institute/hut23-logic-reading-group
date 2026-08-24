@@ -1,9 +1,0 @@
-ch36-exE-05
-CH36EXE
-assumption forall x R(x, x)
-forall_elim 1, a
-exists_intro 2, R(a, y)
-exists_intro 3, exists y R(x, y)
-discharge
-imp_intro 1, 4
-qed

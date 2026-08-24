@@ -1,7 +1,0 @@
-ch36-exI-04
-CH36EXI
-premise forall x (S(x) -> T(a))
-premise S(d)
-forall_elim 1, d
-imp_elim 3, 2
-qed

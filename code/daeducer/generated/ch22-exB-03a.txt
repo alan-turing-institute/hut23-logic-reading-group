@@ -1,5 +1,0 @@
-ch22-exB-03a
-CH22EXB
-premise Z
-or_intro_left 1, ((!Z -> Z) ^ (Z -> !Z))
-qed

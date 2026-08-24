@@ -1,8 +1,0 @@
-ch17-exB-01
-CH17EXB
-premise (P ^ S)
-premise (S -> R)
-and_elim_right 1
-imp_elim 2, 3
-or_intro_left 4, E
-qed

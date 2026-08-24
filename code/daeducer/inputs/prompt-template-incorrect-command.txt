@@ -1,8 +1,0 @@
-Your last command had incorrect syntax.
-
-Please make another attempt to complete the proof using the same criteria as before.
-
-To reiteration the task, starting with <PREPREMISES><PREMISES>, prove the result <CLAIM>. The proof should start as follows.
-
-<PROOF>
-
