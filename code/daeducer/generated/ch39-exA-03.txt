@@ -1,8 +1,0 @@
-ch39-exA-03
-CH39EXA
-premise forall x x = m
-premise R(m, a)
-forall_elim 1, a
-id_elim 3, 2, R(m, m)
-exists_intro 4, R(x, x)
-qed

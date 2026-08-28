@@ -1,7 +1,0 @@
-ch36-exE-04
-CH36EXE
-premise forall x forall y G(x, y)
-forall_elim 1, a
-forall_elim 2, a
-exists_intro 3, G(x, x)
-qed

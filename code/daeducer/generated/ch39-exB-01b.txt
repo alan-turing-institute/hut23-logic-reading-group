@@ -1,7 +1,0 @@
-ch39-exB-01b
-CH39EXB
-premise (F(n) ^ forall y (F(y) -> n = y))
-id_intro n
-and_intro 1, 2
-exists_intro 3, ((F(x) ^ forall y (F(y) -> x = y)) ^ x = n)
-qed

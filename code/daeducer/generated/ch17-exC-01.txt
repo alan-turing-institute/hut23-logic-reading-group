@@ -1,9 +1,0 @@
-ch17-exC-01
-CH17EXC
-premise (J -> !J)
-assumption J
-imp_elim 1, 2
-not_elim 3, 2
-discharge
-not_intro 2, 4
-qed

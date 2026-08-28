@@ -1,9 +1,0 @@
-ch22-exB-09
-CH22EXB
-premise !(W -> W)
-premise (((W -> W) ^ (W -> W)) ^ W)
-premise (E v (W -> !(E ^ W)))
-and_elim_left 2
-and_elim_left 4
-not_elim 1, 5
-qed

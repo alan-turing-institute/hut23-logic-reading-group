@@ -1,8 +1,0 @@
-ch36-exH-03b
-CH36EXH
-premise forall y forall x D(x, y)
-forall_elim 1, b
-forall_elim 2, a
-forall_intro 3, b, y
-forall_intro 4, a, x
-qed

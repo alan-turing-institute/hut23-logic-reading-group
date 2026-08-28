@@ -1,9 +1,0 @@
-ch18-exC-02
-CH18EXC
-assumption (A ^ !A)
-and_elim_left 1
-and_elim_right 1
-not_elim 3, 2
-discharge
-not_intro 1, 4
-qed
