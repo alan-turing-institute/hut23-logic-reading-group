@@ -2,7 +2,8 @@
 \documentclass{article}
 \usepackage{ttn}
 \usepackage{booktabs}
-%\usepackage{mathtools}
+\usepackage{siunitx}
+% \usepackage{mathtools}
 \usepackage{colonequals} % because unicode-math has broken "::=" somehow
 \usepackage{simplebnf}
 %
@@ -20,6 +21,9 @@
 \usepackage{subcaption}
 \DeclareCaptionStyle{sidecaption}{font=footnotesize, justification=raggedright}
 \usepackage[dvipsnames]{xcolor}
+%
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
 %% 
 %%\usepackage[style=authoryear]{biblatex}
 %%\addbibresource{notes.bib}
@@ -40,7 +44,7 @@
 \newcommand{\fv}{\mathfrak{F}}
 \newcommand{\interp}[1]{\lBrack#1\rBrack}
 %% 
-\title{All we know about logic}
+\title{All we know about logic and computation}
 \author{James Geddes}
 \date{\today}
 %%
@@ -852,6 +856,43 @@ rules.
     \]
   \end{subfigure}
 \end{figure}
+
+\section{Computation: The $\lambda$-calculus}
+
+\subsection{The \emph{Entscheidungsproblem}}
+
+To compute is to ``mechanically'' work out the answer to some question. A computer is a little machine: you put in the question, the machine cranks away, and the answer comes out.  
+\begin{marginfigure}
+  \caption{A computer. Questions go in; answers come out.\label{fig:computer}}
+  \begin{center}
+    \begin{tikzpicture}[ % Figure by Claude.
+      node distance=1.2cm,
+      every node/.style={font=\Large},
+      box/.style={draw, minimum width=2cm, minimum height=1.2cm},
+      arr/.style={-{Stealth[length=3mm]}, thick}
+      ]
+      
+      \node (Q) {Q};
+      \node[box, right=of Q] (B) {};
+      \node[right=of B] (A) {A};
+      
+      \draw[arr] (Q) -- (B);
+      \draw[arr] (B) -- (A);
+      
+    \end{tikzpicture}
+  \end{center}
+
+\end{marginfigure}
+
+Clearly, in order to construct such a machine one must answer the question, what does ``mechanically'' mean?  But there is a prior observation: a useful computer should answer more than one question. One should be able to put in different questions and get out answers to each.  
+
+For example, in the nineteenth century a very important question was ``what is the sine of \ang{30}\,?'' And also ``what is the sine of \ang{31}\,?'' and so on for lots of different angles and other trigonmetric functions.  That is because tables of the answers to these questions were useful in navigation.\sidenote{Not just the nineteenth century.  Wikipedia says that the first sine table was produced by the Indian mathematician \={A}ryabha\d{t}a around 500~CE.} And so people constructed mechanical procedures for computing the value of $\sin\theta$ for any angle~$\theta$.
+
+We do know a mechanical procedure for calculating the sine of any given angle to any desired precision (that is, everyone agrees that it is a mechanical procedure).  Here is a harder problem: suppose $\wff{S}$ is a sentence of first-order logic. Is $\wff{S}$ a theorem? That is, is there a proof of $\vdash \wff{S}$?  If one has a purported proof then there is a mechanical procedure to check that the proof is valid: check that each step follows from an allowed rule of deduction.  But is there a mechanical procedure to compute \emph{whether} there is a proof?
+
+This question is known as the \emph{Entscheidungsproblem} and the answer is that there is no such mechancial procedure.  In order to make this claim it is necessary to say exactly what is meant by a mechanical procedure. 
+
+
 
 
 
