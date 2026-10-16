@@ -1,7 +1,0 @@
-ch20-exA-01
-CH20EXA
-assumption O
-reiteration 1
-discharge
-imp_intro 1, 2
-qed

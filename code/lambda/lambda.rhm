@@ -1,0 +1,31 @@
+#lang rhombus
+
+class Term():
+  nonfinal
+  
+class Var(var :: String):
+  extends Term
+
+class App(fn :: Term, arg :: Term):
+  extends Term
+
+class Abs(var :: Var, body :: Term):
+  extends Term
+
+// Example
+// Ex. 3 a (i)
+
+def ex3ai = Abs(
+    Var("x"),
+    Abs(
+      Var("y"),
+      Abs(Var("z"), App(App(Var("x"), Var("x")), App(Var("y"), Var("x"))))
+    )
+  )
+
+fun FV(t :: Term):
+  match t:
+  | Var(v):    Set(v)
+  | App(M, N): Set.union(FV(M), FV(N))
+  | Abs(v, M): FV(M).remove(v.var)
+

@@ -1,8 +1,0 @@
-double_not_elim
-DNE
-premise !!A
-assumption !A
-not_elim 1, 2
-discharge
-indirect 2, 3
-qed

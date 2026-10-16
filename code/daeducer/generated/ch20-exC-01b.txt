@@ -1,7 +1,0 @@
-ch20-exC-01b
-CH20EXC
-premise ((E -> R) ^ (R -> E))
-and_elim_left 1
-and_elim_right 1
-and_intro 3, 2
-qed

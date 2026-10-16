@@ -1,6 +1,0 @@
-Your proof gives the result <INCORRECT>, but I asked you to prove <CLAIM>. Please make another attempt to complete the proof using the same criteria as before.
-
-To reiteration the task, starting with <PREPREMISES><PREMISES>, prove the result <CLAIM>. The proof should start as follows.
-
-<PROOF>
-

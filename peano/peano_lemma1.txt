@@ -1,0 +1,89 @@
+peano_lemma1
+LEM1
+premise forall x !S(0, x)
+premise forall x forall y (exists z (S(x, z) ^ S(y, z)) -> x = y)
+premise forall x forall z (a(x, 0, z) <-> z = x)
+premise forall x forall y forall z (exists z_1 (S(y, z_1) ^ a(x, z_1, z)) <-> exists z_1 (a(x, y, z_1) ^ S(z_1, z)))
+premise forall x forall z (m(x, 0, z) <-> z = 0)
+premise forall x forall y forall z_1 (exists z_1 (S(y, z_1) ^ m(x, z_1, z)) <-> exists z_1 (m(x, y, z_1) ^ a(z_1, x, z)))
+premise forall x exists z S(x, z)
+premise forall x forall z_1 forall z_2 ((S(x, z_1) ^ S(x, z_2)) -> z_1 = z_2)
+premise forall x forall y exists z a(x, y, z)
+premise forall x forall y forall z_1 forall z_2 ((a(x, y, z_1) ^ a(x, y, z_2)) -> z_1 = z_2)
+premise forall x forall y exists z m(x, y, z)
+premise forall x forall y forall z_1 forall z_2 ((m(x, y, z_1) ^ m(x, y, z_2)) -> z_1 = z_2)
+premise ((forall z_1 (a(0, 0, z_1) <-> a(0, 0, z_1)) ^ forall x forall z ((forall z_1 (a(x, 0, z_1) <-> a(0, x, z_1)) ^ S(x, z)) -> forall z_1 (a(z, 0, z_1) <-> a(0, z, z_1)))) -> forall x forall z_1 (a(x, 0, z_1) <-> a(0, x, z_1)))
+assumption a(0, 0, f)
+reiteration 14
+discharge
+bi_intro 14, 15, 14, 15
+forall_intro 17, f, z_1
+assumption (forall z_1 (a(a, 0, z_1) <-> a(0, a, z_1)) ^ S(a, c))
+and_elim_left 19
+and_elim_right 19
+assumption a(c, 0, c_1)
+forall_elim 3, c
+forall_elim 23, c_1
+bi_elim 24, 22
+id_elim 25, 21, S(a, c_1)
+forall_elim 3, a
+forall_elim 27, a
+id_intro a
+bi_elim 28, 29
+forall_elim 20, a
+bi_elim 31, 30
+forall_elim 4, 0
+forall_elim 33, a
+forall_elim 34, c
+and_intro 32, 21
+exists_intro 36, (a(0, a, z_1) ^ S(z_1, c))
+bi_elim 35, 37
+assumption (S(a, c_2) ^ a(0, c_2, c))
+forall_elim 8, a
+forall_elim 40, c_2
+forall_elim 41, c
+and_elim_left 39
+and_intro 43, 21
+imp_elim 42, 44
+id_elim 45, 39, (S(a, c) ^ a(0, c, c))
+discharge
+exists_elim 38, 39, 46
+and_elim_right 48
+id_elim 25, 49, a(0, c, c_1)
+discharge
+assumption a(0, c, c_1)
+forall_elim 4, 0
+forall_elim 53, a
+forall_elim 54, c_1
+and_intro 21, 52
+exists_intro 56, (S(a, z_1) ^ a(0, z_1, c_1))
+bi_elim 55, 57
+assumption (a(0, a, a_1) ^ S(a_1, c_1))
+and_elim_left 59
+and_elim_right 59
+forall_elim 20, a_1
+bi_elim 62, 60
+forall_elim 3, a
+forall_elim 64, a_1
+bi_elim 65, 63
+id_elim 66, 61, S(a, c_1)
+forall_elim 8, a
+forall_elim 68, c_1
+forall_elim 69, c
+and_intro 67, 21
+imp_elim 70, 71
+discharge
+exists_elim 58, 59, 72
+forall_elim 3, c
+forall_elim 75, c_1
+bi_elim 76, 74
+discharge
+bi_intro 22, 50, 52, 77
+forall_intro 79, c_1, z_1
+discharge
+imp_intro 19, 80
+forall_intro 82, c, z
+forall_intro 83, a, x
+and_intro 18, 84
+imp_elim 13, 85
+qed

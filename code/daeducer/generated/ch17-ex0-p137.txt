@@ -1,8 +1,0 @@
-ch17-ex0-p134-03
-CH17EX0
-premise D
-assumption !D
-not_elim 2, 1
-discharge
-not_intro 2, 3
-qed
