@@ -890,8 +890,19 @@ For example, in the nineteenth century a very important question was ``what is t
 
 We do know a mechanical procedure for calculating the sine of any given angle to any desired precision (that is, everyone agrees that it is a mechanical procedure).  Here is a harder problem: suppose $\wff{S}$ is a sentence of first-order logic. Is $\wff{S}$ a theorem? That is, is there a proof of $\vdash \wff{S}$?  If one has a purported proof then there is a mechanical procedure to check that the proof is valid: check that each step follows from an allowed rule of deduction.  But is there a mechanical procedure to compute \emph{whether} there is a proof?
 
-This question is known as the \emph{Entscheidungsproblem} and the answer is that there is no such mechancial procedure.  In order to make this claim it is necessary to say exactly what is meant by a mechanical procedure. 
+This question is known as the \emph{Entscheidungsproblem} and the answer is that there is no such mechanical procedure.  In order to make this claim it is necessary to say exactly what is meant by a mechanical procedure. 
 
+\subsection{Grammar}
+
+We assume we are given a countably infinite set of \emph{variables}, say $\{x, y, \dotsc \}$. A \defn{lambda term} is given by the inductive definition:
+\begin{center}
+  \begin{bnf}
+    $e$ : $\lambda$-term ::= 
+    | $v$ : variable
+    | ($e$ $e$) : application
+    | ($\lambda v. e$) : abstraction
+  \end{bnf}
+\end{center}
 
 
 
