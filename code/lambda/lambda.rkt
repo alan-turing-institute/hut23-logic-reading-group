@@ -39,4 +39,19 @@ We may generalise later for convenience:
     [_
      (raise-user-error "Invalid form" sexp)]))
 
-;; 
+;; redex? : Term? -> Bool?
+;; A redex is (App (Abs ...) ... )
+(define (redex? term)
+  (match term
+    [(App (Abs _ _) _) #t]
+    [else              #f]))
+
+;; eval/step
+;; search the parse tree left-first, until we find a redex; then reduce
+
+;; ((λ (x) (+ x 1)) (f x))
+
+;; ((λ (x) (λ (y) x)) y)
+;;                |
+;;                bound variables are: x and y
+;; => ((λ (x) (λ (y1) x)) y)
