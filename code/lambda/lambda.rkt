@@ -39,23 +39,12 @@ We may generalise later for convenience:
     [_
      (raise-user-error "Invalid form" sexp)]))
 
-;; redex? : Term? -> bool?
-;; A redex is (App (Abs ...) ... )
-(define (redex? term)
+;; unparse : Term? -> s-expression
+(define (unparse term)
   (match term
-    [(App (Abs _ _) _) #t]
-    [_                 #f]))
-
-
-;; free-vars : Term? -> [List-of symbol?]
-;; FV[v]         = (list v)
-;; FV[(E F)]     = FV[E] U FV[F]
-;; FV[(λ (v) E)] = FV[E]\{v}
-(define (free-vars term)
-  (match term
-    [(Var v)          (list v)]
-    [(App rator rand) (set-union (free-vars rator) (free-vars rand))]
-    [(Abs v body)     (set-remove (free-vars body) v)]))
+    [(Var v)          v]
+    [(App rator rand) (list (unparse rator) (unparse rand))]
+    [(Abs v body)     (list 'λ (list v) (unparse body))]))
 
 
 ;; fresh : symbol? -> symbol?
@@ -68,6 +57,24 @@ We may generalise later for convenience:
       (let ([N (add1 (hash-ref vars var 0))])
         (hash-set! vars var N)
         (string->symbol (string-append (symbol->string var) "_" (number->string N)))))))
+
+;; redex? : Term? -> bool?
+;; A redex is (App (Abs ...) ... )
+(define (redex? term)
+  (match term
+    [(App (Abs _ _) _) #t]
+    [_                 #f]))
+
+;; free-vars : Term? -> [List-of symbol?]
+;; FV[v]         = (list v)
+;; FV[(E F)]     = FV[E] U FV[F]
+;; FV[(λ (v) E)] = FV[E]\{v}
+(define (free-vars term)
+  (match term
+    [(Var v)          (list v)]
+    [(App rator rand) (set-union (free-vars rator) (free-vars rand))]
+    [(Abs v body)     (set-remove (free-vars body) v)]))
+
 
 ;; Capture-avoiding substitution E[F/x]
 ;; Replace x with F in E, when x is free, and without
@@ -95,7 +102,6 @@ We may generalise later for convenience:
            (Abs vv
                 (substitute x F (substitute vv v body)))))]))
 
-;; eval/step : Term? -> Tern?
-;; Single-step beta-reduction.
+;; eval : Term? -> Term?
 ;; Search the parse tree left-first, until we find a redex; then reduce
 
