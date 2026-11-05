@@ -26,6 +26,10 @@ We may generalise later for convenience:
 (struct App Term (rator rand) #:transparent)
 (struct Abs Term (v body)     #:transparent)
 
+;; A Value? is a Term? with no redex
+(struct Value (term) #:transparent)
+
+
 ;; parse : s-expression -> Term?
 (define (parse sexp)
   (match sexp
@@ -102,6 +106,13 @@ We may generalise later for convenience:
            (Abs vv
                 (substitute x F (substitute vv v body)))))]))
 
-;; eval : Term? -> Term?
+;; eval : Term? -> Value?
 ;; Search the parse tree left-first, until we find a redex; then reduce
 
+(define (eval t)
+  (match t
+    [(Var _)        (Value t)]
+    [(Abs x body)   (Value (Abs x (Value-term (eval body))))]
+    [(App (Value v) (Value w)) (Value (v w))]
+    [(App (E (Value w))) (eval (App (eval E) (Value w)))]
+    [(App ((Val)))]))
