@@ -27,7 +27,9 @@
 ;; Examples
 
 (define (run1 sexp)
-  (unparse (eval/step (parse sexp))))
+  (unparse (and
+            (eval/step (parse sexp))
+            sexp)))
 
 (define (run sexp)
   (unparse (eval (parse sexp))))

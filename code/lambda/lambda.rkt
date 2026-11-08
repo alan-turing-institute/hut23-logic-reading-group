@@ -114,9 +114,11 @@ We may generalise later for convenience:
     [(Abs v body)
      (if (equal? x v)
          (Abs x body)
-         (let ([vv (fresh! v)])
-           (Abs vv
-                (substitute x F (substitute vv v body)))))]))
+         (if (set-member? (free-vars F) v)
+             (let ([vv (fresh! v)])
+               (Abs vv
+                    (substitute x F (substitute vv v body))))
+             (Abs v (substitute x F body))))]))
 
 ;; eval/step : Term? -> (or/c Term? #f)
 ;; Single-step reduction
